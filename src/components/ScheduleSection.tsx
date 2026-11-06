@@ -68,6 +68,9 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
           <p className="mt-2.5 max-w-2xl text-xs leading-relaxed text-[#212047]/70 sm:text-base">
             雙向連動檢視：點選下方任一女孩頭像標籤，即可篩選出她本季所有主場出席場次；點擊場次內的成員頭像卡，可開啟個人詳細應援檔案。
           </p>
+          <p className="mt-2 max-w-2xl text-[11px] font-semibold text-[#3F8E67]">
+            ※ 粉絲自製免責說明：本班表整理自官方 Instagram 公開貼文，若有臨時排班異動或賽程調整，請一律以臺中連莊球團與 ACE VIVA 官方實際公告為準。
+          </p>
         </div>
 
         <div className="flex items-center gap-3 self-start lg:self-end">

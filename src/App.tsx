@@ -152,6 +152,9 @@ export const App: React.FC = () => {
               className="h-6 w-6 shrink-0 rounded-full bg-white object-contain p-0.5"
             />
             <span>ACE VIVA</span>
+            <span className="rounded-full bg-[#5BAE84]/35 px-2 py-0.5 font-mono-num text-[9px] font-bold tracking-normal text-[#7ADAD0] ring-1 ring-[#5ECBC0]/40">
+              粉絲自製
+            </span>
           </a>
 
           {/* Desktop Navigation Links */}
@@ -276,13 +279,20 @@ export const App: React.FC = () => {
 
         <div className="mx-auto w-full max-w-7xl px-3.5 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-12 lg:gap-10">
-            {/* Left Column: Official Logo Identity, Editorial Typography & Nested CTA */}
+            {/* Left Column: Fan-Made Identity, Editorial Typography & Nested CTA */}
             <div className="w-full animate-editorial-entry lg:col-span-6">
-              <div className="inline-flex items-center gap-2 rounded-full bg-white px-3.5 py-1.5 shadow-xs ring-1 ring-[#5BAE84]/35">
-                <span className="h-2 w-2 shrink-0 rounded-full bg-[#5BAE84]" />
-                <span className="font-mono-num text-[10px] font-bold tracking-[0.16em] text-[#212047] uppercase">
-                  TPVL · 臺中連莊職業排球隊專屬啦啦隊
-                </span>
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="inline-flex items-center gap-2 rounded-full bg-[#212047] px-3.5 py-1.5 shadow-xs ring-1 ring-[#5ECBC0]/40">
+                  <span className="h-2 w-2 shrink-0 rounded-full bg-[#5ECBC0]" />
+                  <span className="font-mono-num text-[10px] font-bold tracking-[0.14em] text-[#7ADAD0] uppercase">
+                    UNOFFICIAL FAN-MADE GUIDE · 粉絲自製應援網站
+                  </span>
+                </div>
+                <div className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 shadow-xs ring-1 ring-[#5BAE84]/35">
+                  <span className="font-mono-num text-[10px] font-bold tracking-[0.12em] text-[#212047]">
+                    TPVL 臺中連莊啦啦隊
+                  </span>
+                </div>
               </div>
 
               {/* Official Logo + Display Title */}
@@ -290,7 +300,7 @@ export const App: React.FC = () => {
                 <div className="shrink-0 rounded-full bg-white p-1.5 shadow-[0_14px_35px_rgba(33,32,71,0.12)] ring-2 ring-[#5BAE84]/35 sm:p-2">
                   <img
                     src={TEAM_INFO.logoPath}
-                    alt="Ace Viva 連莊女孩官方 Logo"
+                    alt="Ace Viva 連莊女孩 Logo"
                     className="h-16 w-16 rounded-full object-contain sm:h-24 sm:w-24"
                   />
                 </div>
@@ -299,13 +309,16 @@ export const App: React.FC = () => {
                     <span className="block font-editorial text-4xl font-bold tracking-tight text-[#4FA87D] italic sm:text-7xl">
                       Ace Viva
                     </span>
-                    <span className="mt-0.5 block">連莊女孩官方圖鑑</span>
+                    <span className="mt-0.5 block">連莊女孩應援圖鑑</span>
                   </h1>
+                  <div className="mt-1.5 inline-flex items-center gap-1.5 rounded-md bg-[#E6F5F1] px-2.5 py-0.5 text-[11px] font-extrabold text-[#3F8E67] ring-1 ring-[#5BAE84]/35 sm:text-xs">
+                    <span>粉絲自製選位指南與班表查詢工具（非官方）</span>
+                  </div>
                 </div>
               </div>
 
               <p className="mt-4 max-w-xl text-sm leading-relaxed font-medium text-[#212047]/80 sm:mt-6 sm:text-lg">
-                2026 年 8 月全新成軍，由創隊隊長{' '}
+                由粉絲自發整理之臺中連莊啦啦隊應援指南。收錄 2026 年 8 月成軍之創隊隊長{' '}
                 <strong className="font-bold text-[#212047]">
                   Yuri（#6 陳洛心）
                 </strong>
@@ -315,12 +328,39 @@ export const App: React.FC = () => {
                 <strong className="font-bold text-[#212047]">
                   巫苡萱（#111）&amp; 心璇（#25）
                 </strong>{' '}
-                領軍，集結台灣職棒、職籃、偶像女團、競技啦啦隊與韓國職棒「韓籍三本柱」{' '}
+                與韓國職棒「韓籍三本柱」{' '}
                 <strong className="font-bold text-[#212047]">
                   車榮玹（#21）、李珠熙（#20）、鄭熙靜（#42）
                 </strong>{' '}
-                共 18 位全陣容形象照與應援班表。
+                共 18 位成員檔案、2F 集氣區選位推薦與主推距離雷達。
               </p>
+
+              {/* Hero Fan-Made Disclaimer Notice Box */}
+              <div className="mt-4 max-w-xl rounded-2xl border border-[#5BAE84]/35 bg-white/90 px-4 py-3 text-xs leading-relaxed text-[#212047]/80 shadow-xs">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="font-mono-num text-[10px] font-extrabold tracking-[0.14em] text-[#3F8E67] uppercase">
+                    DISCLAIMER · 非官方粉絲自製免責聲明
+                  </span>
+                  <a
+                    href="#disclaimer-section"
+                    className="font-mono-num text-[10px] font-bold text-[#4FA87D] underline underline-offset-2 hover:text-[#212047]"
+                  >
+                    完整聲明 ↓
+                  </a>
+                </div>
+                <p className="mt-1">
+                  本站為球迷粉絲自製之非營利應援工具，非球團或啦啦隊官方網站。所有出席名單、2F 集氣區各局站位、座位編號對應及活動資訊，請一律以{' '}
+                  <a
+                    href={TEAM_INFO.officialInstagramUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-bold text-[#212047] underline decoration-[#5BAE84] underline-offset-2 hover:text-[#4FA87D]"
+                  >
+                    ACE VIVA 官方 IG (@ace_viva_official)
+                  </a>{' '}
+                  與球團最新實際公告為準。
+                </p>
+              </div>
 
               {/* Nested CTA Buttons */}
               <div className="mt-6 flex flex-wrap items-center gap-3 sm:mt-8 sm:gap-4">
@@ -610,13 +650,13 @@ export const App: React.FC = () => {
           <div>
             <span className="inline-flex items-center gap-2 rounded-full bg-[#5BAE84]/15 px-3 py-1 font-mono-num text-[10px] font-bold tracking-[0.16em] text-[#212047] uppercase ring-1 ring-[#5BAE84]/30">
               <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#5BAE84]" />
-              <span>2026–2027 OFFICIAL ROSTER DIRECTORY</span>
+              <span>2026–2027 FAN-COMPILED ROSTER DIRECTORY · 粉絲整理成員圖鑑</span>
             </span>
             <h2 className="mt-3 text-2xl font-black tracking-tight text-[#212047] sm:text-5xl">
-              連莊女孩全體成員圖鑑
+              連莊女孩全體成員應援圖鑑
             </h2>
             <p className="mt-2.5 max-w-2xl text-xs leading-relaxed text-[#212047]/70 sm:text-base">
-              手機版採用雙欄臉部特寫圖鑑，點擊任一成員卡片即可開啟完整 WELCOME 打字機復古形象海報、背號、生日星座、MBTI 與主場出席預告。
+              手機版採用雙欄臉部特寫圖鑑，點擊任一成員卡片即可開啟完整 WELCOME 打字機復古形象海報、背號、生日星座、MBTI 與主場出席預告（資料整理自官方公開貼文與維基百科，實際資訊以官方公告為準）。
             </p>
           </div>
 
@@ -899,9 +939,73 @@ export const App: React.FC = () => {
         onOpenMemberDetail={(m) => setSelectedMember(m)}
       />
 
-      {/* Footer with Official Logo & Data Maintainability Note */}
-      <footer className="border-t border-[#212047]/10 bg-[#212047] text-white">
+      {/* Dedicated Disclaimer & Official Announcement Notice Section + Footer */}
+      <footer
+        id="disclaimer-section"
+        className="border-t border-[#212047]/10 bg-[#212047] text-white"
+      >
         <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+          {/* Prominent Fan-Made Disclaimer Banner */}
+          <div className="mb-10 rounded-[1.75rem] border border-[#5ECBC0]/35 bg-white/[0.06] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.12)] sm:p-7">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3.5">
+              <div className="flex items-center gap-2">
+                <span className="rounded-full bg-[#5BAE84] px-3 py-1 font-mono-num text-[10px] font-extrabold tracking-[0.14em] text-white uppercase">
+                  FAN-MADE DISCLAIMER · 粉絲自製與免責聲明
+                </span>
+                <span className="font-mono-num text-xs font-bold text-[#7ADAD0]">
+                  非官方應援網站 · 請以官方實際公告為準
+                </span>
+              </div>
+              <a
+                href={TEAM_INFO.officialInstagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-[#7ADAD0] transition-colors hover:bg-[#5BAE84] hover:text-white"
+              >
+                <span>前往 ACE VIVA 官方 IG 查閱最新公告</span>
+                <span>↗</span>
+              </a>
+            </div>
+
+            <div className="mt-4 grid grid-cols-1 gap-4 text-xs leading-relaxed text-white/80 md:grid-cols-3">
+              <div className="rounded-2xl bg-white/[0.04] p-4 ring-1 ring-white/10">
+                <div className="font-mono-num text-[10px] font-bold tracking-[0.15em] text-[#7ADAD0] uppercase">
+                  01 · 網站性質說明
+                </div>
+                <div className="mt-1 font-extrabold text-white">
+                  純粉絲自製之非營利應援工具
+                </div>
+                <p className="mt-1.5 text-white/75">
+                  本網站由支持臺中連莊職業排球隊與 ACE VIVA（連莊女孩）之球迷粉絲獨立製作與維護，旨在方便球迷查詢成員資料、應援班表與集氣區視角，與球團及經紀公司無任何官方委任或商業從屬關係。
+                </p>
+              </div>
+
+              <div className="rounded-2xl bg-white/[0.04] p-4 ring-1 ring-white/10">
+                <div className="font-mono-num text-[10px] font-bold tracking-[0.15em] text-[#7ADAD0] uppercase">
+                  02 · 班表與座位推算免責
+                </div>
+                <div className="mt-1 font-extrabold text-white">
+                  一律以官方最新實際公告為準
+                </div>
+                <p className="mt-1.5 text-white/75">
+                  站內所列之出席名單、2F ACE 集氣區（A / B / C 區）各局站位、破 10 分換位規則、1–23 號座位視角對應與主推距離計算，均為依據官方公開貼文所作之輔助推算；若遇現場座位編號調整、動線變更或成員臨時異動，概以官方與現場實際公告為準。
+                </p>
+              </div>
+
+              <div className="rounded-2xl bg-white/[0.04] p-4 ring-1 ring-white/10">
+                <div className="font-mono-num text-[10px] font-bold tracking-[0.15em] text-[#7ADAD0] uppercase">
+                  03 · 圖像與商標權歸屬
+                </div>
+                <div className="mt-1 font-extrabold text-white">
+                  權利歸屬原官方與成員所有
+                </div>
+                <p className="mt-1.5 text-white/75">
+                  本站引用之隊徽 Logo、WELCOME 成員形象照及相關名稱，其著作權、商標權與肖像權均歸屬臺中連莊職業排球隊（Win+Streak）、LEXX 原質娛樂及各成員本人所有，本站僅作非營利應援推廣與資訊索引使用。
+                </p>
+              </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 gap-8 md:grid-cols-12 md:gap-10">
             <div className="md:col-span-6">
               <div className="flex items-center gap-3">
@@ -910,47 +1014,61 @@ export const App: React.FC = () => {
                   alt="Ace Viva Logo"
                   className="h-10 w-10 rounded-full bg-white p-0.5 object-contain"
                 />
-                <span className="font-editorial text-2xl font-bold tracking-wider text-[#7ADAD0] italic">
-                  ACE VIVA · 連莊女孩
-                </span>
+                <div>
+                  <span className="font-editorial text-2xl font-bold tracking-wider text-[#7ADAD0] italic">
+                    ACE VIVA · 連莊女孩應援指南
+                  </span>
+                  <span className="ml-2 rounded-md bg-white/10 px-2 py-0.5 font-mono-num text-[10px] font-bold text-white/80">
+                    粉絲自製非官方網站
+                  </span>
+                </div>
               </div>
               <p className="mt-3 max-w-md text-xs leading-relaxed text-white/75">
-                台灣職業排球聯盟（TPVL）臺中連莊職業排球隊專屬啦啦隊介紹與應援班表平台。資料來源整合自維基百科「Ace Viva」條目與官方 Instagram (@ace_viva_official) 公開資訊。
+                粉絲自製之台灣職業排球聯盟（TPVL）臺中連莊職業排球隊啦啦隊應援介紹、2F 集氣區選位推薦與班表查詢平台。資料來源整理自維基百科「Ace Viva」條目與官方 Instagram (@ace_viva_official) 公開資訊，實際資訊請以官方公告為準。
               </p>
             </div>
 
             <div className="md:col-span-6">
               <div className="rounded-2xl border border-[#5ECBC0]/25 bg-white/[0.05] p-4 sm:p-5">
                 <div className="font-mono-num text-[10px] font-bold tracking-[0.2em] text-[#7ADAD0] uppercase">
-                  DEVELOPER MAINTAINABILITY · 照片與班表維護指南
+                  OFFICIAL CHANNELS · 官方資訊查證管道
                 </div>
                 <p className="mt-2 text-xs leading-relaxed text-white/80">
-                  全體 18 位成員之官方 WELCOME 形象照與臉部特寫頭像已存放於{' '}
-                  <code className="rounded bg-white/10 px-1.5 py-0.5 font-mono-num text-[#7ADAD0]">
-                    public/images/members/
-                  </code>{' '}
-                  與{' '}
-                  <code className="rounded bg-white/10 px-1.5 py-0.5 font-mono-num text-[#7ADAD0]">
-                    public/images/avatars/
-                  </code>
-                  。日後欲更新賽季班表或成員資料，可直接編輯{' '}
-                  <code className="rounded bg-white/10 px-1.5 py-0.5 font-mono-num text-[#7ADAD0]">
-                    src/data/schedule.ts
-                  </code>{' '}
-                  與{' '}
-                  <code className="rounded bg-white/10 px-1.5 py-0.5 font-mono-num text-[#7ADAD0]">
-                    src/data/members.ts
-                  </code>
-                  。
+                  購票選位前或進場應援當日，建議先前往以下官方社群確認最新班表與現場活動公告：
                 </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <a
+                    href={TEAM_INFO.officialInstagramUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-full bg-[#5BAE84] px-3.5 py-1.5 text-xs font-extrabold text-white transition-colors hover:bg-[#4FA87D]"
+                  >
+                    ACE VIVA 官方 IG (@{TEAM_INFO.officialInstagramHandle}) ↗
+                  </a>
+                  <a
+                    href={TEAM_INFO.clubInstagramUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-bold text-white transition-colors hover:bg-white/20"
+                  >
+                    臺中連莊球團 IG (@{TEAM_INFO.clubInstagramHandle}) ↗
+                  </a>
+                  <a
+                    href={TEAM_INFO.wikipediaUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-full bg-white/10 px-3.5 py-1.5 text-xs font-bold text-white transition-colors hover:bg-white/20"
+                  >
+                    維基百科條目 ↗
+                  </a>
+                </div>
               </div>
             </div>
           </div>
 
           <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-6 text-xs text-white/55 sm:mt-10 sm:pt-8">
             <span>
-              © 2026–2027 ACE VIVA Fan &amp; Roster Showcase · Taichung
-              Win+Streak
+              © 2026–2027 ACE VIVA Unofficial Fan-Made Guide · 粉絲自製應援網站（非官方，所有資訊以官方實際公告為準）
             </span>
             <div className="flex items-center gap-5">
               <a

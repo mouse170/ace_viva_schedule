@@ -95,7 +95,7 @@ export const MemberDetailDialog: React.FC<MemberDetailDialogProps> = ({
                   className="h-6 w-6 rounded-full object-contain"
                 />
                 <span className="font-mono-num text-[11px] font-bold tracking-[0.2em] text-[#212047]/70 uppercase">
-                  ACE VIVA OFFICIAL DOSSIER · {member.roleBadge}
+                  ACE VIVA FAN GUIDE DOSSIER · {member.roleBadge}
                 </span>
               </div>
               <form method="dialog">

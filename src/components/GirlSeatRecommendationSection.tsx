@@ -119,6 +119,9 @@ export const GirlSeatRecommendationSection: React.FC<
           <p className="mt-2.5 max-w-3xl text-xs leading-relaxed text-[#212047]/75 sm:text-base">
             點選你想鎖定的連莊女孩，系統將自動追蹤她在「第 1、4 局」、「第 2、5 局」與「第 3 局」的跨區路線，以及單局得分破 10 分前後的區內移位，計算出「雙享黃金席」與「破 10 分主力 C 位席」推薦號碼區間。
           </p>
+          <p className="mt-2 max-w-3xl text-[11px] font-semibold text-[#3F8E67]">
+            ※ 粉絲自製免責說明：本選位區間為依據官方公告站位表推算之輔助參考，現場實際座椅編號與臨時人員異動，請以球團與 ACE VIVA 官方最新實際公告為準。
+          </p>
         </div>
 
         {/* Date Switcher */}

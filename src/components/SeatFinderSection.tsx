@@ -308,6 +308,9 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
             </a>
             ），點選你的區域（A / B / C）與座位號碼（1–23 號），系統除顯示正前方女孩外，亦會即時計算你的座位「距離主推成員差幾個座位、隔幾個區域」以及破 10 分換位後的距離變化。
           </p>
+          <p className="mt-2 max-w-3xl text-[11px] font-semibold text-[#3F8E67]">
+            ※ 粉絲自製免責說明：23 席視角對應與主推距離計算為粉絲依官方站位表推算之參考工具，現場實際站位、動線與名單異動請以官方實際公告為準。
+          </p>
         </div>
 
         {/* Date Switcher */}
