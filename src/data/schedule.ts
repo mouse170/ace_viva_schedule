@@ -582,6 +582,7 @@ export interface PhaseDistanceDetail {
   boundaryConnectionLabel: string | null;
   seatsToDirectRange: number;
   seatsToCoreCenter: number;
+  signedSeatOffset: number;
   globalSeatDistance: number;
   directionText: string;
   headlineDistanceText: string;
@@ -639,12 +640,16 @@ function computePhaseDistance(
   }
 
   let seatsToCoreCenter = 0;
+  let signedSeatOffset = 0;
   if (userGlobalSeat >= girlGlobalCoreMin && userGlobalSeat <= girlGlobalCoreMax) {
     seatsToCoreCenter = 0;
+    signedSeatOffset = 0;
   } else if (userGlobalSeat < girlGlobalCoreMin) {
     seatsToCoreCenter = girlGlobalCoreMin - userGlobalSeat;
+    signedSeatOffset = seatsToCoreCenter; // 正值代表在座位右前方
   } else {
     seatsToCoreCenter = userGlobalSeat - girlGlobalCoreMax;
+    signedSeatOffset = -seatsToCoreCenter; // 負值代表在座位左前方
   }
 
   const isDirectFront = isSameZone && userSeat >= rangeStart && userSeat <= rangeEnd;
@@ -731,6 +736,7 @@ function computePhaseDistance(
     boundaryConnectionLabel,
     seatsToDirectRange,
     seatsToCoreCenter,
+    signedSeatOffset,
     globalSeatDistance,
     directionText,
     headlineDistanceText,

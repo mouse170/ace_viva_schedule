@@ -639,87 +639,286 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                   </span>
                 </div>
 
-                <div className="mt-3.5 flex flex-wrap items-baseline gap-2.5">
-                  <span className="text-2xl font-black text-white whitespace-nowrap sm:text-4xl">
-                    ACE 集氣 {selectedZone} 區
-                  </span>
-                  <span className="font-editorial text-3xl font-bold text-[#5ECBC0] italic whitespace-nowrap sm:text-4xl">
-                    第 {selectedSeat} 號席
+                <div className="mt-3.5 flex flex-wrap items-baseline justify-between gap-2">
+                  <div className="flex items-baseline gap-2.5">
+                    <span className="text-2xl font-black text-white whitespace-nowrap sm:text-3xl">
+                      ACE 集氣 {selectedZone} 區
+                    </span>
+                    <span className="font-editorial text-3xl font-bold text-[#5ECBC0] italic whitespace-nowrap sm:text-4xl">
+                      第 {selectedSeat} 號席
+                    </span>
+                  </div>
+                  <span className="rounded-md bg-white/10 px-2 py-0.5 font-mono-num text-[11px] font-bold text-[#7ADAD0]">
+                    正對：{seatMapping.slotName}
                   </span>
                 </div>
 
-                <p className="mt-2 text-xs leading-relaxed text-white/75">
-                  {seatMapping.viewAngleNote}
-                </p>
-
-                {/* Concise Oshi Proximity Notification (ONLY rendered when within 12 seats) */}
+                {/* Graphic Relative Position Map (Facing Stage · Only shown when Oshi is within ±12 seats) */}
                 {(nearbyActiveOshis.length > 0 ||
-                  nearbyOtherPhaseOshis.length > 0) && (
-                  <div className="mt-3.5 space-y-2 rounded-2xl border border-[#5ECBC0]/55 bg-[#5BAE84]/25 p-3">
-                    <div className="flex items-center justify-between gap-2">
-                      <span className="font-mono-num text-[10px] font-extrabold tracking-wider text-[#7ADAD0] uppercase">
-                        ★ 主推接近通知（距離 12 席內）
-                      </span>
-                      <span className="font-mono-num text-[10px] text-white/75">
-                        {currentSetArrangement.setLabel}
-                      </span>
-                    </div>
+                  nearbyOtherPhaseOshis.length > 0) && (() => {
+                  const userGlobal =
+                    (selectedZone === 'A' ? 0 : selectedZone === 'B' ? 1 : 2) *
+                      23 +
+                    selectedSeat;
+                  const boundaryABOffset = 23.5 - userGlobal;
+                  const boundaryBCOffset = 46.5 - userGlobal;
+                  const toXPercent = (offset: number) =>
+                    Math.max(9, Math.min(91, 50 + (offset / 12) * 40));
 
-                    {nearbyActiveOshis.map(({ member, phaseInfo }) => (
-                      <div
-                        key={member.id}
-                        className="flex items-center justify-between gap-2.5 rounded-xl bg-[#212047]/85 px-3 py-2 ring-1 ring-[#5ECBC0]/40"
-                      >
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <MemberPortrait
-                            member={member}
-                            variant="avatar"
-                            className="h-9 w-9 shrink-0 rounded-full ring-1 ring-[#5ECBC0]"
+                  return (
+                    <div className="mt-4 rounded-2xl border border-[#5ECBC0]/45 bg-[#181736] p-3 shadow-inner">
+                      {/* Diagram Header */}
+                      <div className="flex items-center justify-between text-[10px] font-bold text-[#7ADAD0]">
+                        <span>▲ 面對應援舞台視角（±12 席接近雷達圖）</span>
+                        <span className="font-mono-num text-white/60">
+                          {scorePhase === 'initial' ? '0–10 分' : '破 10 分後'}
+                        </span>
+                      </div>
+
+                      {/* Scale Bar: Left (-12) — Center (0) — Right (+12) */}
+                      <div className="mt-2 flex items-center justify-between rounded-lg bg-white/[0.06] px-2.5 py-1 font-mono-num text-[10px] text-white/70">
+                        <span>← 左方 -12 席</span>
+                        <span className="font-extrabold text-[#5ECBC0]">
+                          ▲ 正前方 (0 席)
+                        </span>
+                        <span>右方 +12 席 →</span>
+                      </div>
+
+                      {/* Visual Radar Canvas */}
+                      <div className="relative mt-2 h-36 w-full overflow-hidden rounded-xl bg-[#212047]/90 ring-1 ring-white/10">
+                        {/* SVG Field-of-View Cone & Sightline Vectors */}
+                        <svg
+                          viewBox="0 0 100 100"
+                          preserveAspectRatio="none"
+                          className="pointer-events-none absolute inset-0 h-full w-full"
+                        >
+                          <defs>
+                            <linearGradient
+                              id="fovGrad"
+                              x1="0"
+                              y1="1"
+                              x2="0"
+                              y2="0"
+                            >
+                              <stop
+                                offset="0%"
+                                stopColor="#5ECBC0"
+                                stopOpacity="0.22"
+                              />
+                              <stop
+                                offset="100%"
+                                stopColor="#5ECBC0"
+                                stopOpacity="0.03"
+                              />
+                            </linearGradient>
+                          </defs>
+
+                          {/* Stage Top Bar Line */}
+                          <line
+                            x1="6"
+                            y1="22"
+                            x2="94"
+                            y2="22"
+                            stroke="rgba(255,255,255,0.18)"
+                            strokeWidth="1"
                           />
-                          <div className="min-w-0">
-                            <div className="flex flex-wrap items-center gap-1.5">
-                              <span className="text-xs font-black text-white">
-                                {member.name}
+
+                          {/* FOV Cone from User (50, 86) to Stage (10..90, 22) */}
+                          <polygon
+                            points="50,86 10,22 90,22"
+                            fill="url(#fovGrad)"
+                          />
+
+                          {/* Straight-Ahead Center Axis */}
+                          <line
+                            x1="50"
+                            y1="86"
+                            x2="50"
+                            y2="22"
+                            stroke="rgba(255,255,255,0.2)"
+                            strokeWidth="0.6"
+                            strokeDasharray="2 2"
+                          />
+
+                          {/* Connected Zone Boundary Lines (A23|B1 or B23|C1) if within ±12 seats */}
+                          {Math.abs(boundaryABOffset) <= 12 && (
+                            <line
+                              x1={toXPercent(boundaryABOffset)}
+                              y1="14"
+                              x2={toXPercent(boundaryABOffset)}
+                              y2="88"
+                              stroke="rgba(122,218,208,0.45)"
+                              strokeWidth="0.8"
+                              strokeDasharray="2 2"
+                            />
+                          )}
+                          {Math.abs(boundaryBCOffset) <= 12 && (
+                            <line
+                              x1={toXPercent(boundaryBCOffset)}
+                              y1="14"
+                              x2={toXPercent(boundaryBCOffset)}
+                              y2="88"
+                              stroke="rgba(122,218,208,0.45)"
+                              strokeWidth="0.8"
+                              strokeDasharray="2 2"
+                            />
+                          )}
+
+                          {/* Dashed Sightline for Other Phase Oshi (if entering ±12 seats after rotation) */}
+                          {nearbyOtherPhaseOshis.map(
+                            ({ member, otherPhaseInfo }) => {
+                              const x = toXPercent(
+                                otherPhaseInfo.signedSeatOffset
+                              );
+                              return (
+                                <line
+                                  key={`vec-other-${member.id}`}
+                                  x1="50"
+                                  y1="84"
+                                  x2={x}
+                                  y2="28"
+                                  stroke="rgba(122,218,208,0.5)"
+                                  strokeWidth="1"
+                                  strokeDasharray="2.5 2.5"
+                                />
+                              );
+                            }
+                          )}
+
+                          {/* Solid Glowing Sightline Vector from User Seat (50, 84) to Active Oshi */}
+                          {nearbyActiveOshis.map(({ member, phaseInfo }) => {
+                            const x = toXPercent(phaseInfo.signedSeatOffset);
+                            return (
+                              <line
+                                key={`vec-${member.id}`}
+                                x1="50"
+                                y1="84"
+                                x2={x}
+                                y2="28"
+                                stroke="#5ECBC0"
+                                strokeWidth="1.6"
+                              />
+                            );
+                          })}
+                        </svg>
+
+                        {/* Zone Boundary Pill Labels on Stage Rail */}
+                        {Math.abs(boundaryABOffset) <= 12 && (
+                          <div
+                            style={{
+                              left: `${toXPercent(boundaryABOffset)}%`,
+                            }}
+                            className="pointer-events-none absolute bottom-8 -translate-x-1/2 rounded bg-[#212047]/90 px-1.5 py-0.5 font-mono-num text-[8px] font-bold text-[#7ADAD0] whitespace-nowrap ring-1 ring-[#5ECBC0]/40"
+                          >
+                            A23│B1 相連
+                          </div>
+                        )}
+                        {Math.abs(boundaryBCOffset) <= 12 && (
+                          <div
+                            style={{
+                              left: `${toXPercent(boundaryBCOffset)}%`,
+                            }}
+                            className="pointer-events-none absolute bottom-8 -translate-x-1/2 rounded bg-[#212047]/90 px-1.5 py-0.5 font-mono-num text-[8px] font-bold text-[#7ADAD0] whitespace-nowrap ring-1 ring-[#5ECBC0]/40"
+                          >
+                            B23│C1 相連
+                          </div>
+                        )}
+
+                        {/* Other Phase Ghost Pin (when Oshi enters ±12 seats in the other half of the set) */}
+                        {nearbyOtherPhaseOshis.map(
+                          ({ member, otherPhaseInfo }) => {
+                            const x = toXPercent(
+                              otherPhaseInfo.signedSeatOffset
+                            );
+                            const offset = otherPhaseInfo.signedSeatOffset;
+                            const dirLabel =
+                              offset === 0
+                                ? '正前'
+                                : offset < 0
+                                  ? `左 ${Math.abs(offset)}席`
+                                  : `右 ${offset}席`;
+                            return (
+                              <button
+                                key={`pin-other-${member.id}`}
+                                type="button"
+                                onClick={() =>
+                                  setScorePhase(
+                                    scorePhase === 'initial'
+                                      ? 'after10'
+                                      : 'initial'
+                                  )
+                                }
+                                style={{ left: `${x}%` }}
+                                className="absolute top-2 -translate-x-1/2 flex flex-col items-center opacity-75 transition-all duration-500 hover:opacity-100"
+                              >
+                                <div className="relative">
+                                  <MemberPortrait
+                                    member={member}
+                                    variant="avatar"
+                                    className="h-8 w-8 rounded-full ring-1 ring-dashed ring-[#7ADAD0]"
+                                  />
+                                </div>
+                                <span className="mt-0.5 rounded bg-[#212047]/95 px-1.5 py-0.2 font-mono-num text-[9px] font-bold text-[#7ADAD0] whitespace-nowrap ring-1 ring-white/20">
+                                  {scorePhase === 'initial' ? '破10分' : '開局'}{' '}
+                                  · {dirLabel}
+                                </span>
+                              </button>
+                            );
+                          }
+                        )}
+
+                        {/* Active Phase Oshi Pin(s) on Stage Track */}
+                        {nearbyActiveOshis.map(({ member, phaseInfo }) => {
+                          const x = toXPercent(phaseInfo.signedSeatOffset);
+                          const offset = phaseInfo.signedSeatOffset;
+                          const posBadge =
+                            offset === 0
+                              ? '▲ 正前方 0 席'
+                              : offset < 0
+                                ? `↖ 左前方 ${Math.abs(offset)} 席`
+                                : `↗ 右前方 ${offset} 席`;
+
+                          return (
+                            <button
+                              key={`pin-${member.id}`}
+                              type="button"
+                              onClick={() => onOpenMemberDetail(member)}
+                              style={{ left: `${x}%` }}
+                              className="absolute top-1.5 z-10 -translate-x-1/2 flex flex-col items-center transition-all duration-500"
+                            >
+                              <div className="relative">
+                                <MemberPortrait
+                                  member={member}
+                                  variant="avatar"
+                                  className="h-10 w-10 rounded-full ring-2 ring-[#5ECBC0] shadow-[0_0_16px_rgba(94,203,192,0.6)]"
+                                />
+                                <span className="absolute -top-1 -right-2 rounded-full bg-[#5BAE84] px-1 font-mono-num text-[8px] font-black text-white ring-1 ring-[#212047]">
+                                  {phaseInfo.girlZone}
+                                  {phaseInfo.girlSlotLabel.slice(0, 1)}
+                                </span>
+                              </div>
+                              <span className="mt-1 rounded-full bg-[#5BAE84] px-2 py-0.5 font-mono-num text-[9px] font-extrabold text-white whitespace-nowrap shadow-xs">
+                                ★ {member.name} · {posBadge}
                               </span>
-                              <span className="font-mono-num text-[10px] text-[#7ADAD0]">
-                                ({phaseInfo.girlZone} 區
-                                {phaseInfo.girlSlotLabel.slice(0, 2)})
-                              </span>
-                            </div>
-                            <div className="text-[11px] font-bold text-[#5ECBC0]">
-                              {phaseInfo.isDirectFront
-                                ? `正前方視角內（距 C 位中心 ${phaseInfo.seatsToCoreCenter} 席）`
-                                : phaseInfo.isConnectedBoundary
-                                  ? `跨區相連接近中 · 相距 ${phaseInfo.seatsToCoreCenter} 席（${phaseInfo.boundaryConnectionLabel}）`
-                                  : `同區接近中 · 相距 ${phaseInfo.seatsToCoreCenter} 席（${phaseInfo.directionText}）`}
-                            </div>
+                            </button>
+                          );
+                        })}
+
+                        {/* Bottom Center: User's Seat Facing Stage */}
+                        <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 flex flex-col items-center">
+                          <span className="text-[10px] leading-none text-[#5ECBC0]">
+                            ▲
+                          </span>
+                          <div className="mt-0.5 flex items-center gap-1.5 rounded-full bg-white px-3 py-0.5 font-mono-num text-[10px] font-black text-[#212047] whitespace-nowrap shadow-sm ring-2 ring-[#5ECBC0]">
+                            <span>
+                              你的座位：{selectedZone} 區 {selectedSeat} 號
+                            </span>
                           </div>
                         </div>
                       </div>
-                    ))}
-
-                    {nearbyOtherPhaseOshis.map(({ member, otherPhaseInfo }) => (
-                      <div
-                        key={`other-${member.id}`}
-                        className="rounded-xl bg-white/10 px-3 py-1.5 text-[11px] text-white/85"
-                      >
-                        <span className="font-bold text-[#7ADAD0]">
-                          同局換位提醒：
-                        </span>
-                        {member.name} 於本局
-                        {scorePhase === 'initial'
-                          ? '「破 10 分換位後」'
-                          : '「開局 0–10 分」'}
-                        將接近至距離你{' '}
-                        <strong className="font-mono-num font-extrabold text-[#5ECBC0]">
-                          {otherPhaseInfo.seatsToCoreCenter} 席
-                        </strong>
-                        （{otherPhaseInfo.girlZone} 區
-                        {otherPhaseInfo.girlSlotLabel.slice(0, 2)}）
-                      </div>
-                    ))}
-                  </div>
-                )}
+                    </div>
+                  );
+                })()}
 
                 {/* Highlighted Direct Front Member Card (Face-Focused Avatar) */}
                 {directFrontMember && (
