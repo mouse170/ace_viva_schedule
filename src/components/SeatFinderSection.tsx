@@ -81,21 +81,6 @@ const STATION_GROUPS: {
   },
 ];
 
-function getDistanceBadgeStyle(level: PhaseDistanceDetail['statusLevel']): string {
-  switch (level) {
-    case 'direct_core':
-      return 'bg-[#5BAE84] text-white ring-2 ring-[#7ADAD0]';
-    case 'direct_range':
-      return 'bg-[#5BAE84] text-white';
-    case 'same_zone_near':
-      return 'bg-[#5ECBC0]/25 text-[#7ADAD0] ring-1 ring-[#5ECBC0]/50';
-    case 'same_zone_far':
-      return 'bg-white/15 text-white ring-1 ring-white/25';
-    default:
-      return 'bg-white/10 text-white/80 ring-1 ring-white/15';
-  }
-}
-
 export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
   favoriteIds,
   externalSelection,
@@ -219,12 +204,15 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
         : currentSetOshiDistance.initial
       : undefined;
 
-  // Multi-favorite quick comparison for all attending favorites in favoriteIds
-  const attendingFavoritesDistances = useMemo(() => {
-    const attendingFavIds = favoriteIds.filter((id) =>
-      rotatingMemberIds.includes(id)
+  // Monitored oshis (activeOshi + any favoriteIds on duty) that are within 12 seats of the selected seat
+  const monitoredOshiDistances = useMemo(() => {
+    const targetIds = Array.from(
+      new Set([
+        activeOshi.id,
+        ...favoriteIds.filter((id) => rotatingMemberIds.includes(id)),
+      ])
     );
-    return attendingFavIds
+    return targetIds
       .map((id) => {
         const member = memberMap.get(id);
         if (!member) return null;
@@ -238,15 +226,21 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
           summary.find((s) => s.setKey === activeSetKey) ?? summary[0];
         const phaseInfo =
           scorePhase === 'initial' ? setInfo.initial : setInfo.after10;
-        return { member, phaseInfo };
+        const otherPhaseInfo =
+          scorePhase === 'initial' ? setInfo.after10 : setInfo.initial;
+        return { member, phaseInfo, otherPhaseInfo };
       })
       .filter(
         (
           item
-        ): item is { member: AceVivaMember; phaseInfo: PhaseDistanceDetail } =>
-          Boolean(item)
+        ): item is {
+          member: AceVivaMember;
+          phaseInfo: PhaseDistanceDetail;
+          otherPhaseInfo: PhaseDistanceDetail;
+        } => Boolean(item)
       );
   }, [
+    activeOshi.id,
     favoriteIds,
     rotatingMemberIds,
     memberMap,
@@ -256,6 +250,22 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
     activeSetKey,
     scorePhase,
   ]);
+
+  // Only keep oshis that are within 12 seats in the current phase (or will enter 12 seats after 10 points in the same set)
+  const nearbyActiveOshis = useMemo(
+    () =>
+      monitoredOshiDistances.filter((item) => item.phaseInfo.isWithin12Seats),
+    [monitoredOshiDistances]
+  );
+
+  const nearbyOtherPhaseOshis = useMemo(
+    () =>
+      monitoredOshiDistances.filter(
+        (item) =>
+          !item.phaseInfo.isWithin12Seats && item.otherPhaseInfo.isWithin12Seats
+      ),
+    [monitoredOshiDistances]
+  );
 
   // Compute all unique girls that will visit this exact zone across the entire match (all 5 sets)
   const allMatchZoneVisitors = useMemo(() => {
@@ -291,10 +301,10 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
         <div>
           <div className="inline-flex items-center gap-2 rounded-full bg-[#5BAE84]/15 px-3 py-1 font-mono-num text-[10px] font-bold tracking-[0.16em] text-[#212047] uppercase ring-1 ring-[#5BAE84]/35">
             <span className="h-2 w-2 shrink-0 rounded-full bg-[#5BAE84]" />
-            <span>2F ACE 集氣區 · 23 席視角與主推距離雷達</span>
+            <span>2F ACE 集氣區 · 23 席視角與主推接近通知（12 席內）</span>
           </div>
           <h2 className="mt-3 text-2xl font-black tracking-tight text-[#212047] sm:text-5xl">
-            選擇你的區域與 1–23 號座位，查看面前女孩與離主推多遠
+            選擇你的區域與 1–23 號座位，查看面前女孩
           </h2>
           <p className="mt-2.5 max-w-3xl text-xs leading-relaxed text-[#212047]/75 sm:text-base">
             依據官方站位公告（
@@ -306,10 +316,18 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
             >
               #OldMyCar 我的 90 年代站位表 ↗
             </a>
-            ），點選你的區域（A / B / C）與座位號碼（1–23 號），系統除顯示正前方女孩外，亦會即時計算你的座位「距離主推成員差幾個座位、隔幾個區域」以及破 10 分換位後的距離變化。
+            ），點選你的區域（A / B / C）與座位號碼（1–23 號）即可查看正前方女孩。看台座位為連續相接（
+            <strong className="font-bold text-[#212047]">
+              A 區大號接 B 區小號、B 區大號接 C 區小號
+            </strong>
+            ），當所選座位距離你的主推成員在{' '}
+            <strong className="font-bold text-[#3F8E67]">
+              12 個座位席次內
+            </strong>{' '}
+            時，系統才會顯示「主推接近通知」。
           </p>
           <p className="mt-2 max-w-3xl text-[11px] font-semibold text-[#3F8E67]">
-            ※ 粉絲自製免責說明：23 席視角對應與主推距離計算為粉絲依官方站位表推算之參考工具，現場實際站位、動線與名單異動請以官方實際公告為準。
+            ※ 粉絲自製免責說明：23 席視角對應與主推接近通知為粉絲依官方站位表推算之參考工具，現場實際站位、動線與名單異動請以官方實際公告為準。
           </p>
         </div>
 
@@ -338,6 +356,54 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
       {/* Main Console Container */}
       <div className="mt-6 rounded-[1.75rem] bg-[#D5EFE9] p-1.5 ring-1 ring-[#5BAE84]/35 sm:mt-10 sm:rounded-[2rem] sm:p-2">
         <div className="rounded-[calc(1.75rem-0.375rem)] bg-white p-4 shadow-[inset_0_1px_1px_rgba(255,255,255,0.95)] sm:rounded-[calc(2rem-0.375rem)] sm:p-8">
+          {/* Compact Oshi Proximity Target Selector (Only notifies when within 12 seats) */}
+          <div className="mb-5 rounded-2xl bg-[#F4FAF8] p-3 ring-1 ring-[#5BAE84]/30 sm:mb-6 sm:p-3.5">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="rounded-full bg-[#212047] px-2.5 py-0.5 font-mono-num text-[10px] font-bold text-[#7ADAD0]">
+                  12 席內接近提醒
+                </span>
+                <span className="text-xs font-extrabold text-[#212047]">
+                  點選主推對象（僅在座位距離她 12 席內時顯示接近通知）：
+                </span>
+              </div>
+              <span className="font-mono-num text-[10px] font-semibold text-[#3F8E67]">
+                看台相連：A23 接 B1 · B23 接 C1
+              </span>
+            </div>
+
+            <div className="-mx-1 mt-2.5 flex gap-1.5 overflow-x-auto px-1 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
+              {sortedRotatingMembers.map((m) => {
+                const isTarget = m.id === activeOshi.id;
+                const isFav = favoriteIds.includes(m.id);
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => setTargetOshiId(m.id)}
+                    className={`flex shrink-0 items-center gap-1.5 rounded-full py-1 pr-2.5 pl-1 text-xs font-bold whitespace-nowrap transition-all active:scale-95 ${
+                      isTarget
+                        ? 'bg-[#212047] text-white shadow-xs ring-2 ring-[#5BAE84]'
+                        : isFav
+                          ? 'bg-[#E6F5F1] text-[#212047] ring-1 ring-[#5BAE84]/50 hover:bg-[#D5EFE9]'
+                          : 'bg-white text-[#212047]/75 ring-1 ring-[#212047]/10 hover:bg-[#E6F5F1]'
+                    }`}
+                  >
+                    <MemberPortrait
+                      member={m}
+                      variant="avatar"
+                      className="h-6 w-6 shrink-0 rounded-full"
+                    />
+                    {isFav && (
+                      <span className="text-[10px] text-[#4FA87D]">★</span>
+                    )}
+                    <span>{m.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           {/* Step 1: Select Zone (A / B / C) */}
           <div>
             <div className="flex flex-wrap items-center justify-between gap-1.5">
@@ -345,7 +411,7 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                 STEP 01 · 選擇「2F ACE 集氣區」區域（A / B / C 區）
               </span>
               <span className="text-[11px] font-medium text-[#212047]/60">
-                ★ 標記代表你鎖定的主推（{activeOshi.name}）本局所在區域
+                A 區大號（23 號）接 B 區小號（1 號）· B 區大號（23 號）接 C 區小號（1 號）
               </span>
             </div>
 
@@ -384,7 +450,7 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                       </span>
                       {isOshiInThisZone ? (
                         <span className="rounded-full bg-[#5BAE84] px-2 py-0.5 font-mono-num text-[9px] font-extrabold text-white whitespace-nowrap">
-                          ★ 主推 {activeOshi.name} 在此
+                          ★ {activeOshi.name}
                         </span>
                       ) : (
                         <span
@@ -448,9 +514,17 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
               <span className="font-mono-num text-[11px] font-extrabold tracking-[0.14em] text-[#212047] uppercase sm:text-xs">
                 STEP 02 · 點選「ACE 集氣 {selectedZone} 區」座位編號（1–23 號）
               </span>
-              <span className="text-[11px] font-semibold text-[#4FA87D]">
-                依左、中、右 3 個站位分組，點選任一號碼即時計算與主推距離
-              </span>
+              <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold text-[#3F8E67]">
+                {selectedZone === 'A' && (
+                  <span>右端 A 區 23 號緊鄰 B 區 1 號 →</span>
+                )}
+                {selectedZone === 'B' && (
+                  <span>← 左端 B 區 1 號緊鄰 A 區 23 號 · 右端 B 區 23 號緊鄰 C 區 1 號 →</span>
+                )}
+                {selectedZone === 'C' && (
+                  <span>← 左端 C 區 1 號緊鄰 B 區 23 號</span>
+                )}
+              </div>
             </div>
 
             <div className="mt-3.5 grid grid-cols-1 gap-3 lg:grid-cols-3">
@@ -551,373 +625,6 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
             </div>
           </div>
 
-          {/* STEP 03: OSHI DISTANCE RADAR (我離主推有多遠？即時測距儀) */}
-          <div className="mt-6 rounded-3xl bg-[#212047] p-4 text-white shadow-[0_20px_50px_-15px_rgba(33,32,71,0.45)] ring-2 ring-[#5BAE84] sm:mt-8 sm:p-6">
-            {/* Top Header + Quick Oshi Selector Strip */}
-            <div className="border-b border-white/15 pb-4">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="inline-flex items-center gap-2 rounded-full bg-[#5BAE84] px-3 py-1 font-mono-num text-[10px] font-extrabold tracking-wider text-white uppercase">
-                  <span>OSHI DISTANCE RADAR · 我離主推有多遠？</span>
-                </div>
-                <span className="font-mono-num text-xs font-bold text-[#7ADAD0]">
-                  當前座位：ACE 集氣 {selectedZone} 區 {selectedSeat} 號席
-                </span>
-              </div>
-
-              <div className="mt-3">
-                <div className="mb-2 flex items-center justify-between text-[11px] text-white/75">
-                  <span>點選切換你想測距的主推女孩（★ 為「我的主推」收藏成員）：</span>
-                </div>
-                <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1.5 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
-                  {sortedRotatingMembers.map((m) => {
-                    const isTarget = m.id === activeOshi.id;
-                    const isFav = favoriteIds.includes(m.id);
-                    return (
-                      <button
-                        key={m.id}
-                        type="button"
-                        onClick={() => setTargetOshiId(m.id)}
-                        className={`flex shrink-0 items-center gap-2 rounded-full py-1 pr-3 pl-1 text-xs font-extrabold whitespace-nowrap transition-all active:scale-95 ${
-                          isTarget
-                            ? 'bg-[#5BAE84] text-white shadow-sm ring-2 ring-[#7ADAD0]'
-                            : isFav
-                              ? 'bg-white/15 text-[#7ADAD0] ring-1 ring-[#5ECBC0]/50 hover:bg-white/25'
-                              : 'bg-white/[0.08] text-white/80 ring-1 ring-white/15 hover:bg-white/20'
-                        }`}
-                      >
-                        <MemberPortrait
-                          member={m}
-                          variant="avatar"
-                          className="h-7 w-7 shrink-0 rounded-full ring-1 ring-white/50"
-                        />
-                        {isFav && <span className="text-[10px]">★</span>}
-                        <span className="font-mono-num text-[10px] opacity-80">
-                          #{m.number}
-                        </span>
-                        <span>{m.name}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Multi-Favorite Quick Strip (When user has multiple favorites on duty) */}
-              {attendingFavoritesDistances.length > 1 && (
-                <div className="mt-3 rounded-2xl bg-white/[0.06] p-2.5 ring-1 ring-white/10">
-                  <div className="mb-1.5 font-mono-num text-[10px] font-bold tracking-wider text-[#7ADAD0] uppercase">
-                    我的主推收藏（{attendingFavoritesDistances.length} 人在場）與「{selectedZone} 區 {selectedSeat} 號席」當前距離一覽：
-                  </div>
-                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                    {attendingFavoritesDistances.map(({ member, phaseInfo }) => (
-                      <button
-                        key={member.id}
-                        type="button"
-                        onClick={() => setTargetOshiId(member.id)}
-                        className={`flex items-center justify-between gap-2 rounded-xl px-3 py-2 text-left text-xs transition-all ${
-                          member.id === activeOshi.id
-                            ? 'bg-[#5BAE84]/30 ring-1 ring-[#7ADAD0]'
-                            : 'bg-white/[0.05] hover:bg-white/10'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2 min-w-0">
-                          <MemberPortrait
-                            member={member}
-                            variant="avatar"
-                            className="h-7 w-7 shrink-0 rounded-full"
-                          />
-                          <span className="font-black text-white whitespace-nowrap">
-                            {member.name}
-                          </span>
-                          <span className="font-mono-num text-[10px] text-[#7ADAD0] whitespace-nowrap">
-                            ({phaseInfo.girlZone}區{phaseInfo.girlSlotLabel.slice(0, 2)})
-                          </span>
-                        </div>
-                        <span
-                          className={`rounded-full px-2 py-0.5 font-mono-num text-[10px] font-extrabold whitespace-nowrap ${
-                            phaseInfo.isDirectFront
-                              ? 'bg-[#5BAE84] text-white'
-                              : phaseInfo.isSameZone
-                                ? 'bg-[#7ADAD0]/20 text-[#7ADAD0]'
-                                : 'bg-white/10 text-white/75'
-                          }`}
-                        >
-                          {phaseInfo.isDirectFront
-                            ? `正對 (距C位${phaseInfo.seatsToCoreCenter}席)`
-                            : phaseInfo.isSameZone
-                              ? `同區差 ${phaseInfo.seatsToDirectRange} 席`
-                              : `跨${phaseInfo.zoneDiff}區 (差${phaseInfo.seatsToDirectRange}席)`}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Main Distance Readout for Active Oshi */}
-            {activePhaseOshiDistance && otherPhaseOshiDistance && (
-              <div className="mt-4 grid grid-cols-1 gap-5 lg:grid-cols-12">
-                {/* Left 6 cols: Current Set & Phase Exact Distance Meter */}
-                <div className="flex flex-col justify-between rounded-2xl bg-white/[0.08] p-4 ring-1 ring-[#5ECBC0]/30 sm:p-5 lg:col-span-6">
-                  <div>
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <span className="font-mono-num text-[10px] font-bold tracking-wider text-[#7ADAD0] uppercase">
-                        當前檢視：{currentSetArrangement.setLabel}（
-                        {scorePhase === 'initial'
-                          ? '開局 0–10 分'
-                          : '破 10 分換位後'}
-                        ）
-                      </span>
-                      <span
-                        className={`rounded-full px-2.5 py-0.5 font-mono-num text-[10px] font-extrabold ${getDistanceBadgeStyle(
-                          activePhaseOshiDistance.statusLevel
-                        )}`}
-                      >
-                        親近度 {activePhaseOshiDistance.proximityPercent}%
-                      </span>
-                    </div>
-
-                    {/* Oshi Avatar + Headline Distance */}
-                    <div className="mt-3.5 flex items-center gap-3.5">
-                      <button
-                        type="button"
-                        onClick={() => onOpenMemberDetail(activeOshi)}
-                        className="shrink-0 overflow-hidden rounded-2xl ring-2 ring-[#5ECBC0]"
-                      >
-                        <MemberPortrait
-                          member={activeOshi}
-                          variant="avatar"
-                          className="h-16 w-16 sm:h-20 sm:w-20"
-                        />
-                      </button>
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          <span className="rounded-md bg-[#5BAE84] px-2 py-0.5 font-mono-num text-[11px] font-extrabold text-white">
-                            主推 #{activeOshi.number}
-                          </span>
-                          <span className="text-lg font-black text-white sm:text-xl">
-                            {activeOshi.name}
-                          </span>
-                          <span className="rounded-md bg-white/15 px-2 py-0.5 font-mono-num text-[11px] font-bold text-[#7ADAD0]">
-                            位於 {activePhaseOshiDistance.girlZone} 區 ·{' '}
-                            {activePhaseOshiDistance.girlSlotLabel.slice(0, 2)}（
-                            {activePhaseOshiDistance.girlSeatRange[0]}–
-                            {activePhaseOshiDistance.girlSeatRange[1]}號）
-                          </span>
-                        </div>
-
-                        <div className="mt-1.5 text-base font-black text-[#5ECBC0] sm:text-lg">
-                          {activePhaseOshiDistance.headlineDistanceText}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* 3 Quantitative Distance Metrics */}
-                    <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-                      <div className="rounded-xl bg-[#212047]/80 p-2.5 ring-1 ring-white/10">
-                        <div className="font-mono-num text-[10px] text-white/60">
-                          跨區距離
-                        </div>
-                        <div className="mt-0.5 font-mono-num text-sm font-black text-white sm:text-base">
-                          {activePhaseOshiDistance.isSameZone
-                            ? '同區 (0 區)'
-                            : `跨 ${activePhaseOshiDistance.zoneDiff} 區`}
-                        </div>
-                        <div className="text-[10px] text-[#7ADAD0]">
-                          {activePhaseOshiDistance.directionText}
-                        </div>
-                      </div>
-
-                      <div className="rounded-xl bg-[#212047]/80 p-2.5 ring-1 ring-white/10">
-                        <div className="font-mono-num text-[10px] text-white/60">
-                          距正對範圍邊界
-                        </div>
-                        <div className="mt-0.5 font-mono-num text-sm font-black text-[#5ECBC0] sm:text-base">
-                          {activePhaseOshiDistance.seatsToDirectRange === 0
-                            ? '0 席 (正對內)'
-                            : `差 ${activePhaseOshiDistance.seatsToDirectRange} 席`}
-                        </div>
-                        <div className="text-[10px] text-white/65">
-                          正對 {activePhaseOshiDistance.girlSeatRange[0]}–
-                          {activePhaseOshiDistance.girlSeatRange[1]} 號
-                        </div>
-                      </div>
-
-                      <div className="rounded-xl bg-[#212047]/80 p-2.5 ring-1 ring-white/10">
-                        <div className="font-mono-num text-[10px] text-white/60">
-                          距她 C 位中心
-                        </div>
-                        <div className="mt-0.5 font-mono-num text-sm font-black text-white sm:text-base">
-                          {activePhaseOshiDistance.seatsToCoreCenter === 0
-                            ? '0 席 (正C位)'
-                            : `差 ${activePhaseOshiDistance.seatsToCoreCenter} 席`}
-                        </div>
-                        <div className="text-[10px] text-white/65">
-                          C 位：{activePhaseOshiDistance.girlZone} 區{' '}
-                          {activePhaseOshiDistance.girlCoreSeatLabel}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Visual Proximity Progress Bar */}
-                    <div className="mt-3.5">
-                      <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
-                        <div
-                          className="h-full rounded-full bg-gradient-to-r from-[#5BAE84] to-[#5ECBC0] transition-all duration-500"
-                          style={{
-                            width: `${activePhaseOshiDistance.proximityPercent}%`,
-                          }}
-                        />
-                      </div>
-                      <p className="mt-2 text-xs leading-relaxed text-white/80">
-                        {activePhaseOshiDistance.detailDescription}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Same-Set Score Rotation Preview + One-Tap Jump to Oshi Core Seat */}
-                  <div className="mt-4 flex flex-col gap-2.5 border-t border-white/15 pt-3.5 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="text-xs text-[#7ADAD0]">
-                      <strong className="font-bold text-white">
-                        {scorePhase === 'initial'
-                          ? '破 10 分換位後預告：'
-                          : '開局 0–10 分位置：'}
-                      </strong>
-                      移至 {otherPhaseOshiDistance.girlZone} 區
-                      {otherPhaseOshiDistance.girlSlotLabel.slice(0, 2)}（
-                      {otherPhaseOshiDistance.isDirectFront
-                        ? `★ 將直接走到你正前方！距 C 位 ${otherPhaseOshiDistance.seatsToCoreCenter} 席`
-                        : otherPhaseOshiDistance.isSameZone
-                          ? `同區差 ${otherPhaseOshiDistance.seatsToDirectRange} 席`
-                          : `跨 ${otherPhaseOshiDistance.zoneDiff} 區`}
-                      ）
-                    </div>
-
-                    {(!activePhaseOshiDistance.isExactCore ||
-                      selectedZone !== activePhaseOshiDistance.girlZone) && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedZone(activePhaseOshiDistance.girlZone);
-                          setSelectedSeat(activePhaseOshiDistance.girlCoreSeat);
-                        }}
-                        className="shrink-0 rounded-full bg-[#5BAE84] px-3.5 py-1.5 text-xs font-extrabold text-white shadow-xs transition-colors hover:bg-[#4FA87D] active:scale-95"
-                      >
-                        移至她本階段 C 位（{activePhaseOshiDistance.girlZone} 區{' '}
-                        {activePhaseOshiDistance.girlCoreSeat} 號）→
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Right 6 cols: All 3 Set Groups Distance Breakdown for Your Selected Seat */}
-                <div className="flex flex-col justify-between rounded-2xl bg-white/[0.06] p-4 ring-1 ring-white/15 sm:p-5 lg:col-span-6">
-                  <div>
-                    <div className="font-mono-num text-[10px] font-bold tracking-wider text-[#7ADAD0] uppercase">
-                      FULL MATCH DISTANCE TABLE · 坐在「{selectedZone} 區{' '}
-                      {selectedSeat} 號席」整場五局與 {activeOshi.name} 的距離變化
-                    </div>
-
-                    <div className="mt-3 space-y-2.5">
-                      {oshiDistanceSummary.map((setComp) => {
-                        const isCurrentSet = setComp.setKey === activeSetKey;
-                        const isSameZoneSet = setComp.initial.isSameZone;
-
-                        return (
-                          <div
-                            key={setComp.setKey}
-                            onClick={() => setActiveSetKey(setComp.setKey)}
-                            className={`cursor-pointer rounded-xl p-3 transition-all ${
-                              isSameZoneSet
-                                ? 'bg-[#5BAE84]/25 ring-2 ring-[#5ECBC0]'
-                                : isCurrentSet
-                                  ? 'bg-white/15 ring-1 ring-white/30'
-                                  : 'bg-white/[0.05] ring-1 ring-white/10 hover:bg-white/10'
-                            }`}
-                          >
-                            <div className="flex flex-wrap items-center justify-between gap-2">
-                              <div className="flex items-center gap-2">
-                                <span className="rounded-md bg-[#212047] px-2 py-0.5 font-mono-num text-[11px] font-extrabold text-[#7ADAD0]">
-                                  {setComp.setShortLabel}
-                                </span>
-                                <span className="text-xs font-extrabold text-white">
-                                  {activeOshi.name} 在{' '}
-                                  {setComp.initial.girlZone} 區
-                                </span>
-                              </div>
-
-                              <span
-                                className={`rounded-full px-2.5 py-0.5 font-mono-num text-[10px] font-extrabold ${
-                                  isSameZoneSet
-                                    ? 'bg-[#5BAE84] text-white'
-                                    : 'bg-white/15 text-white/75'
-                                }`}
-                              >
-                                {isSameZoneSet
-                                  ? `★ 本局來到你的 ${selectedZone} 區！`
-                                  : `跨 ${setComp.initial.zoneDiff} 區（相隔約 ${setComp.initial.seatsToDirectRange} 席）`}
-                              </span>
-                            </div>
-
-                            <div className="mt-2 grid grid-cols-1 gap-1.5 text-xs sm:grid-cols-2">
-                              <div
-                                className={`rounded-lg px-2.5 py-1.5 font-mono-num text-[11px] ${
-                                  setComp.initial.isDirectFront
-                                    ? 'bg-[#5BAE84] font-extrabold text-white'
-                                    : 'bg-[#212047]/65 text-white/85'
-                                }`}
-                              >
-                                <div>
-                                  0–10分：{setComp.initial.girlZone}區
-                                  {setComp.initial.girlSlotLabel.slice(0, 2)}（
-                                  {setComp.initial.girlSeatRange[0]}–
-                                  {setComp.initial.girlSeatRange[1]}號）
-                                </div>
-                                <div className="mt-0.5 text-[10px] text-[#7ADAD0]">
-                                  {setComp.initial.isDirectFront
-                                    ? `★ 正對你（距 C 位 ${setComp.initial.seatsToCoreCenter} 席）`
-                                    : setComp.initial.isSameZone
-                                      ? `同區差 ${setComp.initial.seatsToDirectRange} 席（距 C 位 ${setComp.initial.seatsToCoreCenter} 席）`
-                                      : `距你約 ${setComp.initial.globalSeatDistance} 席身位`}
-                                </div>
-                              </div>
-
-                              <div
-                                className={`rounded-lg px-2.5 py-1.5 font-mono-num text-[11px] ${
-                                  setComp.after10.isDirectFront
-                                    ? 'bg-[#5BAE84] font-extrabold text-white'
-                                    : 'bg-[#212047]/65 text-white/85'
-                                }`}
-                              >
-                                <div>
-                                  破10分：{setComp.after10.girlZone}區
-                                  {setComp.after10.girlSlotLabel.slice(0, 2)}（
-                                  {setComp.after10.girlSeatRange[0]}–
-                                  {setComp.after10.girlSeatRange[1]}號）
-                                </div>
-                                <div className="mt-0.5 text-[10px] text-[#7ADAD0]">
-                                  {setComp.after10.isDirectFront
-                                    ? `★ 正對你（距 C 位 ${setComp.after10.seatsToCoreCenter} 席）`
-                                    : setComp.after10.isSameZone
-                                      ? `同區差 ${setComp.after10.seatsToDirectRange} 席（距 C 位 ${setComp.after10.seatsToCoreCenter} 席）`
-                                      : `距你約 ${setComp.after10.globalSeatDistance} 席身位`}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  <div className="mt-3 text-[11px] text-white/70">
-                    提示：點選任一局數卡片可立即切換下方舞台模擬視角。
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
           {/* Live Stage & Front Girl Spotlight */}
           <div className="mt-6 grid grid-cols-1 gap-5 border-t border-[#212047]/10 pt-6 lg:mt-8 lg:grid-cols-12 lg:gap-6 lg:pt-8">
             {/* Left 5 cols: Your Exact Seat Summary & Direct Front Girl */}
@@ -944,6 +651,75 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                 <p className="mt-2 text-xs leading-relaxed text-white/75">
                   {seatMapping.viewAngleNote}
                 </p>
+
+                {/* Concise Oshi Proximity Notification (ONLY rendered when within 12 seats) */}
+                {(nearbyActiveOshis.length > 0 ||
+                  nearbyOtherPhaseOshis.length > 0) && (
+                  <div className="mt-3.5 space-y-2 rounded-2xl border border-[#5ECBC0]/55 bg-[#5BAE84]/25 p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-mono-num text-[10px] font-extrabold tracking-wider text-[#7ADAD0] uppercase">
+                        ★ 主推接近通知（距離 12 席內）
+                      </span>
+                      <span className="font-mono-num text-[10px] text-white/75">
+                        {currentSetArrangement.setLabel}
+                      </span>
+                    </div>
+
+                    {nearbyActiveOshis.map(({ member, phaseInfo }) => (
+                      <div
+                        key={member.id}
+                        className="flex items-center justify-between gap-2.5 rounded-xl bg-[#212047]/85 px-3 py-2 ring-1 ring-[#5ECBC0]/40"
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <MemberPortrait
+                            member={member}
+                            variant="avatar"
+                            className="h-9 w-9 shrink-0 rounded-full ring-1 ring-[#5ECBC0]"
+                          />
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <span className="text-xs font-black text-white">
+                                {member.name}
+                              </span>
+                              <span className="font-mono-num text-[10px] text-[#7ADAD0]">
+                                ({phaseInfo.girlZone} 區
+                                {phaseInfo.girlSlotLabel.slice(0, 2)})
+                              </span>
+                            </div>
+                            <div className="text-[11px] font-bold text-[#5ECBC0]">
+                              {phaseInfo.isDirectFront
+                                ? `正前方視角內（距 C 位中心 ${phaseInfo.seatsToCoreCenter} 席）`
+                                : phaseInfo.isConnectedBoundary
+                                  ? `跨區相連接近中 · 相距 ${phaseInfo.seatsToCoreCenter} 席（${phaseInfo.boundaryConnectionLabel}）`
+                                  : `同區接近中 · 相距 ${phaseInfo.seatsToCoreCenter} 席（${phaseInfo.directionText}）`}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+
+                    {nearbyOtherPhaseOshis.map(({ member, otherPhaseInfo }) => (
+                      <div
+                        key={`other-${member.id}`}
+                        className="rounded-xl bg-white/10 px-3 py-1.5 text-[11px] text-white/85"
+                      >
+                        <span className="font-bold text-[#7ADAD0]">
+                          同局換位提醒：
+                        </span>
+                        {member.name} 於本局
+                        {scorePhase === 'initial'
+                          ? '「破 10 分換位後」'
+                          : '「開局 0–10 分」'}
+                        將接近至距離你{' '}
+                        <strong className="font-mono-num font-extrabold text-[#5ECBC0]">
+                          {otherPhaseInfo.seatsToCoreCenter} 席
+                        </strong>
+                        （{otherPhaseInfo.girlZone} 區
+                        {otherPhaseInfo.girlSlotLabel.slice(0, 2)}）
+                      </div>
+                    ))}
+                  </div>
+                )}
 
                 {/* Highlighted Direct Front Member Card (Face-Focused Avatar) */}
                 {directFrontMember && (

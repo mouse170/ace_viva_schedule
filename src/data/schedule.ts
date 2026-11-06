@@ -564,6 +564,8 @@ export function getGirlSeatRecommendations(
   return results;
 }
 
+export const PROXIMITY_SEAT_THRESHOLD = 12;
+
 export interface PhaseDistanceDetail {
   girlZone: AceZoneId;
   girlSlotIndex: 0 | 1 | 2;
@@ -575,6 +577,9 @@ export interface PhaseDistanceDetail {
   isSameZone: boolean;
   isDirectFront: boolean;
   isExactCore: boolean;
+  isWithin12Seats: boolean;
+  isConnectedBoundary: boolean;
+  boundaryConnectionLabel: string | null;
   seatsToDirectRange: number;
   seatsToCoreCenter: number;
   globalSeatDistance: number;
@@ -616,9 +621,11 @@ function computePhaseDistance(
   const coreMeta = SLOT_CORE_SEAT[girlSlotIndex];
   const [rangeStart, rangeEnd] = slotMeta.range;
 
-  // Global seat index across A (1..23), B (24..46), C (47..69)
+  // 連續座位編號：A 區 1..23、B 區 24..46（A23 接 B1）、C 區 47..69（B23 接 C1）
   const userGlobalSeat = uZ * 23 + userSeat;
   const girlGlobalCoreSeat = gZ * 23 + coreMeta.center;
+  const girlGlobalCoreMin = gZ * 23 + coreMeta.minCore;
+  const girlGlobalCoreMax = gZ * 23 + coreMeta.maxCore;
   const girlGlobalRangeStart = gZ * 23 + rangeStart;
   const girlGlobalRangeEnd = gZ * 23 + rangeEnd;
 
@@ -631,31 +638,43 @@ function computePhaseDistance(
     seatsToDirectRange = userGlobalSeat - girlGlobalRangeEnd;
   }
 
-  let seatsToCoreCenter = globalSeatDistance;
-  if (isSameZone) {
-    if (userSeat >= coreMeta.minCore && userSeat <= coreMeta.maxCore) {
-      seatsToCoreCenter = 0;
-    } else if (userSeat < coreMeta.minCore) {
-      seatsToCoreCenter = coreMeta.minCore - userSeat;
-    } else {
-      seatsToCoreCenter = userSeat - coreMeta.maxCore;
-    }
+  let seatsToCoreCenter = 0;
+  if (userGlobalSeat >= girlGlobalCoreMin && userGlobalSeat <= girlGlobalCoreMax) {
+    seatsToCoreCenter = 0;
+  } else if (userGlobalSeat < girlGlobalCoreMin) {
+    seatsToCoreCenter = girlGlobalCoreMin - userGlobalSeat;
+  } else {
+    seatsToCoreCenter = userGlobalSeat - girlGlobalCoreMax;
   }
 
   const isDirectFront = isSameZone && userSeat >= rangeStart && userSeat <= rangeEnd;
   const isExactCore = isSameZone && seatsToCoreCenter === 0;
+  const isWithin12Seats = seatsToCoreCenter <= PROXIMITY_SEAT_THRESHOLD;
+  const isConnectedBoundary = !isSameZone && isWithin12Seats;
 
-  // Determine direction from user's seat perspective (facing court: A is left, B is center, C is right; seat 1 is left, 23 is right)
+  let boundaryConnectionLabel: string | null = null;
+  if (isConnectedBoundary) {
+    if (userZone === 'A' && girlZone === 'B') {
+      boundaryConnectionLabel = 'A 區大號與 B 區小號相連';
+    } else if (userZone === 'B' && girlZone === 'A') {
+      boundaryConnectionLabel = 'B 區小號與 A 區大號相連';
+    } else if (userZone === 'B' && girlZone === 'C') {
+      boundaryConnectionLabel = 'B 區大號與 C 區小號相連';
+    } else if (userZone === 'C' && girlZone === 'B') {
+      boundaryConnectionLabel = 'C 區小號與 B 區大號相連';
+    }
+  }
+
   const deltaGlobal = girlGlobalCoreSeat - userGlobalSeat;
+  const dirShort = deltaGlobal < 0 ? '往左' : '往右';
   let directionText = '正前方直視';
   if (!isDirectFront) {
     if (isSameZone) {
-      directionText = deltaGlobal < 0 ? '同區往左方看' : '同區往右方看';
+      directionText = `${dirShort}約 ${seatsToCoreCenter} 席`;
+    } else if (isConnectedBoundary) {
+      directionText = `跨區相連 · ${dirShort}約 ${seatsToCoreCenter} 席`;
     } else {
-      directionText =
-        deltaGlobal < 0
-          ? `往左方 ${girlZone} 區看（跨 ${zoneDiff} 區）`
-          : `往右方 ${girlZone} 區看（跨 ${zoneDiff} 區）`;
+      directionText = `${dirShort} ${girlZone} 區`;
     }
   }
 
@@ -667,26 +686,33 @@ function computePhaseDistance(
   if (isExactCore) {
     statusLevel = 'direct_core';
     proximityPercent = 100;
-    headlineDistanceText = '零距離正對 C 位（相距 0 席）';
-    detailDescription = `你正坐在 ${girlZone} 區 ${slotMeta.label} 的黃金核心席（${coreMeta.label}），主推就在你正前方直線對焦位置！`;
+    headlineDistanceText = '正對 C 位（相距 0 席）';
+    detailDescription = `就在你正前方 ${girlZone} 區${slotMeta.label}核心席（${coreMeta.label}）。`;
   } else if (isDirectFront) {
     statusLevel = 'direct_range';
     proximityPercent = Math.max(88, 98 - seatsToCoreCenter * 3);
-    headlineDistanceText = `正前方視角區內（距 C 位中心 ${seatsToCoreCenter} 席）`;
-    detailDescription = `主推就在你面前的 ${girlZone} 區 ${slotMeta.label}（${rangeStart}–${rangeEnd} 號區間），僅離正中心 C 位（${coreMeta.label}）${seatsToCoreCenter} 個座位。`;
+    headlineDistanceText = `正前方視角內（距中心 ${seatsToCoreCenter} 席）`;
+    detailDescription = `位於你正前方 ${girlZone} 區${slotMeta.label}（${rangeStart}–${rangeEnd} 號），距中心僅 ${seatsToCoreCenter} 席。`;
+  } else if (isWithin12Seats && isSameZone) {
+    statusLevel = 'same_zone_near';
+    proximityPercent = Math.max(70, 92 - seatsToCoreCenter * 2);
+    headlineDistanceText = `同區接近中 · 相距 ${seatsToCoreCenter} 席`;
+    detailDescription = `位於同區${slotMeta.label}（${rangeStart}–${rangeEnd} 號），從你的座位${dirShort}約 ${seatsToCoreCenter} 席（差 ${seatsToDirectRange} 席進正對區）。`;
+  } else if (isConnectedBoundary) {
+    statusLevel = 'same_zone_near';
+    proximityPercent = Math.max(68, 90 - seatsToCoreCenter * 2);
+    headlineDistanceText = `跨區相連接近中 · 相距 ${seatsToCoreCenter} 席`;
+    detailDescription = `${boundaryConnectionLabel}，位於鄰接之 ${girlZone} 區${slotMeta.label}（${rangeStart}–${rangeEnd} 號），從你的座位${dirShort}僅相距 ${seatsToCoreCenter} 席（差 ${seatsToDirectRange} 席進正對區）。`;
   } else if (isSameZone) {
-    const slotDiff = Math.abs(girlSlotIndex - getSeatPositionMapping(userSeat).slotIndex);
-    statusLevel = slotDiff === 1 ? 'same_zone_near' : 'same_zone_far';
-    proximityPercent = Math.max(55, 86 - seatsToDirectRange * 2);
-    const dirShort = deltaGlobal < 0 ? '往左' : '往右';
-    headlineDistanceText = `同在 ${girlZone} 區 · ${dirShort}差 ${seatsToDirectRange} 席進正對區（距 C 位 ${seatsToCoreCenter} 席）`;
-    detailDescription = `主推與你同在 ${girlZone} 區，站${slotMeta.label}（${rangeStart}–${rangeEnd} 號）；從你的第 ${userSeat} 號席${dirShort}數 ${seatsToDirectRange} 個座位即進入她的正對範圍（距離她的正中心 ${coreMeta.label} 相差 ${seatsToCoreCenter} 席）。`;
+    statusLevel = 'same_zone_far';
+    proximityPercent = 40;
+    headlineDistanceText = `相距 ${seatsToCoreCenter} 席（超過 12 席）`;
+    detailDescription = `位於 ${girlZone} 區${slotMeta.label}，距離超過 12 個座位。`;
   } else {
     statusLevel = 'cross_zone';
-    proximityPercent = Math.max(12, 52 - seatsToDirectRange * 1.1);
-    const dirShort = deltaGlobal < 0 ? '左方' : '右方';
-    headlineDistanceText = `跨 ${zoneDiff} 區（位於 ${girlZone} 區）· 相隔約 ${seatsToDirectRange} 席進入正對區`;
-    detailDescription = `主推目前在${dirShort} ${girlZone} 區${slotMeta.label}（${rangeStart}–${rangeEnd} 號）；與你的 ${userZone} 區 ${userSeat} 號席相隔 ${zoneDiff} 個區域（距其正對邊界約 ${seatsToDirectRange} 個座位身位，距其 C 位中心約 ${globalSeatDistance} 席）。`;
+    proximityPercent = 20;
+    headlineDistanceText = `相距 ${seatsToCoreCenter} 席（超過 12 席）`;
+    detailDescription = `位於 ${girlZone} 區${slotMeta.label}，距離超過 12 個座位。`;
   }
 
   return {
@@ -700,6 +726,9 @@ function computePhaseDistance(
     isSameZone,
     isDirectFront,
     isExactCore,
+    isWithin12Seats,
+    isConnectedBoundary,
+    boundaryConnectionLabel,
     seatsToDirectRange,
     seatsToCoreCenter,
     globalSeatDistance,
