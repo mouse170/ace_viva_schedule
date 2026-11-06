@@ -8,8 +8,10 @@ interface MemberPortraitProps {
 }
 
 /**
- * 載入 public/images/members/<id>.jpg 官方形象照。
- * 具備 Ace Viva 官方薄荷綠（#5BAE84 / #5ECBC0）與深靛藍（#212047）主題底色與平滑縮放過渡。
+ * 載入成員官方形象照與臉部特寫頭像：
+ * - variant="avatar"：優先載入 ./images/avatars/<id>.jpg（400x400 臉部特寫裁切），確保手機版與小尺寸圓形頭像清晰聚焦臉部。
+ * - variant="card"：載入 ./images/members/<id>.jpg 並聚焦上半身與臉部視覺中心。
+ * - variant="modal"：完整呈現官方 WELCOME 打字機復古形象海報。
  */
 export const MemberPortrait: React.FC<MemberPortraitProps> = ({
   member,
@@ -17,18 +19,35 @@ export const MemberPortrait: React.FC<MemberPortraitProps> = ({
   variant = 'card',
 }) => {
   const [imgError, setImgError] = useState(false);
+  const [avatarFallback, setAvatarFallback] = useState(false);
   const [c1, c2] = member.accentGradient;
+
+  const avatarPath = `./images/avatars/${member.id}.jpg`;
+  const srcToUse =
+    variant === 'avatar' && !avatarFallback ? avatarPath : member.localImagePath;
 
   if (!imgError) {
     return (
       <div className={`relative overflow-hidden bg-[#E6F5F1] ${className}`}>
         <img
-          src={member.localImagePath}
+          src={srcToUse}
           alt={`${member.name} (#${member.number}) - ACE VIVA 連莊女孩官方形象照`}
           loading="lazy"
-          onError={() => setImgError(true)}
+          onError={() => {
+            if (variant === 'avatar' && !avatarFallback) {
+              setAvatarFallback(true);
+            } else {
+              setImgError(true);
+            }
+          }}
           className={`h-full w-full object-cover transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-[1.03] ${
-            variant === 'avatar' ? 'object-[center_22%] scale-125' : 'object-top'
+            variant === 'avatar'
+              ? avatarFallback
+                ? 'object-[50%_18%] scale-[2.2]'
+                : 'object-center'
+              : variant === 'card'
+                ? 'object-[50%_14%]'
+                : 'object-top'
           }`}
         />
       </div>

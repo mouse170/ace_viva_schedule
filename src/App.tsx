@@ -28,7 +28,9 @@ export const App: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<RosterFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('default');
-  const [selectedMember, setSelectedMember] = useState<AceVivaMember | null>(null);
+  const [selectedMember, setSelectedMember] = useState<AceVivaMember | null>(
+    null
+  );
   const [scheduleMemberFilter, setScheduleMemberFilter] = useState<
     string | 'all' | 'favorites'
   >('all');
@@ -129,131 +131,183 @@ export const App: React.FC = () => {
   const koreanAces = MEMBERS.filter((m) => m.category === 'kr_member');
 
   return (
-    <div className="relative min-h-[100dvh] bg-[#F4FAF8] text-[#212047]">
+    <div className="relative min-h-[100dvh] bg-[#F4FAF8] pb-20 text-[#212047] lg:pb-0">
       {/* Fixed Film Grain Overlay */}
       <div className="editorial-grain" aria-hidden="true" />
 
-      {/* Floating Glass Island Navbar */}
-      <header className="fixed inset-x-0 top-0 z-30 flex justify-center px-4 pt-5 pointer-events-none">
+      {/* Responsive Top Navigation Bar (Single-Row Non-Wrapping on Mobile + Full Pill on Desktop) */}
+      <header className="fixed inset-x-0 top-0 z-30 flex justify-center px-3 pt-3 pointer-events-none sm:px-4 sm:pt-4">
         <nav
           aria-label="主要導覽列"
-          className="pointer-events-auto flex items-center gap-1 rounded-full bg-[#212047]/92 p-1.5 text-white shadow-[0_20px_50px_rgba(33,32,71,0.32)] ring-1 ring-[#5ECBC0]/30 backdrop-blur-2xl sm:gap-2 sm:px-3"
+          className="pointer-events-auto flex w-full max-w-fit items-center justify-between gap-1.5 rounded-full bg-[#212047]/95 p-1.5 text-white shadow-[0_16px_40px_rgba(33,32,71,0.32)] ring-1 ring-[#5ECBC0]/30 backdrop-blur-2xl sm:gap-2 sm:px-3"
         >
           <a
             href="#top"
-            className="flex items-center gap-2 rounded-full bg-white/10 py-1 pr-3.5 pl-1.5 text-xs font-extrabold tracking-wider text-white transition-colors hover:bg-white/20"
+            className="flex shrink-0 items-center gap-2 rounded-full bg-white/10 py-1 pr-3 pl-1.5 text-xs font-extrabold tracking-wider text-white whitespace-nowrap transition-colors hover:bg-white/20"
           >
             <img
               src={TEAM_INFO.logoPath}
               alt="Ace Viva Logo"
-              className="h-6 w-6 rounded-full bg-white object-contain p-0.5"
+              className="h-6 w-6 shrink-0 rounded-full bg-white object-contain p-0.5"
             />
             <span>ACE VIVA</span>
           </a>
 
-          <a
-            href="#about-section"
-            className="rounded-full px-3 py-1.5 text-xs font-semibold text-white/80 transition-colors hover:bg-white/10 hover:text-[#7ADAD0]"
-          >
-            團隊誌要
-          </a>
+          {/* Desktop Navigation Links */}
+          <div className="hidden items-center gap-1 lg:flex">
+            <a
+              href="#about-section"
+              className="rounded-full px-3 py-1.5 text-xs font-semibold text-white/80 whitespace-nowrap transition-colors hover:bg-white/10 hover:text-[#7ADAD0]"
+            >
+              團隊誌要
+            </a>
+            <a
+              href="#roster-section"
+              className="rounded-full px-3 py-1.5 text-xs font-semibold text-white/80 whitespace-nowrap transition-colors hover:bg-white/10 hover:text-[#7ADAD0]"
+            >
+              成員圖鑑 ({MEMBERS.length})
+            </a>
+            <a
+              href="#girl-seat-guide-section"
+              className="rounded-full bg-[#5BAE84] px-3.5 py-1.5 text-xs font-extrabold text-white whitespace-nowrap transition-colors hover:bg-[#4FA87D]"
+            >
+              女孩選位推薦
+            </a>
+            <a
+              href="#seat-finder-section"
+              className="rounded-full bg-[#5BAE84]/20 px-3 py-1.5 text-xs font-extrabold text-[#7ADAD0] whitespace-nowrap ring-1 ring-[#5ECBC0]/35 transition-colors hover:bg-[#5BAE84] hover:text-white"
+            >
+              23 席面前女孩查詢
+            </a>
+            <a
+              href="#schedule-section"
+              className="rounded-full px-3 py-1.5 text-xs font-semibold text-white/80 whitespace-nowrap transition-colors hover:bg-white/10 hover:text-[#7ADAD0]"
+            >
+              應援班表
+            </a>
+          </div>
+
+          <div className="flex shrink-0 items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => {
+                setActiveCategory('favorites');
+                document
+                  .getElementById('roster-section')
+                  ?.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="flex items-center gap-1.5 rounded-full bg-[#5BAE84]/25 px-2.5 py-1.5 text-xs font-bold text-[#7ADAD0] whitespace-nowrap ring-1 ring-[#5BAE84]/45 transition-all hover:bg-[#5BAE84] hover:text-white sm:px-3"
+            >
+              <span>我的主推</span>
+              <span className="rounded-full bg-[#5BAE84] px-1.5 py-0.2 font-mono-num text-[10px] font-extrabold text-white">
+                {favoriteIds.length}
+              </span>
+            </button>
+
+            <a
+              href={TEAM_INFO.officialInstagramUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex shrink-0 items-center gap-1 rounded-full bg-[#5BAE84] px-3 py-1.5 text-xs font-extrabold text-white whitespace-nowrap transition-transform hover:bg-[#4FA87D] active:scale-[0.97]"
+            >
+              <span>IG 官方</span>
+              <span aria-hidden="true">↗</span>
+            </a>
+          </div>
+        </nav>
+      </header>
+
+      {/* Mobile Fixed Bottom Quick-Navigation Bar (Thumb-Friendly 4 Core Sections) */}
+      <nav
+        aria-label="手機版底部快速導覽列"
+        className="fixed inset-x-0 bottom-0 z-30 border-t border-[#5ECBC0]/25 bg-[#212047]/95 px-2 py-2 text-white shadow-[0_-10px_30px_rgba(33,32,71,0.28)] backdrop-blur-xl lg:hidden"
+      >
+        <div className="mx-auto grid max-w-md grid-cols-4 gap-1.5">
           <a
             href="#roster-section"
-            className="rounded-full px-3 py-1.5 text-xs font-semibold text-white/80 transition-colors hover:bg-white/10 hover:text-[#7ADAD0]"
+            className="flex flex-col items-center justify-center rounded-xl bg-white/10 py-1.5 text-center text-[11px] font-extrabold text-white whitespace-nowrap active:bg-[#5BAE84]"
           >
-            成員圖鑑 ({MEMBERS.length})
+            <span className="font-mono-num text-[9px] text-[#7ADAD0]">
+              18 MEMBERS
+            </span>
+            <span>成員圖鑑</span>
           </a>
           <a
             href="#girl-seat-guide-section"
-            className="rounded-full bg-[#5BAE84] px-3.5 py-1.5 text-xs font-extrabold text-white transition-colors hover:bg-[#4FA87D]"
+            className="flex flex-col items-center justify-center rounded-xl bg-[#5BAE84] py-1.5 text-center text-[11px] font-extrabold text-white whitespace-nowrap shadow-xs active:bg-[#4FA87D]"
           >
-            女孩選位推薦
+            <span className="font-mono-num text-[9px] text-white/90">
+              RECOMMEND
+            </span>
+            <span>女孩選位</span>
           </a>
           <a
             href="#seat-finder-section"
-            className="rounded-full bg-[#5BAE84]/20 px-3 py-1.5 text-xs font-extrabold text-[#7ADAD0] ring-1 ring-[#5ECBC0]/35 transition-colors hover:bg-[#5BAE84] hover:text-white"
+            className="flex flex-col items-center justify-center rounded-xl bg-white/10 py-1.5 text-center text-[11px] font-extrabold text-[#7ADAD0] whitespace-nowrap ring-1 ring-[#5ECBC0]/35 active:bg-[#5BAE84] active:text-white"
           >
-            23 席面前女孩查詢
+            <span className="font-mono-num text-[9px] text-white/80">
+              ZONE A/B/C
+            </span>
+            <span>23 席查詢</span>
           </a>
           <a
             href="#schedule-section"
-            className="rounded-full px-3 py-1.5 text-xs font-semibold text-white/80 transition-colors hover:bg-white/10 hover:text-[#7ADAD0]"
+            className="flex flex-col items-center justify-center rounded-xl bg-white/10 py-1.5 text-center text-[11px] font-extrabold text-white whitespace-nowrap active:bg-[#5BAE84]"
           >
-            應援班表
-          </a>
-
-          <button
-            type="button"
-            onClick={() => {
-              setActiveCategory('favorites');
-              document
-                .getElementById('roster-section')
-                ?.scrollIntoView({ behavior: 'smooth' });
-            }}
-            className="hidden items-center gap-1.5 rounded-full bg-[#5BAE84]/25 px-3 py-1.5 text-xs font-bold text-[#7ADAD0] ring-1 ring-[#5BAE84]/45 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-[#5BAE84] hover:text-white sm:flex"
-          >
-            <span>我的主推</span>
-            <span className="rounded-full bg-[#5BAE84] px-1.5 py-0.2 font-mono-num text-[10px] font-extrabold text-white">
-              {favoriteIds.length}
+            <span className="font-mono-num text-[9px] text-[#7ADAD0]">
+              SCHEDULE
             </span>
-          </button>
-
-          <a
-            href={TEAM_INFO.officialInstagramUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 rounded-full bg-[#5BAE84] px-3.5 py-1.5 text-xs font-extrabold text-white transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-[#4FA87D] active:scale-[0.97]"
-          >
-            <span>IG 官方</span>
-            <span aria-hidden="true">↗</span>
+            <span>應援班表</span>
           </a>
-        </nav>
-      </header>
+        </div>
+      </nav>
 
       {/* Hero Section: Editorial Split + Asymmetrical Bento */}
       <section
         id="top"
-        className="relative flex min-h-[100dvh] items-center overflow-hidden pt-28 pb-20 lg:pt-32 lg:pb-28"
+        className="relative flex items-center overflow-hidden pt-20 pb-14 sm:pt-28 sm:pb-20 lg:min-h-[100dvh] lg:pt-32 lg:pb-28"
       >
         {/* Subtle Mint & Indigo Architectural Background Glow */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -top-36 right-0 h-[680px] w-[680px] rounded-full bg-radial from-[#5ECBC0]/28 via-[#5BAE84]/10 to-transparent blur-3xl"
+          className="pointer-events-none absolute -top-36 right-0 h-[520px] w-[520px] rounded-full bg-radial from-[#5ECBC0]/28 via-[#5BAE84]/10 to-transparent blur-3xl sm:h-[680px] sm:w-[680px]"
         />
 
-        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-12 lg:gap-10">
+        <div className="mx-auto w-full max-w-7xl px-3.5 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-12 lg:gap-10">
             {/* Left Column: Official Logo Identity, Editorial Typography & Nested CTA */}
             <div className="w-full animate-editorial-entry lg:col-span-6">
-              <div className="inline-flex items-center gap-2.5 rounded-full bg-white px-4 py-1.5 shadow-xs ring-1 ring-[#5BAE84]/35">
-                <span className="h-2 w-2 rounded-full bg-[#5BAE84]" />
-                <span className="font-mono-num text-[10px] font-bold tracking-[0.22em] text-[#212047] uppercase">
+              <div className="inline-flex items-center gap-2 rounded-full bg-white px-3.5 py-1.5 shadow-xs ring-1 ring-[#5BAE84]/35">
+                <span className="h-2 w-2 shrink-0 rounded-full bg-[#5BAE84]" />
+                <span className="font-mono-num text-[10px] font-bold tracking-[0.16em] text-[#212047] uppercase">
                   TPVL · 臺中連莊職業排球隊專屬啦啦隊
                 </span>
               </div>
 
               {/* Official Logo + Display Title */}
-              <div className="mt-6 flex items-center gap-5">
-                <div className="shrink-0 rounded-full bg-white p-2 shadow-[0_14px_35px_rgba(33,32,71,0.12)] ring-2 ring-[#5BAE84]/35">
+              <div className="mt-4 flex items-center gap-4 sm:mt-6 sm:gap-5">
+                <div className="shrink-0 rounded-full bg-white p-1.5 shadow-[0_14px_35px_rgba(33,32,71,0.12)] ring-2 ring-[#5BAE84]/35 sm:p-2">
                   <img
                     src={TEAM_INFO.logoPath}
                     alt="Ace Viva 連莊女孩官方 Logo"
-                    className="h-20 w-20 rounded-full object-contain sm:h-24 sm:w-24"
+                    className="h-16 w-16 rounded-full object-contain sm:h-24 sm:w-24"
                   />
                 </div>
                 <div>
-                  <h1 className="text-4xl leading-[1.05] font-black tracking-tight text-[#212047] sm:text-6xl">
-                    <span className="block font-editorial text-5xl font-bold tracking-tight text-[#4FA87D] italic sm:text-7xl">
+                  <h1 className="text-3xl leading-[1.08] font-black tracking-tight text-[#212047] sm:text-6xl">
+                    <span className="block font-editorial text-4xl font-bold tracking-tight text-[#4FA87D] italic sm:text-7xl">
                       Ace Viva
                     </span>
-                    <span className="mt-1 block">連莊女孩官方圖鑑</span>
+                    <span className="mt-0.5 block">連莊女孩官方圖鑑</span>
                   </h1>
                 </div>
               </div>
 
-              <p className="mt-6 max-w-xl text-base leading-relaxed font-medium text-[#212047]/80 sm:text-lg">
+              <p className="mt-4 max-w-xl text-sm leading-relaxed font-medium text-[#212047]/80 sm:mt-6 sm:text-lg">
                 2026 年 8 月全新成軍，由創隊隊長{' '}
-                <strong className="font-bold text-[#212047]">Yuri（#6 陳洛心）</strong>
+                <strong className="font-bold text-[#212047]">
+                  Yuri（#6 陳洛心）
+                </strong>
                 、應援團長{' '}
                 <strong className="font-bold text-[#212047]">馬妹（#41）</strong>
                 、主場雙 MC{' '}
@@ -264,118 +318,94 @@ export const App: React.FC = () => {
                 <strong className="font-bold text-[#212047]">
                   車榮玹（#21）、李珠熙（#20）、鄭熙靜（#42）
                 </strong>{' '}
-                共 18 位全陣容形象照與應援檔案。
+                共 18 位全陣容形象照與應援班表。
               </p>
 
-              {/* Nested CTA Buttons (Button-in-Button Architecture) */}
-              <div className="mt-8 flex flex-wrap items-center gap-4">
+              {/* Nested CTA Buttons */}
+              <div className="mt-6 flex flex-wrap items-center gap-3 sm:mt-8 sm:gap-4">
                 <a
-                  href="#roster-section"
-                  className="group flex items-center gap-4 rounded-full bg-[#212047] py-2.5 pr-2.5 pl-7 text-sm font-bold text-white shadow-[0_18px_40px_-12px_rgba(33,32,71,0.45)] transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-[#2D2C5A] active:scale-[0.98]"
+                  href="#girl-seat-guide-section"
+                  className="group flex items-center gap-3 rounded-full bg-[#212047] py-2 pr-2 pl-5 text-xs font-bold text-white shadow-[0_18px_40px_-12px_rgba(33,32,71,0.45)] transition-all hover:bg-[#2D2C5A] active:scale-[0.98] sm:py-2.5 sm:pr-2.5 sm:pl-7 sm:text-sm"
                 >
-                  <span>探索 18 位官方形象圖鑑</span>
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#5BAE84] text-white transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-1 group-hover:-translate-y-[1px] group-hover:scale-105">
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.25"
-                      className="h-4 w-4"
-                    >
-                      <path
-                        d="M7 17L17 7M17 7H8M17 7V16"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
+                  <span>女孩專屬黃金座位推薦</span>
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#5BAE84] text-white sm:h-9 sm:w-9">
+                    ↗
                   </span>
                 </a>
 
                 <a
-                  href="#girl-seat-guide-section"
-                  className="group flex items-center gap-3 rounded-full bg-white py-2.5 pr-2.5 pl-6 text-sm font-bold text-[#212047] ring-1 ring-[#5BAE84]/40 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-[#E6F5F1] active:scale-[0.98]"
+                  href="#seat-finder-section"
+                  className="group flex items-center gap-2.5 rounded-full bg-white py-2 pr-2 pl-5 text-xs font-bold text-[#212047] ring-1 ring-[#5BAE84]/40 transition-all hover:bg-[#E6F5F1] active:scale-[0.98] sm:py-2.5 sm:pr-2.5 sm:pl-6 sm:text-sm"
                 >
-                  <span>女孩專屬座位推薦區間</span>
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#E6F5F1] text-[#3F8E67] transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-1 group-hover:scale-105">
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.25"
-                      className="h-4 w-4"
-                    >
-                      <path
-                        d="M5 12h14M13 6l6 6-6 6"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
+                  <span>2F 集氣區 23 席視角查詢</span>
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#E6F5F1] text-[#3F8E67] sm:h-9 sm:w-9">
+                    →
                   </span>
                 </a>
               </div>
 
               {/* Key Roster Metrics Strip */}
-              <div className="mt-12 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <div className="rounded-2xl bg-white p-4 ring-1 ring-[#5BAE84]/25">
-                  <div className="font-editorial text-3xl font-bold text-[#212047] italic">
+              <div className="mt-8 grid grid-cols-2 gap-2.5 sm:mt-12 sm:grid-cols-4 sm:gap-3">
+                <div className="rounded-2xl bg-white p-3.5 ring-1 ring-[#5BAE84]/25 sm:p-4">
+                  <div className="font-editorial text-2xl font-bold text-[#212047] italic sm:text-3xl">
                     16 + 2
                   </div>
-                  <div className="mt-1 text-xs font-semibold text-[#212047]/65">
+                  <div className="mt-0.5 text-xs font-semibold text-[#212047]/65">
                     16 位隊員與 2 位 MC
                   </div>
                 </div>
-                <div className="rounded-2xl bg-white p-4 ring-1 ring-[#5BAE84]/25">
-                  <div className="font-editorial text-3xl font-bold text-[#4FA87D] italic">
+                <div className="rounded-2xl bg-white p-3.5 ring-1 ring-[#5BAE84]/25 sm:p-4">
+                  <div className="font-editorial text-2xl font-bold text-[#4FA87D] italic sm:text-3xl">
                     03 KOR
                   </div>
-                  <div className="mt-1 text-xs font-semibold text-[#212047]/65">
+                  <div className="mt-0.5 text-xs font-semibold text-[#212047]/65">
                     KBO 韓籍三本柱加盟
                   </div>
                 </div>
-                <div className="rounded-2xl bg-white p-4 ring-1 ring-[#5BAE84]/25">
-                  <div className="font-editorial text-3xl font-bold text-[#212047] italic">
+                <div className="rounded-2xl bg-white p-3.5 ring-1 ring-[#5BAE84]/25 sm:p-4">
+                  <div className="font-editorial text-2xl font-bold text-[#212047] italic sm:text-3xl">
                     2026.08
                   </div>
-                  <div className="mt-1 text-xs font-semibold text-[#212047]/65">
+                  <div className="mt-0.5 text-xs font-semibold text-[#212047]/65">
                     LEXX 原質娛樂經紀
                   </div>
                 </div>
-                <div className="rounded-2xl bg-white p-4 ring-1 ring-[#5BAE84]/25">
-                  <div className="font-editorial text-3xl font-bold text-[#4FA87D] italic">
+                <div className="rounded-2xl bg-white p-3.5 ring-1 ring-[#5BAE84]/25 sm:p-4">
+                  <div className="font-editorial text-2xl font-bold text-[#4FA87D] italic sm:text-3xl">
                     TPVL
                   </div>
-                  <div className="mt-1 text-xs font-semibold text-[#212047]/65">
+                  <div className="mt-0.5 text-xs font-semibold text-[#212047]/65">
                     臺中連莊主場應援
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Right Column: Asymmetrical Bento Spotlight Cards with Real Photos */}
+            {/* Right Column: Asymmetrical Bento Spotlight Cards with Face-Centered Avatars */}
             <div className="w-full lg:col-span-6">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-12">
                 {/* Main Spotlight: Captain Yuri (#6) */}
                 <div className="sm:col-span-7">
-                  <div className="rounded-[2rem] bg-[#D5EFE9] p-1.5 ring-1 ring-[#5BAE84]/35">
+                  <div className="rounded-[1.75rem] bg-[#D5EFE9] p-1.5 ring-1 ring-[#5BAE84]/35 sm:rounded-[2rem]">
                     <button
                       type="button"
                       onClick={() => setSelectedMember(captainYuri)}
-                      className="group relative block w-full overflow-hidden rounded-[calc(2rem-0.375rem)] bg-[#212047] text-left shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)]"
+                      className="group relative block w-full overflow-hidden rounded-[calc(1.75rem-0.375rem)] bg-[#212047] text-left shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)] sm:rounded-[calc(2rem-0.375rem)]"
                     >
                       <MemberPortrait
                         member={captainYuri}
-                        className="aspect-[3/4] w-full"
+                        className="aspect-[4/4] w-full sm:aspect-[3/4]"
                       />
-                      <div className="flex items-center justify-between bg-[#212047] px-5 py-4 text-white">
+                      <div className="flex items-center justify-between bg-[#212047] px-4 py-3.5 text-white sm:px-5 sm:py-4">
                         <div>
-                          <div className="font-mono-num text-[10px] tracking-[0.2em] text-[#7ADAD0]">
+                          <div className="font-mono-num text-[10px] tracking-[0.18em] text-[#7ADAD0]">
                             INAUGURAL CAPTAIN · 創隊首任隊長
                           </div>
                           <div className="mt-0.5 text-lg font-extrabold">
                             Yuri 陳洛心 (#6)
                           </div>
                         </div>
-                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#5BAE84] text-white transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#5BAE84] text-white transition-transform duration-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
                           ↗
                         </span>
                       </div>
@@ -383,23 +413,23 @@ export const App: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Right Stacked Bento Cards */}
+                {/* Right Stacked Bento Cards (With Face Close-Up Avatars) */}
                 <div className="flex flex-col justify-between gap-4 sm:col-span-5">
                   {/* Cheer Leader Mamai (#41) */}
-                  <div className="rounded-[2rem] bg-[#D5EFE9] p-1.5 ring-1 ring-[#5BAE84]/35">
+                  <div className="rounded-[1.75rem] bg-[#D5EFE9] p-1.5 ring-1 ring-[#5BAE84]/35 sm:rounded-[2rem]">
                     <button
                       type="button"
                       onClick={() => setSelectedMember(leaderMamai)}
-                      className="group flex w-full flex-col justify-between rounded-[calc(2rem-0.375rem)] bg-[#212047] p-4 text-left text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-[#2C2A5A]"
+                      className="group flex w-full flex-col justify-between rounded-[calc(1.75rem-0.375rem)] bg-[#212047] p-4 text-left text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] transition-all hover:bg-[#2C2A5A] sm:rounded-[calc(2rem-0.375rem)]"
                     >
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3.5">
                         <MemberPortrait
                           member={leaderMamai}
                           variant="avatar"
-                          className="h-14 w-14 shrink-0 rounded-2xl ring-2 ring-[#5ECBC0]"
+                          className="h-16 w-16 shrink-0 rounded-2xl ring-2 ring-[#5ECBC0]"
                         />
                         <div>
-                          <span className="rounded-full bg-[#5BAE84]/25 px-2.5 py-0.5 font-mono-num text-[10px] font-bold tracking-[0.14em] text-[#7ADAD0]">
+                          <span className="rounded-full bg-[#5BAE84]/25 px-2.5 py-0.5 font-mono-num text-[10px] font-bold tracking-[0.12em] text-[#7ADAD0]">
                             CHEER LEADER #41
                           </span>
                           <div className="mt-1 text-lg font-black text-white">
@@ -420,11 +450,11 @@ export const App: React.FC = () => {
                   </div>
 
                   {/* Korean 3 Pillars Card */}
-                  <div className="rounded-[2rem] bg-[#D5EFE9] p-1.5 ring-1 ring-[#5BAE84]/35">
-                    <div className="flex h-full flex-col justify-between rounded-[calc(2rem-0.375rem)] bg-white p-4 shadow-[inset_0_1px_1px_rgba(255,255,255,0.9)]">
+                  <div className="rounded-[1.75rem] bg-[#D5EFE9] p-1.5 ring-1 ring-[#5BAE84]/35 sm:rounded-[2rem]">
+                    <div className="flex h-full flex-col justify-between rounded-[calc(1.75rem-0.375rem)] bg-white p-4 shadow-[inset_0_1px_1px_rgba(255,255,255,0.9)] sm:rounded-[calc(2rem-0.375rem)]">
                       <div>
                         <div className="flex items-center justify-between">
-                          <span className="font-mono-num text-[10px] font-bold tracking-[0.2em] text-[#4FA87D] uppercase">
+                          <span className="font-mono-num text-[10px] font-bold tracking-[0.18em] text-[#4FA87D] uppercase">
                             KOREAN THREE PILLARS
                           </span>
                           <span className="rounded-full bg-[#212047] px-2 py-0.5 font-mono-num text-[10px] text-[#7ADAD0]">
@@ -442,29 +472,29 @@ export const App: React.FC = () => {
                             key={kr.id}
                             type="button"
                             onClick={() => setSelectedMember(kr)}
-                            className="group flex w-full items-center justify-between rounded-xl bg-[#F4FAF8] px-3 py-2 text-left ring-1 ring-[#5BAE84]/25 transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-[#212047] hover:text-white"
+                            className="group flex w-full items-center justify-between rounded-xl bg-[#F4FAF8] px-3 py-2 text-left ring-1 ring-[#5BAE84]/25 transition-all hover:bg-[#212047] hover:text-white"
                           >
-                            <div className="flex items-center gap-2.5">
+                            <div className="flex items-center gap-3">
                               <MemberPortrait
                                 member={kr}
                                 variant="avatar"
-                                className="h-8 w-8 rounded-full ring-1 ring-[#5BAE84]/40"
+                                className="h-11 w-11 shrink-0 rounded-full ring-2 ring-[#5BAE84]/45"
                               />
                               <div>
                                 <div className="flex items-center gap-1.5">
                                   <span className="font-mono-num text-xs font-extrabold text-[#4FA87D] group-hover:text-[#7ADAD0]">
                                     #{kr.number}
                                   </span>
-                                  <span className="text-xs font-bold">
+                                  <span className="text-sm font-black">
                                     {kr.name}
                                   </span>
                                 </div>
-                                <div className="text-[10px] opacity-60">
+                                <div className="text-[11px] opacity-65">
                                   {kr.realOrAltName} · MBTI {kr.mbti}
                                 </div>
                               </div>
                             </div>
-                            <span className="font-mono-num text-[10px] text-[#4FA87D] group-hover:text-[#7ADAD0]">
+                            <span className="font-mono-num text-xs font-bold text-[#4FA87D] group-hover:text-[#7ADAD0]">
                               檔案 ↗
                             </span>
                           </button>
@@ -482,40 +512,40 @@ export const App: React.FC = () => {
       {/* Brand Chronicle & Wikipedia History Section */}
       <section
         id="about-section"
-        className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8"
+        className="mx-auto max-w-7xl px-3.5 py-14 sm:px-6 sm:py-20 lg:px-8"
       >
-        <div className="rounded-[2rem] bg-[#5BAE84]/30 p-1.5 ring-1 ring-[#212047]/15 sm:p-2">
-          <div className="rounded-[calc(2rem-0.375rem)] bg-[#212047] px-6 py-12 text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.12)] sm:px-12 sm:py-16">
-            <div className="grid grid-cols-1 gap-10 lg:grid-cols-12">
+        <div className="rounded-[1.75rem] bg-[#5BAE84]/30 p-1.5 ring-1 ring-[#212047]/15 sm:rounded-[2rem] sm:p-2">
+          <div className="rounded-[calc(1.75rem-0.375rem)] bg-[#212047] px-5 py-8 text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.12)] sm:rounded-[calc(2rem-0.375rem)] sm:px-12 sm:py-16">
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-10">
               <div className="lg:col-span-5">
                 <div className="flex items-center gap-3">
                   <img
                     src={TEAM_INFO.logoPath}
                     alt="Ace Viva Logo"
-                    className="h-10 w-10 rounded-full bg-white p-0.5 object-contain"
+                    className="h-9 w-9 shrink-0 rounded-full bg-white p-0.5 object-contain sm:h-10 sm:w-10"
                   />
-                  <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3.5 py-1 font-mono-num text-[10px] font-semibold tracking-[0.2em] text-[#7ADAD0] uppercase">
+                  <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 font-mono-num text-[10px] font-semibold tracking-[0.18em] text-[#7ADAD0] uppercase">
                     TEAM CHRONICLE · 品牌成軍誌要
                   </span>
                 </div>
-                <h2 className="mt-4 text-3xl font-black tracking-tight text-white sm:text-4xl">
+                <h2 className="mt-4 text-2xl font-black tracking-tight text-white sm:text-4xl">
                   臺中連莊全新應援品牌
-                  <span className="mt-1 block font-editorial text-4xl font-bold text-[#5ECBC0] italic">
+                  <span className="mt-1 block font-editorial text-3xl font-bold text-[#5ECBC0] italic sm:text-4xl">
                     Ace Viva 連莊女孩
                   </span>
                 </h2>
-                <p className="mt-4 text-sm leading-relaxed text-white/75">
+                <p className="mt-3 text-xs leading-relaxed text-white/75 sm:mt-4 sm:text-sm">
                   2025 年台灣職業排球聯盟（TPVL）成立，臺中連莊職業排球隊於 2026 年 8
                   月新賽季重新組建專屬啦啦隊品牌「Ace Viva（連莊女孩）」，由 LEXX
                   原質娛樂負責經紀營運，打造結合高規格韓流應援、女團唱跳與競技特技的主場視覺體驗。
                 </p>
 
-                <div className="mt-6 flex flex-wrap gap-2.5">
+                <div className="mt-5 flex flex-wrap gap-2 sm:mt-6 sm:gap-2.5">
                   <a
                     href={TEAM_INFO.officialInstagramUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 rounded-full bg-[#5BAE84] px-4 py-2 text-xs font-extrabold text-white transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-[#4FA87D] active:scale-[0.97]"
+                    className="inline-flex items-center gap-1.5 rounded-full bg-[#5BAE84] px-3.5 py-2 text-xs font-extrabold text-white transition-transform hover:bg-[#4FA87D] active:scale-[0.97]"
                   >
                     <span>連莊女孩 (@{TEAM_INFO.officialInstagramHandle})</span>
                     <span>↗</span>
@@ -524,34 +554,16 @@ export const App: React.FC = () => {
                     href={TEAM_INFO.clubInstagramUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/5 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-white/15"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/5 px-3.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-white/15"
                   >
                     <span>臺中連莊球團 (@{TEAM_INFO.clubInstagramHandle})</span>
-                    <span>↗</span>
-                  </a>
-                  <a
-                    href={TEAM_INFO.agencyInstagramUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/5 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-white/15"
-                  >
-                    <span>LEXX 原質娛樂 (@{TEAM_INFO.agencyInstagramHandle})</span>
-                    <span>↗</span>
-                  </a>
-                  <a
-                    href={TEAM_INFO.mascotInstagramUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/5 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-white/15"
-                  >
-                    <span>吉祥物虎仔 (@{TEAM_INFO.mascotInstagramHandle})</span>
                     <span>↗</span>
                   </a>
                   <a
                     href={TEAM_INFO.wikipediaUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/5 px-4 py-2 text-xs font-semibold text-white transition-colors hover:bg-white/15"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/5 px-3.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-white/15"
                   >
                     <span>維基百科條目</span>
                     <span>↗</span>
@@ -559,24 +571,24 @@ export const App: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:col-span-7">
+              <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3 lg:col-span-7">
                 {TEAM_INFO.historyMilestones.map((milestone) => (
                   <div
                     key={milestone.date}
-                    className="flex flex-col justify-between rounded-2xl border border-[#5ECBC0]/20 bg-white/[0.05] p-5"
+                    className="flex flex-col justify-between rounded-2xl border border-[#5ECBC0]/20 bg-white/[0.05] p-4 sm:p-5"
                   >
                     <div>
                       <div className="font-mono-num text-xs font-bold tracking-[0.2em] text-[#7ADAD0]">
                         {milestone.date}
                       </div>
-                      <h3 className="mt-2.5 text-base font-extrabold text-white">
+                      <h3 className="mt-2 text-sm font-extrabold text-white sm:text-base">
                         {milestone.title}
                       </h3>
-                      <p className="mt-2 text-xs leading-relaxed text-white/75">
+                      <p className="mt-1.5 text-xs leading-relaxed text-white/75">
                         {milestone.description}
                       </p>
                     </div>
-                    <div className="mt-6 border-t border-white/10 pt-3 font-mono-num text-[10px] tracking-[0.16em] text-[#7ADAD0]/60 uppercase">
+                    <div className="mt-4 border-t border-white/10 pt-2.5 font-mono-num text-[10px] tracking-[0.16em] text-[#7ADAD0]/60 uppercase">
                       OFFICIAL MILESTONE
                     </div>
                   </div>
@@ -587,28 +599,28 @@ export const App: React.FC = () => {
         </div>
       </section>
 
-      {/* Main Roster Directory Section */}
+      {/* Main Roster Directory Section (2-Column Face-First Grid on Mobile + 4-Col Poster Grid on Desktop) */}
       <section
         id="roster-section"
-        className="mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8"
+        className="mx-auto max-w-7xl px-3.5 py-16 sm:px-6 sm:py-24 lg:px-8"
       >
         {/* Section Heading */}
-        <div className="flex flex-col justify-between gap-6 border-b border-[#212047]/10 pb-10 lg:flex-row lg:items-end">
+        <div className="flex flex-col justify-between gap-5 border-b border-[#212047]/10 pb-8 lg:flex-row lg:items-end">
           <div>
-            <span className="inline-flex items-center gap-2 rounded-full bg-[#5BAE84]/15 px-3.5 py-1 font-mono-num text-[10px] font-bold tracking-[0.2em] text-[#212047] uppercase ring-1 ring-[#5BAE84]/30">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#5BAE84]" />
-              2026–2027 OFFICIAL ROSTER DIRECTORY
+            <span className="inline-flex items-center gap-2 rounded-full bg-[#5BAE84]/15 px-3 py-1 font-mono-num text-[10px] font-bold tracking-[0.16em] text-[#212047] uppercase ring-1 ring-[#5BAE84]/30">
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#5BAE84]" />
+              <span>2026–2027 OFFICIAL ROSTER DIRECTORY</span>
             </span>
-            <h2 className="mt-4 text-3xl font-black tracking-tight text-[#212047] sm:text-5xl">
+            <h2 className="mt-3 text-2xl font-black tracking-tight text-[#212047] sm:text-5xl">
               連莊女孩全體成員圖鑑
             </h2>
-            <p className="mt-3 max-w-2xl text-sm leading-relaxed text-[#212047]/70 sm:text-base">
-              完整收錄官方 WELCOME 形象照、背號、生日星座、MBTI 與雙棲經歷。支援依職務與國籍分類、關鍵字檢索、背號與生日排序，點擊任一成員卡片即可開啟完整資歷與出場預告。
+            <p className="mt-2.5 max-w-2xl text-xs leading-relaxed text-[#212047]/70 sm:text-base">
+              手機版採用雙欄臉部特寫圖鑑，點擊任一成員卡片即可開啟完整 WELCOME 打字機復古形象海報、背號、生日星座、MBTI 與主場出席預告。
             </p>
           </div>
 
           {/* Search & Sort Controls */}
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
             <div className="relative">
               <input
                 type="search"
@@ -644,41 +656,41 @@ export const App: React.FC = () => {
         </div>
 
         {/* Category Filter Tabs */}
-        <div className="mt-8 flex flex-wrap gap-2.5">
-          {(
-            ['all', 'leader', 'mc', 'tw_member', 'kr_member'] as const
-          ).map((catKey) => {
-            const info = CATEGORY_LABELS[catKey];
-            const isActive = activeCategory === catKey;
-            return (
-              <button
-                key={catKey}
-                type="button"
-                onClick={() => setActiveCategory(catKey)}
-                className={`group flex items-center gap-2.5 rounded-full px-5 py-2.5 text-xs font-bold transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.97] ${
-                  isActive
-                    ? 'bg-[#212047] text-white shadow-[0_10px_25px_-8px_rgba(33,32,71,0.45)]'
-                    : 'bg-white text-[#212047]/80 ring-1 ring-[#212047]/10 hover:bg-[#E6F5F1]'
-                }`}
-              >
-                <span>{info.label}</span>
-                <span
-                  className={`rounded-full px-2 py-0.5 font-mono-num text-[10px] ${
+        <div className="-mx-1 mt-6 flex gap-2 overflow-x-auto px-1 pb-2 sm:mx-0 sm:mt-8 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
+          {(['all', 'leader', 'mc', 'tw_member', 'kr_member'] as const).map(
+            (catKey) => {
+              const info = CATEGORY_LABELS[catKey];
+              const isActive = activeCategory === catKey;
+              return (
+                <button
+                  key={catKey}
+                  type="button"
+                  onClick={() => setActiveCategory(catKey)}
+                  className={`group flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-xs font-bold whitespace-nowrap transition-all active:scale-[0.97] sm:px-5 sm:py-2.5 ${
                     isActive
-                      ? 'bg-[#5BAE84] text-white'
-                      : 'bg-[#E6F5F1] text-[#3F8E67]'
+                      ? 'bg-[#212047] text-white shadow-[0_10px_25px_-8px_rgba(33,32,71,0.45)]'
+                      : 'bg-white text-[#212047]/80 ring-1 ring-[#212047]/10 hover:bg-[#E6F5F1]'
                   }`}
                 >
-                  {categoryCounts[catKey]}
-                </span>
-              </button>
-            );
-          })}
+                  <span>{info.label}</span>
+                  <span
+                    className={`rounded-full px-2 py-0.5 font-mono-num text-[10px] ${
+                      isActive
+                        ? 'bg-[#5BAE84] text-white'
+                        : 'bg-[#E6F5F1] text-[#3F8E67]'
+                    }`}
+                  >
+                    {categoryCounts[catKey]}
+                  </span>
+                </button>
+              );
+            }
+          )}
 
           <button
             type="button"
             onClick={() => setActiveCategory('favorites')}
-            className={`flex items-center gap-2 rounded-full px-5 py-2.5 text-xs font-bold transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-[0.97] ${
+            className={`flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-xs font-bold whitespace-nowrap transition-all active:scale-[0.97] sm:px-5 sm:py-2.5 ${
               activeCategory === 'favorites'
                 ? 'bg-[#5BAE84] text-white shadow-sm'
                 : 'bg-[#5BAE84]/15 text-[#212047] hover:bg-[#5BAE84]/25'
@@ -693,11 +705,11 @@ export const App: React.FC = () => {
 
         {/* Empty State */}
         {displayedMembers.length === 0 && (
-          <div className="mt-12 rounded-[2rem] bg-white p-14 text-center ring-1 ring-[#212047]/10">
-            <p className="text-lg font-extrabold text-[#212047]">
+          <div className="mt-10 rounded-[2rem] bg-white p-10 text-center ring-1 ring-[#212047]/10">
+            <p className="text-base font-extrabold text-[#212047] sm:text-lg">
               找不到符合條件的連莊女孩成員
             </p>
-            <p className="mt-2 text-sm text-[#212047]/65">
+            <p className="mt-2 text-xs text-[#212047]/65 sm:text-sm">
               請嘗試調整搜尋關鍵字或切換上方分類篩選標籤。
             </p>
             <button
@@ -706,24 +718,24 @@ export const App: React.FC = () => {
                 setActiveCategory('all');
                 setSearchQuery('');
               }}
-              className="mt-5 rounded-full bg-[#212047] px-5 py-2.5 text-xs font-bold text-white"
+              className="mt-4 rounded-full bg-[#212047] px-5 py-2.5 text-xs font-bold text-white"
             >
               重置所有篩選條件
             </button>
           </div>
         )}
 
-        {/* Member Cards Grid (Double-Bezel Nested Architecture) */}
-        <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {/* Member Cards Grid: 2 Columns on Mobile (Face-Focused Avatar) / 3-4 Columns on Desktop */}
+        <div className="mt-6 grid grid-cols-2 gap-3 sm:mt-10 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
           {displayedMembers.map((member) => {
             const isFav = favoriteIds.includes(member.id);
             return (
               <article
                 key={member.id}
-                className="group relative rounded-[2rem] bg-[#D5EFE9]/80 p-1.5 ring-1 ring-[#5BAE84]/30 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] hover:-translate-y-1.5 hover:bg-[#5BAE84]/30 hover:shadow-[0_24px_60px_-15px_rgba(33,32,71,0.18)]"
+                className="group relative rounded-[1.5rem] bg-[#D5EFE9]/80 p-1 ring-1 ring-[#5BAE84]/30 transition-all duration-500 hover:-translate-y-1 hover:bg-[#5BAE84]/30 hover:shadow-[0_24px_60px_-15px_rgba(33,32,71,0.18)] sm:rounded-[2rem] sm:p-1.5"
               >
                 {/* Inner Core */}
-                <div className="flex h-full flex-col justify-between overflow-hidden rounded-[calc(2rem-0.375rem)] bg-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.95)]">
+                <div className="flex h-full flex-col justify-between overflow-hidden rounded-[calc(1.5rem-0.25rem)] bg-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.95)] sm:rounded-[calc(2rem-0.375rem)]">
                   <div>
                     {/* Portrait Wrapper + Floating Favorite Heart */}
                     <div className="relative">
@@ -733,10 +745,16 @@ export const App: React.FC = () => {
                         aria-label={`開啟 ${member.name} 的詳細個人檔案`}
                         className="block w-full text-left focus:outline-none"
                       >
+                        {/* Mobile: Square Face-Centered Close-Up; Tablet/Desktop: 3:4 Portrait */}
+                        <MemberPortrait
+                          member={member}
+                          variant="avatar"
+                          className="aspect-square w-full sm:hidden"
+                        />
                         <MemberPortrait
                           member={member}
                           variant="card"
-                          className="aspect-[3/4] w-full"
+                          className="hidden aspect-[3/4] w-full sm:block"
                         />
                       </button>
 
@@ -752,7 +770,7 @@ export const App: React.FC = () => {
                             ? `將 ${member.name} 從我的主推移除`
                             : `將 ${member.name} 加入我的主推`
                         }
-                        className={`absolute top-3.5 right-3.5 z-20 flex h-9 w-9 items-center justify-center rounded-full transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] active:scale-90 ${
+                        className={`absolute top-2.5 right-2.5 z-20 flex h-8 w-8 items-center justify-center rounded-full transition-all active:scale-90 sm:top-3.5 sm:right-3.5 sm:h-9 sm:w-9 ${
                           isFav
                             ? 'bg-[#5BAE84] text-white shadow-md'
                             : 'bg-[#212047]/65 text-white hover:bg-[#212047] hover:text-[#7ADAD0]'
@@ -775,11 +793,11 @@ export const App: React.FC = () => {
                     </div>
 
                     {/* Card Body Info */}
-                    <div className="p-5">
-                      <div className="flex items-baseline justify-between gap-2">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h3 className="text-xl font-black tracking-tight text-[#212047]">
+                    <div className="p-3 sm:p-5">
+                      <div className="flex items-baseline justify-between gap-1.5">
+                        <div className="min-w-0">
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <h3 className="text-base font-black tracking-tight text-[#212047] sm:text-xl">
                               <button
                                 type="button"
                                 onClick={() => setSelectedMember(member)}
@@ -788,26 +806,26 @@ export const App: React.FC = () => {
                                 {member.name}
                               </button>
                             </h3>
-                            <span className="rounded-md bg-[#E6F5F1] px-2 py-0.5 font-mono-num text-[10px] font-bold text-[#3F8E67]">
+                            <span className="rounded-md bg-[#E6F5F1] px-1.5 py-0.5 font-mono-num text-[9px] font-bold text-[#3F8E67] sm:px-2 sm:text-[10px]">
                               {member.mbti}
                             </span>
                           </div>
-                          <div className="mt-0.5 font-mono-num text-[11px] font-medium text-[#212047]/55">
+                          <div className="mt-0.5 font-mono-num text-[10px] font-medium text-[#212047]/55 sm:text-[11px]">
                             {member.birthday} · {member.zodiac}
                           </div>
                         </div>
 
-                        <span className="font-editorial text-3xl font-bold text-[#4FA87D] italic">
+                        <span className="shrink-0 font-editorial text-2xl font-bold text-[#4FA87D] italic sm:text-3xl">
                           #{member.number}
                         </span>
                       </div>
 
-                      <p className="mt-2.5 line-clamp-2 text-xs leading-relaxed text-[#212047]/70">
+                      <p className="mt-2 line-clamp-2 text-[11px] leading-relaxed text-[#212047]/70 sm:mt-2.5 sm:text-xs">
                         {member.tagline}
                       </p>
 
                       {/* Dual Team Chips */}
-                      <div className="mt-3.5 flex flex-wrap gap-1.5">
+                      <div className="mt-2.5 hidden flex-wrap gap-1.5 sm:mt-3.5 sm:flex">
                         {member.dualTeams.map((team) => (
                           <span
                             key={team}
@@ -821,23 +839,22 @@ export const App: React.FC = () => {
                   </div>
 
                   {/* Card Footer: Direct IG Link + Open Dossier Button */}
-                  <div className="flex items-center justify-between border-t border-[#212047]/[0.07] bg-[#F4FAF8] px-5 py-3">
+                  <div className="flex items-center justify-between border-t border-[#212047]/[0.07] bg-[#F4FAF8] px-3 py-2.5 sm:px-5 sm:py-3">
                     <a
                       href={member.instagramUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 font-mono-num text-[11px] font-semibold text-[#212047]/75 transition-colors hover:text-[#4FA87D]"
+                      className="truncate font-mono-num text-[10px] font-semibold text-[#212047]/75 transition-colors hover:text-[#4FA87D] sm:text-[11px]"
                     >
-                      <span>@{member.instagramHandle}</span>
-                      <span aria-hidden="true">↗</span>
+                      @{member.instagramHandle}
                     </a>
 
                     <button
                       type="button"
                       onClick={() => setSelectedMember(member)}
-                      className="inline-flex items-center gap-1 text-xs font-extrabold text-[#212047] transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-0.5"
+                      className="shrink-0 inline-flex items-center gap-0.5 text-[11px] font-extrabold text-[#212047] whitespace-nowrap sm:text-xs"
                     >
-                      <span>詳細檔案</span>
+                      <span>檔案</span>
                       <span className="text-[#4FA87D]">→</span>
                     </button>
                   </div>
@@ -848,7 +865,7 @@ export const App: React.FC = () => {
         </div>
       </section>
 
-      {/* Girl-Centric Seat Recommendation Guide (Select Girl -> Best Zone & Seat Intervals) */}
+      {/* Girl-Centric Seat Recommendation Guide */}
       <GirlSeatRecommendationSection
         favoriteIds={favoriteIds}
         onOpenMemberDetail={(m) => setSelectedMember(m)}
@@ -881,8 +898,8 @@ export const App: React.FC = () => {
 
       {/* Footer with Official Logo & Data Maintainability Note */}
       <footer className="border-t border-[#212047]/10 bg-[#212047] text-white">
-        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 gap-10 md:grid-cols-12">
+        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-12 md:gap-10">
             <div className="md:col-span-6">
               <div className="flex items-center gap-3">
                 <img
@@ -900,18 +917,18 @@ export const App: React.FC = () => {
             </div>
 
             <div className="md:col-span-6">
-              <div className="rounded-2xl border border-[#5ECBC0]/25 bg-white/[0.05] p-5">
+              <div className="rounded-2xl border border-[#5ECBC0]/25 bg-white/[0.05] p-4 sm:p-5">
                 <div className="font-mono-num text-[10px] font-bold tracking-[0.2em] text-[#7ADAD0] uppercase">
                   DEVELOPER MAINTAINABILITY · 照片與班表維護指南
                 </div>
                 <p className="mt-2 text-xs leading-relaxed text-white/80">
-                  全體 18 位成員之官方 WELCOME 形象照與官方 Logo 已存放於{' '}
+                  全體 18 位成員之官方 WELCOME 形象照與臉部特寫頭像已存放於{' '}
                   <code className="rounded bg-white/10 px-1.5 py-0.5 font-mono-num text-[#7ADAD0]">
                     public/images/members/
                   </code>{' '}
                   與{' '}
                   <code className="rounded bg-white/10 px-1.5 py-0.5 font-mono-num text-[#7ADAD0]">
-                    public/images/logo.png
+                    public/images/avatars/
                   </code>
                   。日後欲更新賽季班表或成員資料，可直接編輯{' '}
                   <code className="rounded bg-white/10 px-1.5 py-0.5 font-mono-num text-[#7ADAD0]">
@@ -927,8 +944,11 @@ export const App: React.FC = () => {
             </div>
           </div>
 
-          <div className="mt-10 flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-8 text-xs text-white/55">
-            <span>© 2026–2027 ACE VIVA Fan &amp; Roster Showcase · Taichung Win+Streak</span>
+          <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-6 text-xs text-white/55 sm:mt-10 sm:pt-8">
+            <span>
+              © 2026–2027 ACE VIVA Fan &amp; Roster Showcase · Taichung
+              Win+Streak
+            </span>
             <div className="flex items-center gap-5">
               <a
                 href={TEAM_INFO.officialInstagramUrl}
@@ -954,7 +974,9 @@ export const App: React.FC = () => {
       {/* Native <dialog> Member Detail Modal */}
       <MemberDetailDialog
         member={selectedMember}
-        isFavorite={selectedMember ? favoriteIds.includes(selectedMember.id) : false}
+        isFavorite={
+          selectedMember ? favoriteIds.includes(selectedMember.id) : false
+        }
         onToggleFavorite={toggleFavorite}
         onClose={() => setSelectedMember(null)}
         onSelectScheduleMember={handleSelectScheduleMemberFromModal}
