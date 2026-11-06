@@ -38,6 +38,7 @@ export const App: React.FC = () => {
     matchId: string;
     zone: AceZoneId;
     seat: number;
+    girlId?: string;
     timestamp: number;
   } | null>(null);
 
@@ -869,11 +870,12 @@ export const App: React.FC = () => {
       <GirlSeatRecommendationSection
         favoriteIds={favoriteIds}
         onOpenMemberDetail={(m) => setSelectedMember(m)}
-        onJumpToSeatSimulator={(matchId, zone, seat) => {
+        onJumpToSeatSimulator={(matchId, zone, seat, girlId) => {
           setSeatSimulatorJump({
             matchId,
             zone,
             seat,
+            girlId,
             timestamp: Date.now(),
           });
           document
@@ -884,6 +886,7 @@ export const App: React.FC = () => {
 
       {/* Interactive 2F ACE Zone (A/B/C · 23 Seats) Seat & Girl Station Finder */}
       <SeatFinderSection
+        favoriteIds={favoriteIds}
         externalSelection={seatSimulatorJump}
         onOpenMemberDetail={(m) => setSelectedMember(m)}
       />

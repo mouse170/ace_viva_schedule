@@ -564,3 +564,193 @@ export function getGirlSeatRecommendations(
   return results;
 }
 
+export interface PhaseDistanceDetail {
+  girlZone: AceZoneId;
+  girlSlotIndex: 0 | 1 | 2;
+  girlSlotLabel: string;
+  girlSeatRange: [number, number];
+  girlCoreSeat: number;
+  girlCoreSeatLabel: string;
+  zoneDiff: number;
+  isSameZone: boolean;
+  isDirectFront: boolean;
+  isExactCore: boolean;
+  seatsToDirectRange: number;
+  seatsToCoreCenter: number;
+  globalSeatDistance: number;
+  directionText: string;
+  headlineDistanceText: string;
+  detailDescription: string;
+  proximityPercent: number;
+  statusLevel: 'direct_core' | 'direct_range' | 'same_zone_near' | 'same_zone_far' | 'cross_zone';
+}
+
+export interface SetGirlDistanceComparison {
+  setKey: 'set1_4' | 'set2_5' | 'set3';
+  setLabel: string;
+  setShortLabel: string;
+  initial: PhaseDistanceDetail;
+  after10: PhaseDistanceDetail;
+}
+
+const ZONE_INDEX: Record<AceZoneId, number> = { A: 0, B: 1, C: 2 };
+
+const SLOT_CORE_SEAT: Record<0 | 1 | 2, { center: number; minCore: number; maxCore: number; label: string }> = {
+  0: { center: 5, minCore: 4, maxCore: 5, label: '4–5 號' },
+  1: { center: 12, minCore: 11, maxCore: 13, label: '12 號' },
+  2: { center: 19, minCore: 19, maxCore: 20, label: '19–20 號' },
+};
+
+function computePhaseDistance(
+  userZone: AceZoneId,
+  userSeat: number,
+  girlZone: AceZoneId,
+  girlSlotIndex: 0 | 1 | 2
+): PhaseDistanceDetail {
+  const uZ = ZONE_INDEX[userZone];
+  const gZ = ZONE_INDEX[girlZone];
+  const zoneDiff = Math.abs(gZ - uZ);
+  const isSameZone = zoneDiff === 0;
+
+  const slotMeta = SLOT_META[girlSlotIndex];
+  const coreMeta = SLOT_CORE_SEAT[girlSlotIndex];
+  const [rangeStart, rangeEnd] = slotMeta.range;
+
+  // Global seat index across A (1..23), B (24..46), C (47..69)
+  const userGlobalSeat = uZ * 23 + userSeat;
+  const girlGlobalCoreSeat = gZ * 23 + coreMeta.center;
+  const girlGlobalRangeStart = gZ * 23 + rangeStart;
+  const girlGlobalRangeEnd = gZ * 23 + rangeEnd;
+
+  const globalSeatDistance = Math.abs(girlGlobalCoreSeat - userGlobalSeat);
+
+  let seatsToDirectRange = 0;
+  if (userGlobalSeat < girlGlobalRangeStart) {
+    seatsToDirectRange = girlGlobalRangeStart - userGlobalSeat;
+  } else if (userGlobalSeat > girlGlobalRangeEnd) {
+    seatsToDirectRange = userGlobalSeat - girlGlobalRangeEnd;
+  }
+
+  let seatsToCoreCenter = globalSeatDistance;
+  if (isSameZone) {
+    if (userSeat >= coreMeta.minCore && userSeat <= coreMeta.maxCore) {
+      seatsToCoreCenter = 0;
+    } else if (userSeat < coreMeta.minCore) {
+      seatsToCoreCenter = coreMeta.minCore - userSeat;
+    } else {
+      seatsToCoreCenter = userSeat - coreMeta.maxCore;
+    }
+  }
+
+  const isDirectFront = isSameZone && userSeat >= rangeStart && userSeat <= rangeEnd;
+  const isExactCore = isSameZone && seatsToCoreCenter === 0;
+
+  // Determine direction from user's seat perspective (facing court: A is left, B is center, C is right; seat 1 is left, 23 is right)
+  const deltaGlobal = girlGlobalCoreSeat - userGlobalSeat;
+  let directionText = '正前方直視';
+  if (!isDirectFront) {
+    if (isSameZone) {
+      directionText = deltaGlobal < 0 ? '同區往左方看' : '同區往右方看';
+    } else {
+      directionText =
+        deltaGlobal < 0
+          ? `往左方 ${girlZone} 區看（跨 ${zoneDiff} 區）`
+          : `往右方 ${girlZone} 區看（跨 ${zoneDiff} 區）`;
+    }
+  }
+
+  let headlineDistanceText = '';
+  let detailDescription = '';
+  let proximityPercent = 50;
+  let statusLevel: PhaseDistanceDetail['statusLevel'] = 'cross_zone';
+
+  if (isExactCore) {
+    statusLevel = 'direct_core';
+    proximityPercent = 100;
+    headlineDistanceText = '零距離正對 C 位（相距 0 席）';
+    detailDescription = `你正坐在 ${girlZone} 區 ${slotMeta.label} 的黃金核心席（${coreMeta.label}），主推就在你正前方直線對焦位置！`;
+  } else if (isDirectFront) {
+    statusLevel = 'direct_range';
+    proximityPercent = Math.max(88, 98 - seatsToCoreCenter * 3);
+    headlineDistanceText = `正前方視角區內（距 C 位中心 ${seatsToCoreCenter} 席）`;
+    detailDescription = `主推就在你面前的 ${girlZone} 區 ${slotMeta.label}（${rangeStart}–${rangeEnd} 號區間），僅離正中心 C 位（${coreMeta.label}）${seatsToCoreCenter} 個座位。`;
+  } else if (isSameZone) {
+    const slotDiff = Math.abs(girlSlotIndex - getSeatPositionMapping(userSeat).slotIndex);
+    statusLevel = slotDiff === 1 ? 'same_zone_near' : 'same_zone_far';
+    proximityPercent = Math.max(55, 86 - seatsToDirectRange * 2);
+    const dirShort = deltaGlobal < 0 ? '往左' : '往右';
+    headlineDistanceText = `同在 ${girlZone} 區 · ${dirShort}差 ${seatsToDirectRange} 席進正對區（距 C 位 ${seatsToCoreCenter} 席）`;
+    detailDescription = `主推與你同在 ${girlZone} 區，站${slotMeta.label}（${rangeStart}–${rangeEnd} 號）；從你的第 ${userSeat} 號席${dirShort}數 ${seatsToDirectRange} 個座位即進入她的正對範圍（距離她的正中心 ${coreMeta.label} 相差 ${seatsToCoreCenter} 席）。`;
+  } else {
+    statusLevel = 'cross_zone';
+    proximityPercent = Math.max(12, 52 - seatsToDirectRange * 1.1);
+    const dirShort = deltaGlobal < 0 ? '左方' : '右方';
+    headlineDistanceText = `跨 ${zoneDiff} 區（位於 ${girlZone} 區）· 相隔約 ${seatsToDirectRange} 席進入正對區`;
+    detailDescription = `主推目前在${dirShort} ${girlZone} 區${slotMeta.label}（${rangeStart}–${rangeEnd} 號）；與你的 ${userZone} 區 ${userSeat} 號席相隔 ${zoneDiff} 個區域（距其正對邊界約 ${seatsToDirectRange} 個座位身位，距其 C 位中心約 ${globalSeatDistance} 席）。`;
+  }
+
+  return {
+    girlZone,
+    girlSlotIndex,
+    girlSlotLabel: slotMeta.label,
+    girlSeatRange: slotMeta.range,
+    girlCoreSeat: coreMeta.center,
+    girlCoreSeatLabel: coreMeta.label,
+    zoneDiff,
+    isSameZone,
+    isDirectFront,
+    isExactCore,
+    seatsToDirectRange,
+    seatsToCoreCenter,
+    globalSeatDistance,
+    directionText,
+    headlineDistanceText,
+    detailDescription,
+    proximityPercent: Math.round(proximityPercent),
+    statusLevel,
+  };
+}
+
+/**
+ * 計算使用者所選座位（userZone, userSeat）與指定主推女孩（girlId）在整場各局（開局 0–10 分、破 10 分後）之精確距離分析
+ */
+export function getFullMatchGirlDistanceSummary(
+  matchSchedule: MatchStationSchedule,
+  userZone: AceZoneId,
+  userSeat: number,
+  girlId: string
+): SetGirlDistanceComparison[] {
+  const zones: AceZoneId[] = ['A', 'B', 'C'];
+  const comparisons: SetGirlDistanceComparison[] = [];
+
+  for (const s of matchSchedule.sets) {
+    let foundZone: AceZoneId | null = null;
+    let initSlot: 0 | 1 | 2 = 0;
+    let after10Slot: 0 | 1 | 2 = 0;
+
+    for (const z of zones) {
+      const iIdx = s.initial[z].indexOf(girlId);
+      const aIdx = s.after10Points[z].indexOf(girlId);
+      if (iIdx !== -1 && aIdx !== -1) {
+        foundZone = z;
+        initSlot = iIdx as 0 | 1 | 2;
+        after10Slot = aIdx as 0 | 1 | 2;
+        break;
+      }
+    }
+
+    if (!foundZone) continue;
+
+    comparisons.push({
+      setKey: s.setKey,
+      setLabel: s.setLabel,
+      setShortLabel: s.setShortLabel,
+      initial: computePhaseDistance(userZone, userSeat, foundZone, initSlot),
+      after10: computePhaseDistance(userZone, userSeat, foundZone, after10Slot),
+    });
+  }
+
+  return comparisons;
+}
+
+

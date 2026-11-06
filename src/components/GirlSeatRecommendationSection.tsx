@@ -14,7 +14,8 @@ interface GirlSeatRecommendationSectionProps {
   onJumpToSeatSimulator?: (
     matchId: string,
     zone: AceZoneId,
-    seat: number
+    seat: number,
+    girlId?: string
   ) => void;
 }
 
@@ -448,7 +449,8 @@ export const GirlSeatRecommendationSection: React.FC<
                                       onJumpToSeatSimulator(
                                         currentMatchSchedule.matchId,
                                         rec.zone,
-                                        seatNum
+                                        seatNum,
+                                        activeGirl.id
                                       );
                                     }
                                   }}
@@ -496,7 +498,8 @@ export const GirlSeatRecommendationSection: React.FC<
                                 onJumpToSeatSimulator(
                                   currentMatchSchedule.matchId,
                                   rec.zone,
-                                  seatNum
+                                  seatNum,
+                                  activeGirl.id
                                 );
                               }
                             }}
