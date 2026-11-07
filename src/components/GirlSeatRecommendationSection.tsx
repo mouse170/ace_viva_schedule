@@ -9,7 +9,10 @@ import {
   type CrossZoneGoldenInterval,
 } from '../data/schedule';
 import { MemberPortrait } from './MemberPortrait';
-import { OshiStrategyCardModal } from './OshiStrategyCardModal';
+import {
+  OshiStrategyCardModal,
+  type StrategyCardMode,
+} from './OshiStrategyCardModal';
 
 interface GirlSeatRecommendationSectionProps {
   favoriteIds: string[];
@@ -56,6 +59,8 @@ export const GirlSeatRecommendationSection: React.FC<
     useState<boolean>(false);
   const [isStrategyModalOpen, setIsStrategyModalOpen] =
     useState<boolean>(false);
+  const [strategyModalMode, setStrategyModalMode] =
+    useState<StrategyCardMode>('zone_hopping');
 
   const memberMap = useMemo(() => {
     const map = new Map<string, AceVivaMember>();
@@ -172,10 +177,25 @@ export const GirlSeatRecommendationSection: React.FC<
 
           <button
             type="button"
-            onClick={() => setIsStrategyModalOpen(true)}
+            onClick={() => {
+              setStrategyModalMode('zone_hopping');
+              setIsStrategyModalOpen(true);
+            }}
             className="inline-flex items-center gap-1.5 rounded-full bg-[#5BAE84] px-4 py-2.5 text-xs font-black text-white shadow-sm transition-all hover:bg-[#3F8E67] active:scale-95 lg:px-5 lg:py-3 lg:text-sm"
           >
-            <span>一鍵生出「{activeGirl.name}」視角攻略圖片</span>
+            <span>生出「{activeGirl.name}」最佳換位＆跨區圖卡</span>
+            <span>↓</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setStrategyModalMode('seat_radar');
+              setIsStrategyModalOpen(true);
+            }}
+            className="inline-flex items-center gap-1.5 rounded-full bg-[#212047] px-4 py-2.5 text-xs font-extrabold text-[#7ADAD0] shadow-sm ring-1 ring-[#5BAE84] transition-all hover:bg-[#2E2C5E] active:scale-95 lg:px-5 lg:py-3 lg:text-sm"
+          >
+            <span>生出「已選座位雷達圖卡」</span>
             <span>↓</span>
           </button>
         </div>
@@ -305,10 +325,24 @@ export const GirlSeatRecommendationSection: React.FC<
                       </button>
                       <button
                         type="button"
-                        onClick={() => setIsStrategyModalOpen(true)}
+                        onClick={() => {
+                          setStrategyModalMode('zone_hopping');
+                          setIsStrategyModalOpen(true);
+                        }}
                         className="inline-flex items-center gap-1 rounded-full bg-[#5BAE84] px-3 py-1 text-xs font-black text-white shadow-xs transition-transform hover:bg-[#3F8E67] active:scale-95"
                       >
-                        <span>生成換位攻略圖 (PNG)</span>
+                        <span>換位＆跨區攻略圖 (PNG)</span>
+                        <span>↓</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setStrategyModalMode('seat_radar');
+                          setIsStrategyModalOpen(true);
+                        }}
+                        className="inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1 text-xs font-bold text-[#7ADAD0] ring-1 ring-[#5ECBC0]/40 transition-transform hover:bg-[#5BAE84] hover:text-white active:scale-95"
+                      >
+                        <span>固定座位雷達圖 (PNG)</span>
                         <span>↓</span>
                       </button>
                     </div>
@@ -1077,6 +1111,9 @@ export const GirlSeatRecommendationSection: React.FC<
         isOpen={isStrategyModalOpen}
         initialGirlId={activeGirl.id}
         initialMatchId={selectedMatchId}
+        initialMode={strategyModalMode}
+        initialZone={topCrossZone?.bestSingleZone ?? primaryRec?.zone ?? 'B'}
+        initialSeat={topCrossZone?.bestSingleSeat ?? 12}
         onClose={() => setIsStrategyModalOpen(false)}
       />
     </section>

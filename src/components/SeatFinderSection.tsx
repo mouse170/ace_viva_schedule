@@ -8,7 +8,10 @@ import {
   type PhaseDistanceDetail,
 } from '../data/schedule';
 import { MemberPortrait } from './MemberPortrait';
-import { OshiStrategyCardModal } from './OshiStrategyCardModal';
+import {
+  OshiStrategyCardModal,
+  type StrategyCardMode,
+} from './OshiStrategyCardModal';
 
 interface SeatFinderSectionProps {
   favoriteIds: string[];
@@ -97,6 +100,8 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
   );
   const [isStrategyModalOpen, setIsStrategyModalOpen] =
     useState<boolean>(false);
+  const [strategyModalMode, setStrategyModalMode] =
+    useState<StrategyCardMode>('seat_radar');
 
   React.useEffect(() => {
     if (!externalSelection) return;
@@ -265,11 +270,26 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
 
           <button
             type="button"
-            onClick={() => setIsStrategyModalOpen(true)}
+            onClick={() => {
+              setStrategyModalMode('seat_radar');
+              setIsStrategyModalOpen(true);
+            }}
             className="inline-flex items-center gap-1.5 rounded-full bg-[#212047] px-4 py-2.5 text-xs font-extrabold text-[#7ADAD0] shadow-sm ring-1 ring-[#5BAE84] transition-all hover:bg-[#2E2C5E] active:scale-95 lg:px-5 lg:py-3 lg:text-sm"
           >
-            <span>生成「{activeOshi.name}」換位攻略圖</span>
-            <span>↗</span>
+            <span>生成「{selectedZone}{selectedSeat} 座位雷達圖卡」</span>
+            <span>↓</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setStrategyModalMode('zone_hopping');
+              setIsStrategyModalOpen(true);
+            }}
+            className="inline-flex items-center gap-1.5 rounded-full bg-[#5BAE84] px-4 py-2.5 text-xs font-extrabold text-white shadow-sm transition-all hover:bg-[#3F8E67] active:scale-95 lg:px-5 lg:py-3 lg:text-sm"
+          >
+            <span>生成「{activeOshi.name} 最佳換位＆跨區卡」</span>
+            <span>↓</span>
           </button>
         </div>
       </div>
@@ -288,13 +308,28 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                   點選要在雷達上計算相對席次的主推：
                 </span>
               </div>
-              <button
-                type="button"
-                onClick={() => setIsStrategyModalOpen(true)}
-                className="rounded-full bg-[#5BAE84] px-3 py-1 font-mono-num text-[11px] font-black text-white shadow-2xs transition-colors hover:bg-[#3F8E67] lg:text-xs"
-              >
-                一鍵匯出 {activeOshi.name} 五局換位圖 ↓
-              </button>
+              <div className="flex flex-wrap items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStrategyModalMode('seat_radar');
+                    setIsStrategyModalOpen(true);
+                  }}
+                  className="rounded-full bg-[#212047] px-3 py-1 font-mono-num text-[11px] font-black text-[#5ECBC0] shadow-2xs ring-1 ring-[#5BAE84] transition-colors hover:bg-[#2E2C5E] lg:text-xs"
+                >
+                  生出 {selectedZone}{selectedSeat} 座位雷達圖卡 ↓
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStrategyModalMode('zone_hopping');
+                    setIsStrategyModalOpen(true);
+                  }}
+                  className="rounded-full bg-[#5BAE84] px-3 py-1 font-mono-num text-[11px] font-black text-white shadow-2xs transition-colors hover:bg-[#3F8E67] lg:text-xs"
+                >
+                  生出 {activeOshi.name} 最佳換位＆跨區卡 ↓
+                </button>
+              </div>
             </div>
 
             <div className="no-scrollbar mt-2.5 flex gap-1.5 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible sm:pb-0 lg:mt-3 lg:gap-2.5">
@@ -1296,6 +1331,9 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
         isOpen={isStrategyModalOpen}
         initialGirlId={activeOshi.id}
         initialMatchId={selectedMatchId}
+        initialMode={strategyModalMode}
+        initialZone={selectedZone}
+        initialSeat={selectedSeat}
         onClose={() => setIsStrategyModalOpen(false)}
       />
     </section>
