@@ -153,7 +153,7 @@ export const App: React.FC = () => {
     };
   }, [favoriteIds, currentMonth]);
 
-  // 計算「自己座位正前方女孩」映射表（依據使用者目前選擇的場次、區域與座位號 1-23 號）
+  // 計算「自己座位正前方與隔壁緊鄰區女孩」映射表（依據使用者目前選擇的場次、區域與座位號 1-23 號）
   const frontSeatMemberMap = useMemo(() => {
     const schedule =
       STATION_ROTATION_SCHEDULES.find(
@@ -164,12 +164,16 @@ export const App: React.FC = () => {
       string,
       {
         order: number;
+        relation: 'direct' | 'adjacent_zone';
+        adjZoneLabel?: string;
+        adjShortZone?: string;
         setsList: string[];
         setsLabel: string;
         setsShortLabel: string;
       }
     >();
 
+    // 第一層：本區座位正前方女孩（6 位）
     let orderCounter = 0;
     for (const setObj of schedule.sets) {
       // 破 10 分後佔單局 60% 時間，優先列入同局正前方順序，其次為開局 0-10 分
@@ -184,6 +188,7 @@ export const App: React.FC = () => {
           orderCounter += 1;
           map.set(gId, {
             order: orderCounter,
+            relation: 'direct',
             setsList: [setObj.setShortLabel],
             setsLabel: setObj.setShortLabel,
             setsShortLabel: setObj.setShortLabel.replace(/\s+/g, ''),
@@ -197,6 +202,78 @@ export const App: React.FC = () => {
         }
       }
     }
+
+    // 第二層：因 A / B / C 區緊連，補充隔壁緊鄰區交界站位女孩（C1 ↔ B23 · B1 ↔ A23）
+    const adjSpecs: {
+      zone: AceZoneId;
+      slot: 0 | 1 | 2;
+      label: string;
+      shortLabel: string;
+    }[] =
+      currentUserSeat.zone === 'A'
+        ? [{ zone: 'B', slot: 0, label: '左鄰 B 區 8–1 號', shortLabel: 'B8-1' }]
+        : currentUserSeat.zone === 'C'
+          ? [
+              {
+                zone: 'B',
+                slot: 2,
+                label: '右鄰 B 區 23–16 號',
+                shortLabel: 'B23-16',
+              },
+            ]
+          : currentUserSeat.seat >= 12
+            ? [
+                {
+                  zone: 'C',
+                  slot: 0,
+                  label: '左鄰 C 區 8–1 號',
+                  shortLabel: 'C8-1',
+                },
+                {
+                  zone: 'A',
+                  slot: 2,
+                  label: '右鄰 A 區 23–16 號',
+                  shortLabel: 'A23-16',
+                },
+              ]
+            : [
+                {
+                  zone: 'A',
+                  slot: 2,
+                  label: '右鄰 A 區 23–16 號',
+                  shortLabel: 'A23-16',
+                },
+                {
+                  zone: 'C',
+                  slot: 0,
+                  label: '左鄰 C 區 8–1 號',
+                  shortLabel: 'C8-1',
+                },
+              ];
+
+    for (const adj of adjSpecs) {
+      for (const setObj of schedule.sets) {
+        const after10GirlId = setObj.after10Points[adj.zone][adj.slot];
+        const initGirlId = setObj.initial[adj.zone][adj.slot];
+        for (const gId of [after10GirlId, initGirlId]) {
+          if (!gId) continue;
+          const existing = map.get(gId);
+          if (!existing) {
+            orderCounter += 1;
+            map.set(gId, {
+              order: 100 + orderCounter,
+              relation: 'adjacent_zone',
+              adjZoneLabel: adj.label,
+              adjShortZone: adj.shortLabel,
+              setsList: [setObj.setShortLabel],
+              setsLabel: setObj.setShortLabel,
+              setsShortLabel: setObj.setShortLabel.replace(/\s+/g, ''),
+            });
+          }
+        }
+      }
+    }
+
     return map;
   }, [currentUserSeat]);
 
@@ -501,7 +578,7 @@ export const App: React.FC = () => {
             <span className="text-white/50">→</span>
             <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-0.5 font-extrabold text-[#5ECBC0] ring-1 ring-[#5ECBC0]/50">
               <span>
-                2. ▲ 座位（{currentUserSeat.zone} 區 {currentUserSeat.seat} 號）面前女孩 ({frontSeatMemberMap.size})
+                2. ▲ 座位（{currentUserSeat.zone} 區 {currentUserSeat.seat} 號）正前＋隔壁緊鄰區女孩 ({frontSeatMemberMap.size})
               </span>
             </span>
           </div>
@@ -723,10 +800,17 @@ export const App: React.FC = () => {
                           <span>★ 主推</span>
                         </div>
                       ) : frontInfo ? (
-                        <div className="pointer-events-none absolute top-1.5 left-1.5 z-20 inline-flex items-center gap-0.5 rounded-full bg-[#212047]/90 px-1.5 py-0.5 font-mono-num text-[9px] font-black text-[#5ECBC0] shadow-xs ring-1 ring-[#5ECBC0] sm:top-3.5 sm:left-3.5 sm:px-3 sm:py-1 sm:text-xs">
+                        <div
+                          className={`pointer-events-none absolute top-1.5 left-1.5 z-20 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 font-mono-num text-[9px] font-black shadow-xs ring-1 sm:top-3.5 sm:left-3.5 sm:px-3 sm:py-1 sm:text-xs ${
+                            frontInfo.relation === 'direct'
+                              ? 'bg-[#212047]/90 text-[#5ECBC0] ring-[#5ECBC0]'
+                              : 'bg-[#3F8E67]/95 text-white ring-[#7ADAD0]'
+                          }`}
+                        >
                           <span>
-                            ▲ {currentUserSeat.zone}
-                            {currentUserSeat.seat}面前
+                            {frontInfo.relation === 'direct'
+                              ? `▲ ${currentUserSeat.zone}${currentUserSeat.seat}面前`
+                              : `↔ 鄰區${frontInfo.adjShortZone}`}
                           </span>
                         </div>
                       ) : isBirthdayStar ? (
@@ -790,7 +874,9 @@ export const App: React.FC = () => {
 
                         {frontInfo ? (
                           <div className="mt-0.5 truncate rounded bg-[#E6F5F1] px-1 py-0.2 font-mono-num text-[9px] font-extrabold text-[#212047]">
-                            ▲ {frontInfo.setsShortLabel}面前
+                            {frontInfo.relation === 'direct'
+                              ? `▲ ${frontInfo.setsShortLabel}面前`
+                              : `↔ 鄰區${frontInfo.adjShortZone}`}
                           </div>
                         ) : (
                           <div className="mt-0.5 flex items-center justify-between gap-0.5 text-[9px] font-bold text-[#212047]/70">
@@ -832,11 +918,17 @@ export const App: React.FC = () => {
                             </div>
 
                             {frontInfo && (
-                              <div className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-[#212047] px-2.5 py-0.5 font-mono-num text-[11px] font-extrabold text-[#5ECBC0]">
+                              <div
+                                className={`mt-1.5 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-mono-num text-[11px] font-extrabold ${
+                                  frontInfo.relation === 'direct'
+                                    ? 'bg-[#212047] text-[#5ECBC0]'
+                                    : 'bg-[#E6F5F1] text-[#3F8E67] ring-1 ring-[#5BAE84]/50'
+                                }`}
+                              >
                                 <span>
-                                  ▲ 你的座位 {currentUserSeat.zone}
-                                  {currentUserSeat.seat} 正前方（
-                                  {frontInfo.setsLabel}）
+                                  {frontInfo.relation === 'direct'
+                                    ? `▲ 你的座位 ${currentUserSeat.zone}${currentUserSeat.seat} 正前方（${frontInfo.setsLabel}）`
+                                    : `↔ 隔壁緊鄰區 ${frontInfo.adjZoneLabel}（${frontInfo.setsLabel}）`}
                                 </span>
                               </div>
                             )}
