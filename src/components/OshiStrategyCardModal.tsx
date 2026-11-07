@@ -3,7 +3,9 @@ import { MEMBERS, type AceVivaMember } from '../data/members';
 import {
   STATION_ROTATION_SCHEDULES,
   getGirlSeatRecommendations,
+  getCrossZoneGoldenIntervals,
   type GirlSetZoneRecommendation,
+  type CrossZoneGoldenInterval,
   type MatchStationSchedule,
 } from '../data/schedule';
 
@@ -45,7 +47,8 @@ function loadImage(src: string): Promise<HTMLImageElement | null> {
 async function renderStrategyCardToDataUrl(
   member: AceVivaMember,
   schedule: MatchStationSchedule,
-  recs: GirlSetZoneRecommendation[]
+  recs: GirlSetZoneRecommendation[],
+  topCross?: CrossZoneGoldenInterval
 ): Promise<string> {
   const W = 1080;
   const H = 1560;
@@ -184,10 +187,10 @@ async function renderStrategyCardToDataUrl(
     ctx.fillText(`（${member.realOrAltName}）`, 290 + nameW + 12, 248);
   }
 
-  // Primary Ticket Recommendation Pill
+  // Primary Ticket & Cross-Zone Golden Interval Pills
   const topRec = recs[0];
   if (topRec) {
-    drawRoundedRect(ctx, 290, 285, 686, 50, 16);
+    drawRoundedRect(ctx, 290, 272, 686, 36, 12);
     ctx.fillStyle = 'rgba(91, 174, 132, 0.28)';
     ctx.fill();
     ctx.strokeStyle = '#5ECBC0';
@@ -195,11 +198,28 @@ async function renderStrategyCardToDataUrl(
     ctx.stroke();
 
     ctx.fillStyle = '#5ECBC0';
-    ctx.font = `800 22px ${fontSans}`;
+    ctx.font = `800 19px ${fontSans}`;
     ctx.fillText(
-      `★ 本場首選主戰區：2F 集氣 ${topRec.zone} 區 ｜ 推薦黃金帶：${topRec.sweetSpotLabel}`,
-      312,
-      310
+      `★ 單區首選：2F 集氣 ${topRec.zone} 區 ｜ 黃金帶：${topRec.sweetSpotLabel}`,
+      308,
+      290
+    );
+  }
+
+  if (topCross) {
+    drawRoundedRect(ctx, 290, 314, 686, 36, 12);
+    ctx.fillStyle = 'rgba(25, 24, 56, 0.85)';
+    ctx.fill();
+    ctx.strokeStyle = '#7ADAD0';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = `800 18px ${fontSans}`;
+    ctx.fillText(
+      `↔ 跨區免換位黃金帶：${topCross.combinedRangeLabel}（兼顧 ${topCross.coveredSetsLabel}）`,
+      308,
+      332
     );
   }
 
@@ -477,6 +497,14 @@ export const OshiStrategyCardModal: React.FC<OshiStrategyCardModalProps> = ({
     [currentSchedule, activeGirl]
   );
 
+  const topCrossZone = useMemo(
+    () =>
+      activeGirl
+        ? getCrossZoneGoldenIntervals(currentSchedule, activeGirl.id)[0]
+        : undefined,
+    [currentSchedule, activeGirl]
+  );
+
   useEffect(() => {
     if (!isOpen || !activeGirl) return;
     let cancelled = false;
@@ -485,7 +513,8 @@ export const OshiStrategyCardModal: React.FC<OshiStrategyCardModalProps> = ({
     renderStrategyCardToDataUrl(
       activeGirl,
       currentSchedule,
-      recommendations
+      recommendations,
+      topCrossZone
     ).then((url) => {
       if (!cancelled) {
         setImageDataUrl(url);
@@ -496,7 +525,7 @@ export const OshiStrategyCardModal: React.FC<OshiStrategyCardModalProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [isOpen, activeGirl, currentSchedule, recommendations]);
+  }, [isOpen, activeGirl, currentSchedule, recommendations, topCrossZone]);
 
   if (!isOpen || !activeGirl) return null;
 

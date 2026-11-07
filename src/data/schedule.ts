@@ -434,6 +434,15 @@ export function getSeatPositionMapping(seatNumber: number): {
   };
 }
 
+export interface CrossZoneAdjacentOption {
+  adjacentZone: AceZoneId;
+  adjacentSeatRange: [number, number];
+  adjacentCoreSeat: number;
+  boundaryName: string;
+  label: string;
+  reason: string;
+}
+
 export interface GirlSetZoneRecommendation {
   setKey: 'set1_4' | 'set2_5' | 'set3';
   setLabel: string;
@@ -452,6 +461,27 @@ export interface GirlSetZoneRecommendation {
   sweetSpotRange: [number, number];
   sweetSpotLabel: string;
   sweetSpotReason: string;
+  crossZoneOption: CrossZoneAdjacentOption | null;
+}
+
+export interface CrossZoneGoldenInterval {
+  id: 'AB' | 'BC';
+  junctionTitle: string;
+  boundaryTag: string;
+  leftZone: AceZoneId;
+  leftSeatRange: [number, number];
+  leftBestSeat: number;
+  rightZone: AceZoneId;
+  rightSeatRange: [number, number];
+  rightBestSeat: number;
+  combinedRangeLabel: string;
+  bestSingleSeatLabel: string;
+  bestSingleZone: AceZoneId;
+  bestSingleSeat: number;
+  coveredSetsLabel: string;
+  coveredPhasesCount: number;
+  summaryReason: string;
+  score: number;
 }
 
 const SLOT_META: Record<
@@ -494,8 +524,88 @@ function computeSweetSpot(
   };
 }
 
+function computeCrossZoneAdjacentOption(
+  zone: AceZoneId,
+  initSlot: 0 | 1 | 2,
+  after10Slot: 0 | 1 | 2
+): CrossZoneAdjacentOption | null {
+  const touchesLeftEdge = initSlot === 0 || after10Slot === 0;
+  const touchesRightEdge = initSlot === 2 || after10Slot === 2;
+
+  if (zone === 'A' && touchesRightEdge) {
+    const isAfter10Right = after10Slot === 2;
+    return {
+      adjacentZone: 'B',
+      adjacentSeatRange: [1, 7],
+      adjacentCoreSeat: 2,
+      boundaryName: 'A23 ↔ B1 跨區相連',
+      label: '跨區可坐：B 區 1–7 號（距 A 區右位僅 5–11 席）',
+      reason: isAfter10Right
+        ? '破 10 分後站 A 區右位（16–23 號），緊鄰 B 區 1 號；坐 B 區 1–7 號同樣在 12 席最佳拍攝範圍內，還能兼顧她在 B 區的局數。'
+        : '開局站 A 區右位（16–23 號），緊鄰 B 區 1 號；坐 B 區 1–7 號可跨區斜拍並兼顧她在 B 區的應援局數。',
+    };
+  }
+
+  if (zone === 'B' && touchesLeftEdge && !touchesRightEdge) {
+    const isAfter10Left = after10Slot === 0;
+    return {
+      adjacentZone: 'A',
+      adjacentSeatRange: [17, 23],
+      adjacentCoreSeat: 22,
+      boundaryName: 'A23 ↔ B1 跨區相連',
+      label: '跨區可坐：A 區 17–23 號（距 B 區左位僅 5–11 席）',
+      reason: isAfter10Left
+        ? '破 10 分後站 B 區左位（1–8 號），緊鄰 A 區 23 號；坐 A 區 17–23 號同樣在 12 席最佳拍攝範圍內，還能兼顧她在 A 區的局數。'
+        : '開局站 B 區左位（1–8 號），緊鄰 A 區 23 號；坐 A 區 17–23 號可跨區拍攝並兼顧她在 A 區的應援局數。',
+    };
+  }
+
+  if (zone === 'B' && touchesRightEdge && !touchesLeftEdge) {
+    const isAfter10Right = after10Slot === 2;
+    return {
+      adjacentZone: 'C',
+      adjacentSeatRange: [1, 7],
+      adjacentCoreSeat: 2,
+      boundaryName: 'B23 ↔ C1 跨區相連',
+      label: '跨區可坐：C 區 1–7 號（距 B 區右位僅 5–11 席）',
+      reason: isAfter10Right
+        ? '破 10 分後站 B 區右位（16–23 號），緊鄰 C 區 1 號；坐 C 區 1–7 號同樣在 12 席最佳拍攝範圍內，還能兼顧她在 C 區的局數。'
+        : '開局站 B 區右位（16–23 號），緊鄰 C 區 1 號；坐 C 區 1–7 號可跨區拍攝並兼顧她在 C 區的應援局數。',
+    };
+  }
+
+  if (zone === 'B' && touchesLeftEdge && touchesRightEdge) {
+    // 右位 (0-10) -> 左位 (>10)
+    return {
+      adjacentZone: 'A',
+      adjacentSeatRange: [17, 23],
+      adjacentCoreSeat: 22,
+      boundaryName: 'A23 ↔ B1 跨區相連',
+      label: '跨區可坐：A 區 17–23 號（鎖定破 10 分 B 左）或 C 區 1–7 號（鎖定開局 B 右）',
+      reason:
+        '破 10 分主力段站 B 區左位（1–8 號），緊鄰 A 區 17–23 號；開局站 B 區右位（16–23 號），緊鄰 C 區 1–7 號。',
+    };
+  }
+
+  if (zone === 'C' && touchesLeftEdge) {
+    const isAfter10Left = after10Slot === 0;
+    return {
+      adjacentZone: 'B',
+      adjacentSeatRange: [17, 23],
+      adjacentCoreSeat: 22,
+      boundaryName: 'B23 ↔ C1 跨區相連',
+      label: '跨區可坐：B 區 17–23 號（距 C 區左位僅 5–11 席）',
+      reason: isAfter10Left
+        ? '破 10 分後站 C 區左位（1–8 號），緊鄰 B 區 23 號；坐 B 區 17–23 號同樣在 12 席最佳拍攝範圍內，還能兼顧她在 B 區的局數。'
+        : '開局站 C 區左位（1–8 號），緊鄰 B 區 23 號；坐 B 區 17–23 號可跨區拍攝並兼顧她在 B 區的應援局數。',
+    };
+  }
+
+  return null;
+}
+
 /**
- * 依據指定場次與女孩 ID，計算該女孩在整場比賽各局之區域、站位與最佳推薦座位區間
+ * 依據指定場次與女孩 ID，計算該女孩在整場比賽各局之區域、站位與最佳推薦座位區間（含跨區鄰接推薦）
  */
 export function getGirlSeatRecommendations(
   matchSchedule: MatchStationSchedule,
@@ -525,6 +635,11 @@ export function getGirlSeatRecommendations(
     const initMeta = SLOT_META[initSlot];
     const afterMeta = SLOT_META[after10Slot];
     const sweet = computeSweetSpot(initSlot, after10Slot);
+    const crossZoneOption = computeCrossZoneAdjacentOption(
+      foundZone,
+      initSlot,
+      after10Slot
+    );
 
     const priorityBadge =
       s.setKey === 'set1_4'
@@ -558,6 +673,7 @@ export function getGirlSeatRecommendations(
       sweetSpotRange: sweet.range,
       sweetSpotLabel: sweet.label,
       sweetSpotReason: sweet.reason,
+      crossZoneOption,
     });
   }
 
@@ -786,6 +902,164 @@ export function getFullMatchGirlDistanceSummary(
   }
 
   return comparisons;
+}
+
+/**
+ * 計算指定女孩在該場次的「跨區免換位黃金座位區間」（利用 A23↔B1 與 B23↔C1 連續看台特性，找出單一座位即可跨區覆蓋多局 12 席內好拍範圍的最佳位置區間）
+ */
+export function getCrossZoneGoldenIntervals(
+  matchSchedule: MatchStationSchedule,
+  girlId: string
+): CrossZoneGoldenInterval[] {
+  const recs = getGirlSeatRecommendations(matchSchedule, girlId);
+  if (recs.length === 0) return [];
+
+  const setWeightMap: Record<'set1_4' | 'set2_5' | 'set3', number> = {
+    set1_4: 2.0,
+    set2_5: 1.65,
+    set3: 1.25,
+  };
+
+  const evaluateJunction = (
+    id: 'AB' | 'BC',
+    leftZone: AceZoneId,
+    rightZone: AceZoneId
+  ): CrossZoneGoldenInterval => {
+    const leftSet = recs.find((r) => r.zone === leftZone);
+    const rightSet = recs.find((r) => r.zone === rightZone);
+
+    interface SeatEval {
+      zone: AceZoneId;
+      seat: number;
+      score: number;
+      coveredSets: string[];
+      coveredPhases: number;
+      coversBothZones: boolean;
+    }
+
+    const evalSeat = (zone: AceZoneId, seat: number): SeatEval => {
+      const summary = getFullMatchGirlDistanceSummary(
+        matchSchedule,
+        zone,
+        seat,
+        girlId
+      );
+      let score = 0;
+      let coveredPhases = 0;
+      const coveredSetLabels: string[] = [];
+      let coversLeft = false;
+      let coversRight = false;
+
+      for (const item of summary) {
+        const w = setWeightMap[item.setKey];
+        const initNear = item.initial.isWithin12Seats;
+        const afterNear = item.after10.isWithin12Seats;
+
+        if (initNear) {
+          coveredPhases += 1;
+          score +=
+            w * 0.4 * Math.max(25, 100 - item.initial.seatsToCoreCenter * 5);
+        }
+        if (afterNear) {
+          coveredPhases += 1;
+          score +=
+            w * 0.6 * Math.max(30, 100 - item.after10.seatsToCoreCenter * 5);
+        }
+        if (initNear || afterNear) {
+          coveredSetLabels.push(item.setShortLabel);
+          if (item.initial.girlZone === leftZone) coversLeft = true;
+          if (item.initial.girlZone === rightZone) coversRight = true;
+        }
+      }
+
+      const coversBothZones = coversLeft && coversRight;
+      if (coversBothZones) {
+        score += 65;
+      }
+
+      return {
+        zone,
+        seat,
+        score,
+        coveredSets: coveredSetLabels,
+        coveredPhases,
+        coversBothZones,
+      };
+    };
+
+    const leftCandidates: SeatEval[] = [];
+    for (let s = 16; s <= 23; s++) {
+      leftCandidates.push(evalSeat(leftZone, s));
+    }
+
+    const rightCandidates: SeatEval[] = [];
+    for (let s = 1; s <= 8; s++) {
+      rightCandidates.push(evalSeat(rightZone, s));
+    }
+
+    const bestLeft = [...leftCandidates].sort((a, b) => b.score - a.score)[0];
+    const bestRight = [...rightCandidates].sort((a, b) => b.score - a.score)[0];
+    const overallBest =
+      bestLeft.score >= bestRight.score ? bestLeft : bestRight;
+
+    const goodLeftSeats = leftCandidates
+      .filter((c) => c.coversBothZones || c.score >= bestLeft.score * 0.82)
+      .map((c) => c.seat);
+    const leftRange: [number, number] =
+      goodLeftSeats.length > 0
+        ? [Math.min(...goodLeftSeats), Math.max(...goodLeftSeats)]
+        : [17, 23];
+
+    const goodRightSeats = rightCandidates
+      .filter((c) => c.coversBothZones || c.score >= bestRight.score * 0.82)
+      .map((c) => c.seat);
+    const rightRange: [number, number] =
+      goodRightSeats.length > 0
+        ? [Math.min(...goodRightSeats), Math.max(...goodRightSeats)]
+        : [1, 7];
+
+    const boundaryTag =
+      id === 'AB' ? 'A23 ↔ B1 跨區交界黃金帶' : 'B23 ↔ C1 跨區交界黃金帶';
+    const junctionTitle =
+      id === 'AB'
+        ? 'A 區大號 ↔ B 區小號 跨區黃金區間'
+        : 'B 區大號 ↔ C 區小號 跨區黃金區間';
+
+    const combinedRangeLabel = `${leftZone} 區 ${leftRange[0]}–${leftRange[1]} 號 ↔ ${rightZone} 區 ${rightRange[0]}–${rightRange[1]} 號`;
+    const bestSingleSeatLabel = `${overallBest.zone} 區 ${overallBest.seat} 號`;
+
+    const coveredSetsLabel =
+      overallBest.coveredSets.length > 0
+        ? overallBest.coveredSets.join(' ＋ ')
+        : `${leftSet?.setShortLabel ?? ''} ＋ ${rightSet?.setShortLabel ?? ''}`;
+
+    const summaryReason = `利用「${leftZone} 區 23 號緊鄰 ${rightZone} 區 1 號」無縫相接特性，坐在此跨區交界區間可同時在 12 席最佳視角內捕捉她在 ${leftZone} 區（${leftSet?.setShortLabel ?? ''}）與 ${rightZone} 區（${rightSet?.setShortLabel ?? ''}）的應援畫面，整場免換位即可橫跨雙區拍攝！`;
+
+    return {
+      id,
+      junctionTitle,
+      boundaryTag,
+      leftZone,
+      leftSeatRange: leftRange,
+      leftBestSeat: bestLeft.seat,
+      rightZone,
+      rightSeatRange: rightRange,
+      rightBestSeat: bestRight.seat,
+      combinedRangeLabel,
+      bestSingleSeatLabel,
+      bestSingleZone: overallBest.zone,
+      bestSingleSeat: overallBest.seat,
+      coveredSetsLabel,
+      coveredPhasesCount: overallBest.coveredPhases,
+      summaryReason,
+      score: Math.round(overallBest.score),
+    };
+  };
+
+  const ab = evaluateJunction('AB', 'A', 'B');
+  const bc = evaluateJunction('BC', 'B', 'C');
+
+  return [ab, bc].sort((a, b) => b.score - a.score);
 }
 
 export interface ThemeWeekGroup {

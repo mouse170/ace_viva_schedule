@@ -3,8 +3,10 @@ import { MEMBERS, type AceVivaMember } from '../data/members';
 import {
   STATION_ROTATION_SCHEDULES,
   getGirlSeatRecommendations,
+  getCrossZoneGoldenIntervals,
   type AceZoneId,
   type GirlSetZoneRecommendation,
+  type CrossZoneGoldenInterval,
 } from '../data/schedule';
 import { MemberPortrait } from './MemberPortrait';
 import { OshiStrategyCardModal } from './OshiStrategyCardModal';
@@ -95,8 +97,17 @@ export const GirlSeatRecommendationSection: React.FC<
     [currentMatchSchedule, activeGirl.id]
   );
 
+  const crossZoneIntervals = useMemo(
+    () => getCrossZoneGoldenIntervals(currentMatchSchedule, activeGirl.id),
+    [currentMatchSchedule, activeGirl.id]
+  );
+
   const primaryRec: GirlSetZoneRecommendation | undefined =
     activeGirlRecommendations[0];
+  const topCrossZone: CrossZoneGoldenInterval | undefined =
+    crossZoneIntervals[0];
+  const secondaryCrossZone: CrossZoneGoldenInterval | undefined =
+    crossZoneIntervals[1];
 
   // Matrix list (all rotating members or filtered by favorites)
   const matrixMembers = useMemo(() => {
@@ -339,6 +350,115 @@ export const GirlSeatRecommendationSection: React.FC<
                     </div>
                   </div>
                 )}
+
+                {/* Cross-Zone Multi-Set Golden Interval Recommendation Box */}
+                {topCrossZone && (
+                  <div className="mt-4 rounded-2xl border-2 border-[#5ECBC0] bg-[#191838] p-4 shadow-md sm:p-5">
+                    <div className="flex flex-wrap items-center justify-between gap-1.5">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[#5ECBC0] px-2.5 py-0.5 font-mono-num text-[10px] font-black tracking-wider text-[#212047] uppercase lg:text-xs">
+                        <span>↔ CROSS-ZONE GOLDEN BAND</span>
+                        <span>· 跨區免換位黃金區間</span>
+                      </span>
+                      <span className="rounded-md bg-white/10 px-2 py-0.5 font-mono-num text-[10px] font-extrabold text-[#7ADAD0] lg:text-xs">
+                        涵蓋 {topCrossZone.coveredPhasesCount}/6 階段於 12 席內
+                      </span>
+                    </div>
+
+                    <div className="mt-2.5 text-lg font-black text-white sm:text-xl lg:text-2xl">
+                      {topCrossZone.combinedRangeLabel}
+                    </div>
+                    <div className="mt-1 flex flex-wrap items-center gap-1.5 font-mono-num text-xs font-extrabold text-[#5ECBC0] lg:text-sm">
+                      <span>跨區雙局兼顧：{topCrossZone.coveredSetsLabel}</span>
+                      <span>·</span>
+                      <span>首選核心：{topCrossZone.bestSingleSeatLabel}</span>
+                    </div>
+
+                    <p className="mt-2 text-xs leading-relaxed text-white/85 lg:text-sm">
+                      {topCrossZone.summaryReason}
+                    </p>
+
+                    {/* Quick Jump Buttons for Both Sides of the Cross-Zone Boundary */}
+                    <div className="mt-3.5 grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (onJumpToSeatSimulator) {
+                            onJumpToSeatSimulator(
+                              currentMatchSchedule.matchId,
+                              topCrossZone.leftZone,
+                              topCrossZone.leftBestSeat,
+                              activeGirl.id
+                            );
+                          }
+                        }}
+                        className="flex flex-col items-start rounded-xl bg-white/10 px-3 py-2 text-left ring-1 ring-white/20 transition-all hover:bg-[#5BAE84] hover:text-white active:scale-95"
+                      >
+                        <span className="font-mono-num text-[10px] font-bold text-[#7ADAD0]">
+                          跨區左翼（{topCrossZone.leftZone} 區 {topCrossZone.leftSeatRange[0]}–{topCrossZone.leftSeatRange[1]} 號）
+                        </span>
+                        <span className="mt-0.5 text-xs font-black text-white lg:text-sm">
+                          模擬 {topCrossZone.leftZone} 區 {topCrossZone.leftBestSeat} 號席 →
+                        </span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (onJumpToSeatSimulator) {
+                            onJumpToSeatSimulator(
+                              currentMatchSchedule.matchId,
+                              topCrossZone.rightZone,
+                              topCrossZone.rightBestSeat,
+                              activeGirl.id
+                            );
+                          }
+                        }}
+                        className="flex flex-col items-start rounded-xl bg-white/10 px-3 py-2 text-left ring-1 ring-white/20 transition-all hover:bg-[#5BAE84] hover:text-white active:scale-95"
+                      >
+                        <span className="font-mono-num text-[10px] font-bold text-[#7ADAD0]">
+                          跨區右翼（{topCrossZone.rightZone} 區 {topCrossZone.rightSeatRange[0]}–{topCrossZone.rightSeatRange[1]} 號）
+                        </span>
+                        <span className="mt-0.5 text-xs font-black text-white lg:text-sm">
+                          模擬 {topCrossZone.rightZone} 區 {topCrossZone.rightBestSeat} 號席 →
+                        </span>
+                      </button>
+                    </div>
+
+                    {/* Secondary Cross-Zone Junction Option */}
+                    {secondaryCrossZone && (
+                      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-white/15 pt-2.5 text-[11px] text-white/75 lg:text-xs">
+                        <div>
+                          <span className="font-bold text-[#7ADAD0]">
+                            次選跨區交界（{secondaryCrossZone.boundaryTag}）：
+                          </span>
+                          <span className="font-mono-num font-bold text-white">
+                            {secondaryCrossZone.combinedRangeLabel}
+                          </span>
+                          <span className="ml-1 text-white/60">
+                            （兼顧 {secondaryCrossZone.coveredSetsLabel}）
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (onJumpToSeatSimulator) {
+                              onJumpToSeatSimulator(
+                                currentMatchSchedule.matchId,
+                                secondaryCrossZone.bestSingleZone,
+                                secondaryCrossZone.bestSingleSeat,
+                                activeGirl.id
+                              );
+                            }
+                          }}
+                          className="shrink-0 rounded-full bg-white/15 px-2.5 py-1 font-mono-num text-[10px] font-bold text-[#7ADAD0] hover:bg-[#5BAE84] hover:text-white"
+                        >
+                          模擬 {secondaryCrossZone.bestSingleZone}
+                          {secondaryCrossZone.bestSingleSeat} 號 →
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Rotation Logic Tip */}
@@ -414,7 +534,7 @@ export const GirlSeatRecommendationSection: React.FC<
 
                     <div className="col-span-2 rounded-2xl bg-[#E6F5F1] p-3 ring-1 ring-[#5BAE84]/40 sm:col-span-1 lg:p-4">
                       <div className="font-mono-num text-[10px] font-extrabold text-[#3F8E67] uppercase lg:text-xs">
-                        SWEET SPOT · 整局推薦區間
+                        SWEET SPOT · 區內推薦黃金帶
                       </div>
                       <div className="mt-1 text-sm font-black text-[#212047] lg:text-lg">
                         {rec.sweetSpotLabel}
@@ -424,6 +544,42 @@ export const GirlSeatRecommendationSection: React.FC<
                       </div>
                     </div>
                   </div>
+
+                  {/* Cross-Zone Adjacent Seat Recommendation Banner (when standing near zone boundary) */}
+                  {rec.crossZoneOption && (
+                    <div className="mt-3 flex flex-col justify-between gap-2 rounded-2xl border border-[#5BAE84]/50 bg-[#D5EFE9]/75 px-3.5 py-2.5 sm:flex-row sm:items-center lg:px-4 lg:py-3">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span className="rounded-md bg-[#212047] px-2 py-0.5 font-mono-num text-[10px] font-extrabold text-[#7ADAD0] lg:text-xs">
+                            ↔ 跨區鄰接推薦（{rec.crossZoneOption.boundaryName}）
+                          </span>
+                          <span className="font-mono-num text-xs font-black text-[#212047] lg:text-sm">
+                            {rec.crossZoneOption.label}
+                          </span>
+                        </div>
+                        <p className="mt-1 text-[11px] leading-snug text-[#212047]/80 lg:text-xs">
+                          {rec.crossZoneOption.reason}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (onJumpToSeatSimulator && rec.crossZoneOption) {
+                            onJumpToSeatSimulator(
+                              currentMatchSchedule.matchId,
+                              rec.crossZoneOption.adjacentZone,
+                              rec.crossZoneOption.adjacentCoreSeat,
+                              activeGirl.id
+                            );
+                          }
+                        }}
+                        className="shrink-0 self-start rounded-full bg-[#212047] px-3 py-1.5 font-mono-num text-[11px] font-extrabold text-[#7ADAD0] transition-all hover:bg-[#5BAE84] hover:text-white active:scale-95 sm:self-center lg:text-xs"
+                      >
+                        模擬跨區 {rec.crossZoneOption.adjacentZone} 區{' '}
+                        {rec.crossZoneOption.adjacentCoreSeat} 號席 →
+                      </button>
+                    </div>
+                  )}
 
                   {/* Bottom Row: 1-23 Seat Heatmap Bar (Mobile 3-Station Stacked / Desktop 23-Col Linear) */}
                   <div className="mt-4">
@@ -607,6 +763,10 @@ export const GirlSeatRecommendationSection: React.FC<
                     currentMatchSchedule,
                     m.id
                   );
+                  const topCross = getCrossZoneGoldenIntervals(
+                    currentMatchSchedule,
+                    m.id
+                  )[0];
                   const isSelected = m.id === activeGirl.id;
 
                   return (
@@ -660,7 +820,23 @@ export const GirlSeatRecommendationSection: React.FC<
                         </button>
                       </div>
 
-                      <div className="mt-2.5 space-y-2">
+                      {topCross && (
+                        <div className="mt-2.5 rounded-xl bg-[#212047] px-3 py-2 text-xs text-white">
+                          <div className="flex flex-wrap items-center justify-between gap-1">
+                            <span className="font-mono-num text-[10px] font-extrabold text-[#7ADAD0]">
+                              ↔ 跨區免換位黃金區間（兼顧 {topCross.coveredSetsLabel}）
+                            </span>
+                            <span className="font-mono-num text-[10px] font-bold text-[#5ECBC0]">
+                              首選 {topCross.bestSingleSeatLabel}
+                            </span>
+                          </div>
+                          <div className="mt-0.5 font-mono-num text-xs font-black text-white">
+                            {topCross.combinedRangeLabel}
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="mt-2 space-y-2">
                         {recs.map((r, idx) => (
                           <div
                             key={r.setKey}
@@ -696,18 +872,21 @@ export const GirlSeatRecommendationSection: React.FC<
 
               {/* Desktop Full Table */}
               <div className="mt-6 hidden overflow-x-auto md:block">
-                <table className="w-full min-w-[780px] border-collapse text-left">
+                <table className="w-full min-w-[920px] border-collapse text-left">
                   <thead>
                     <tr className="border-b border-[#212047]/10 font-mono-num text-xs font-extrabold tracking-[0.14em] text-[#212047]/60 uppercase lg:text-sm">
                       <th className="py-3 pr-4">女孩成員</th>
-                      <th className="px-4 py-3">
+                      <th className="px-3 py-3 text-[#3F8E67]">
+                        ↔ 跨區免換位黃金區間（雙區多局兼顧）
+                      </th>
+                      <th className="px-3 py-3">
                         ★ 首選主戰區（第 1 &amp; 4 局）
                       </th>
-                      <th className="px-4 py-3">
+                      <th className="px-3 py-3">
                         ◆ 次選推薦區（第 2 &amp; 5 局）
                       </th>
-                      <th className="px-4 py-3">● 第三局必打區（第 3 局）</th>
-                      <th className="py-3 pl-4 text-right">攻略詳情</th>
+                      <th className="px-3 py-3">● 第三局必打區（第 3 局）</th>
+                      <th className="py-3 pl-3 text-right">攻略詳情</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#212047]/[0.08] text-xs lg:text-sm">
@@ -716,6 +895,10 @@ export const GirlSeatRecommendationSection: React.FC<
                         currentMatchSchedule,
                         m.id
                       );
+                      const topCross = getCrossZoneGoldenIntervals(
+                        currentMatchSchedule,
+                        m.id
+                      )[0];
                       const r1 = recs.find((r) => r.setKey === 'set1_4');
                       const r2 = recs.find((r) => r.setKey === 'set2_5');
                       const r3 = recs.find((r) => r.setKey === 'set3');
@@ -754,8 +937,24 @@ export const GirlSeatRecommendationSection: React.FC<
                             </div>
                           </td>
 
+                          <td className="px-3 py-4">
+                            {topCross && (
+                              <div className="rounded-xl bg-[#212047] px-3 py-2 text-white">
+                                <div className="font-mono-num text-xs font-black text-[#5ECBC0] lg:text-sm">
+                                  {topCross.combinedRangeLabel}
+                                </div>
+                                <div className="mt-0.5 font-mono-num text-[11px] text-white/80 lg:text-xs">
+                                  兼顧 {topCross.coveredSetsLabel} · 首選{' '}
+                                  <strong className="text-[#7ADAD0]">
+                                    {topCross.bestSingleSeatLabel}
+                                  </strong>
+                                </div>
+                              </div>
+                            )}
+                          </td>
+
                           {[r1, r2, r3].map((r, idx) => (
-                            <td key={idx} className="px-4 py-4">
+                            <td key={idx} className="px-3 py-4">
                               {r && (
                                 <div>
                                   <div className="flex items-center gap-1.5">
