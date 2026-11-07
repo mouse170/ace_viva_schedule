@@ -761,11 +761,13 @@ function computePhaseDistance(
     seatsToCoreCenter = 0;
     signedSeatOffset = 0;
   } else if (userGlobalSeat < girlGlobalCoreMin) {
+    // 女孩位於較大號或往 C 區方向：當觀眾坐在座位面向球場時，大號／C 區側為觀眾的「左手邊（左前方）」
     seatsToCoreCenter = girlGlobalCoreMin - userGlobalSeat;
-    signedSeatOffset = seatsToCoreCenter; // 正值代表在座位右前方
+    signedSeatOffset = -seatsToCoreCenter; // 負值代表在觀眾視角左前方（左手邊 C 區／大號側）
   } else {
+    // 女孩位於較小號或往 A 區方向：當觀眾坐在座位面向球場時，小號／A 區側為觀眾的「右手邊（右前方）」
     seatsToCoreCenter = userGlobalSeat - girlGlobalCoreMax;
-    signedSeatOffset = -seatsToCoreCenter; // 負值代表在座位左前方
+    signedSeatOffset = seatsToCoreCenter; // 正值代表在觀眾視角右前方（右手邊 A 區／小號側）
   }
 
   const isDirectFront = isSameZone && userSeat >= rangeStart && userSeat <= rangeEnd;
@@ -787,7 +789,7 @@ function computePhaseDistance(
   }
 
   const deltaGlobal = girlGlobalCoreSeat - userGlobalSeat;
-  const dirShort = deltaGlobal < 0 ? '往左' : '往右';
+  const dirShort = deltaGlobal > 0 ? '往左前' : '往右前';
   let directionText = '正前方直視';
   if (!isDirectFront) {
     if (isSameZone) {
