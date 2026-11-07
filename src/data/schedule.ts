@@ -788,4 +788,57 @@ export function getFullMatchGirlDistanceSummary(
   return comparisons;
 }
 
+export interface ThemeWeekGroup {
+  weekId: string;
+  weekShortLabel: string;
+  themeTitle: string;
+  dateRangeLabel: string;
+  isCurrentWeek?: boolean;
+  matches: HomeMatchSchedule[];
+}
+
+/**
+ * 依主題週聚合主場賽事，支援動態調整當週顯示天數與當週出席天數篩選
+ */
+export const THEME_WEEKS: ThemeWeekGroup[] = [
+  {
+    weekId: 'week-2026-10-31',
+    weekShortLabel: '10/31–11/01 開幕週',
+    themeTitle: 'HOME GAME OPENING SHOW 開幕主題週',
+    dateRangeLabel: '10/31 (六) – 11/01 (日)',
+    matches: HOME_SCHEDULE.filter(
+      (m) => m.id === '2026-10-31' || m.id === '2026-11-01'
+    ),
+  },
+  {
+    weekId: 'week-2026-11-07',
+    weekShortLabel: '11/07–11/08 本週主題日',
+    themeTitle: 'Old! MY CAR 我的 90 年代',
+    dateRangeLabel: '11/07 (六) – 11/08 (日)',
+    isCurrentWeek: true,
+    matches: HOME_SCHEDULE.filter(
+      (m) => m.id === '2026-11-07' || m.id === '2026-11-08'
+    ),
+  },
+  {
+    weekId: 'week-2026-11-21',
+    weekShortLabel: '11/21–11/22 致青春週',
+    themeTitle: '致青春 創造 WIN',
+    dateRangeLabel: '11/21 (六) – 11/22 (日)',
+    matches: HOME_SCHEDULE.filter(
+      (m) => m.id === '2026-11-21' || m.id === '2026-11-22'
+    ),
+  },
+  {
+    weekId: 'week-2026-12-12',
+    weekShortLabel: '12/12–12/13 聖誕週',
+    themeTitle: 'HOME FOR CHRISTMAS 聖誕主題週',
+    dateRangeLabel: '12/12 (六) – 12/13 (日)',
+    matches: HOME_SCHEDULE.filter(
+      (m) => m.id === '2026-12-12' || m.id === '2026-12-13'
+    ),
+  },
+];
+
+
 

@@ -1,7 +1,8 @@
-import React, { useEffect, useId, useRef } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import type { AceVivaMember } from '../data/members';
 import { HOME_SCHEDULE } from '../data/schedule';
 import { MemberPortrait } from './MemberPortrait';
+import { ZodiacIcon, isCurrentMonthBirthday } from './ZodiacIcon';
 
 interface MemberDetailDialogProps {
   member: AceVivaMember | null;
@@ -20,6 +21,24 @@ export const MemberDetailDialog: React.FC<MemberDetailDialogProps> = ({
 }) => {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const titleId = useId();
+  const [copiedKey, setCopiedKey] = useState<'name' | 'ig' | null>(null);
+
+  const handleCopyText = async (text: string, key: 'name' | 'ig') => {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+    setCopiedKey(key);
+    window.setTimeout(() => {
+      setCopiedKey((prev) => (prev === key ? null : prev));
+    }, 1800);
+  };
 
   // Open or close native modal <dialog> via showModal()
   useEffect(() => {
@@ -208,7 +227,7 @@ export const MemberDetailDialog: React.FC<MemberDetailDialogProps> = ({
                       </div>
                       <h2
                         id={titleId}
-                        className="mt-2.5 flex items-baseline gap-3 text-3xl font-black tracking-tight text-[#212047] sm:text-4xl"
+                        className="mt-2.5 flex flex-wrap items-baseline gap-3 text-3xl font-black tracking-tight text-[#212047] sm:text-4xl"
                       >
                         <span>{member.name}</span>
                         {member.realOrAltName && (
@@ -217,6 +236,43 @@ export const MemberDetailDialog: React.FC<MemberDetailDialogProps> = ({
                           </span>
                         )}
                       </h2>
+
+                      {/* Quick Copy Bar: Copy Name & Copy IG ID (with @) */}
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleCopyText(member.name, 'name')}
+                          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-mono-num text-xs font-bold transition-all active:scale-95 ${
+                            copiedKey === 'name'
+                              ? 'bg-[#5BAE84] text-white'
+                              : 'bg-white text-[#212047] ring-1 ring-[#212047]/15 hover:bg-[#E6F5F1]'
+                          }`}
+                        >
+                          <span>
+                            {copiedKey === 'name'
+                              ? `已複製：${member.name}`
+                              : `複製成員名（${member.name}）`}
+                          </span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleCopyText(`@${member.instagramHandle}`, 'ig')
+                          }
+                          className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-mono-num text-xs font-bold transition-all active:scale-95 ${
+                            copiedKey === 'ig'
+                              ? 'bg-[#5BAE84] text-white'
+                              : 'bg-[#212047] text-[#7ADAD0] hover:bg-[#2E2C5E]'
+                          }`}
+                        >
+                          <span>
+                            {copiedKey === 'ig'
+                              ? `已複製：@${member.instagramHandle}`
+                              : `複製 IG ID（@${member.instagramHandle}）`}
+                          </span>
+                        </button>
+                      </div>
                     </div>
 
                     <div className="font-editorial text-5xl font-bold tracking-tighter text-[#4FA87D] italic">
@@ -232,13 +288,26 @@ export const MemberDetailDialog: React.FC<MemberDetailDialogProps> = ({
                     {member.bio}
                   </p>
 
-                  {/* Key Metadata Grid (Including Official MBTI) */}
+                  {/* Key Metadata Grid (With Birthday Star Highlight & Custom Zodiac Icon) */}
                   <div className="mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-                    <div className="rounded-2xl bg-white px-4 py-3 ring-1 ring-[#212047]/[0.08]">
-                      <div className="font-mono-num text-[10px] tracking-[0.18em] text-[#212047]/50 uppercase">
-                        BIRTHDAY 生日
+                    <div
+                      className={`rounded-2xl px-4 py-3 ${
+                        isCurrentMonthBirthday(member.birthday)
+                          ? 'bg-amber-400/20 ring-2 ring-amber-500 shadow-xs'
+                          : 'bg-white ring-1 ring-[#212047]/[0.08]'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-1">
+                        <span className="font-mono-num text-[10px] tracking-[0.18em] text-[#212047]/60 uppercase">
+                          BIRTHDAY 生日
+                        </span>
+                        {isCurrentMonthBirthday(member.birthday) && (
+                          <span className="rounded-full bg-amber-500 px-1.5 py-0.2 font-mono-num text-[9px] font-black text-white">
+                            本月壽星
+                          </span>
+                        )}
                       </div>
-                      <div className="mt-1 text-sm font-bold text-[#212047]">
+                      <div className="mt-1 text-sm font-black text-[#212047]">
                         {member.birthday}
                       </div>
                     </div>
@@ -246,8 +315,12 @@ export const MemberDetailDialog: React.FC<MemberDetailDialogProps> = ({
                       <div className="font-mono-num text-[10px] tracking-[0.18em] text-[#212047]/50 uppercase">
                         ZODIAC 星座
                       </div>
-                      <div className="mt-1 text-sm font-bold text-[#212047]">
-                        {member.zodiac}
+                      <div className="mt-1 flex items-center gap-1.5 text-sm font-bold text-[#212047]">
+                        <ZodiacIcon
+                          zodiac={member.zodiac}
+                          className="h-5 w-5"
+                        />
+                        <span>{member.zodiac}</span>
                       </div>
                     </div>
                     <div className="rounded-2xl bg-[#E6F5F1] px-4 py-3 ring-1 ring-[#5BAE84]/30">

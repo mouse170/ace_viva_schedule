@@ -7,6 +7,7 @@ import {
   type GirlSetZoneRecommendation,
 } from '../data/schedule';
 import { MemberPortrait } from './MemberPortrait';
+import { OshiStrategyCardModal } from './OshiStrategyCardModal';
 
 interface GirlSeatRecommendationSectionProps {
   favoriteIds: string[];
@@ -41,6 +42,8 @@ export const GirlSeatRecommendationSection: React.FC<
   const [selectedMatchId, setSelectedMatchId] = useState<string>('2026-11-07');
   const [selectedGirlId, setSelectedGirlId] = useState<string>('yuri');
   const [onlyFavoritesInMatrix, setOnlyFavoritesInMatrix] =
+    useState<boolean>(false);
+  const [isStrategyModalOpen, setIsStrategyModalOpen] =
     useState<boolean>(false);
 
   const memberMap = useMemo(() => {
@@ -124,25 +127,37 @@ export const GirlSeatRecommendationSection: React.FC<
           </p>
         </div>
 
-        {/* Date Switcher */}
-        <div className="grid w-full grid-cols-2 gap-1.5 rounded-2xl bg-[#D5EFE9] p-1.5 ring-1 ring-[#5BAE84]/35 sm:w-auto sm:flex sm:rounded-full lg:self-end">
-          {STATION_ROTATION_SCHEDULES.map((sched) => {
-            const isActive = sched.matchId === selectedMatchId;
-            return (
-              <button
-                key={sched.matchId}
-                type="button"
-                onClick={() => setSelectedMatchId(sched.matchId)}
-                className={`rounded-xl px-2.5 py-2.5 text-center text-xs font-extrabold transition-all duration-300 sm:rounded-full sm:px-5 sm:whitespace-nowrap lg:px-6 lg:py-3 lg:text-sm ${
-                  isActive
-                    ? 'bg-[#212047] text-white shadow-sm'
-                    : 'text-[#212047]/75 hover:bg-white/60 hover:text-[#212047]'
-                }`}
-              >
-                {sched.dateLabel.split(' ')[0]} vs {sched.opponent}
-              </button>
-            );
-          })}
+        {/* Dynamic Match Day Switcher + 1-Click Strategy Card Generator */}
+        <div className="flex flex-wrap items-center gap-2 lg:self-end">
+          <div className="flex flex-wrap gap-1.5 rounded-2xl bg-[#D5EFE9] p-1.5 ring-1 ring-[#5BAE84]/35 sm:rounded-full">
+            {STATION_ROTATION_SCHEDULES.map((sched, idx) => {
+              const isActive = sched.matchId === selectedMatchId;
+              return (
+                <button
+                  key={sched.matchId}
+                  type="button"
+                  onClick={() => setSelectedMatchId(sched.matchId)}
+                  className={`rounded-xl px-3 py-2 text-center text-xs font-extrabold transition-all duration-300 sm:rounded-full sm:px-4 sm:whitespace-nowrap lg:px-5 lg:py-2.5 lg:text-sm ${
+                    isActive
+                      ? 'bg-[#212047] text-white shadow-sm'
+                      : 'text-[#212047]/75 hover:bg-white/60 hover:text-[#212047]'
+                  }`}
+                >
+                  Day {idx + 1} · {sched.dateLabel.split(' ')[0]} vs{' '}
+                  {sched.opponent}
+                </button>
+              );
+            })}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setIsStrategyModalOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-full bg-[#5BAE84] px-4 py-2.5 text-xs font-black text-white shadow-sm transition-all hover:bg-[#3F8E67] active:scale-95 lg:px-5 lg:py-3 lg:text-sm"
+          >
+            <span>一鍵生出「{activeGirl.name}」視角攻略圖片</span>
+            <span>↓</span>
+          </button>
         </div>
       </div>
 
@@ -259,14 +274,24 @@ export const GirlSeatRecommendationSection: React.FC<
                         {activeGirl.realOrAltName} · MBTI {activeGirl.mbti}
                       </div>
                     )}
-                    <button
-                      type="button"
-                      onClick={() => onOpenMemberDetail(activeGirl)}
-                      className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-[#7ADAD0] hover:underline lg:text-sm"
-                    >
-                      <span>開啟完整個人檔案</span>
-                      <span>↗</span>
-                    </button>
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => onOpenMemberDetail(activeGirl)}
+                        className="inline-flex items-center gap-1 text-xs font-bold text-[#7ADAD0] hover:underline lg:text-sm"
+                      >
+                        <span>個人檔案</span>
+                        <span>↗</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIsStrategyModalOpen(true)}
+                        className="inline-flex items-center gap-1 rounded-full bg-[#5BAE84] px-3 py-1 text-xs font-black text-white shadow-xs transition-transform hover:bg-[#3F8E67] active:scale-95"
+                      >
+                        <span>生成換位攻略圖 (PNG)</span>
+                        <span>↓</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -838,6 +863,14 @@ export const GirlSeatRecommendationSection: React.FC<
           </div>
         </div>
       </div>
+
+      {/* One-Click Oshi Strategy Image Modal */}
+      <OshiStrategyCardModal
+        isOpen={isStrategyModalOpen}
+        initialGirlId={activeGirl.id}
+        initialMatchId={selectedMatchId}
+        onClose={() => setIsStrategyModalOpen(false)}
+      />
     </section>
   );
 };

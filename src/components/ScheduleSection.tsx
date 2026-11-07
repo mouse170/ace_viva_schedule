@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { MEMBERS, type AceVivaMember } from '../data/members';
 import {
   HOME_SCHEDULE,
   STATION_ROTATION_SCHEDULES,
+  THEME_WEEKS,
   type AceZoneId,
 } from '../data/schedule';
 import { MemberPortrait } from './MemberPortrait';
@@ -20,11 +21,18 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
   onSelectMemberFilter,
   onOpenMemberDetail,
 }) => {
+  // Default to current week ('week-2026-11-07') or 'all'
+  const [selectedWeekId, setSelectedWeekId] = useState<string>('all');
+  // Dynamic day filter within the selected week ('all' or specific match.id)
+  const [selectedDayMatchId, setSelectedDayMatchId] = useState<string>('all');
+  // Dynamic minimum attendance days filter within a week (0 = any, 1 = 1 day, 2 = 2 days...)
+  const [requiredDaysInWeek, setRequiredDaysInWeek] = useState<number>(0);
+
   const [expandedStationMatchId, setExpandedStationMatchId] = useState<
     string | null
   >('2026-11-07');
 
-  const memberMap = React.useMemo(() => {
+  const memberMap = useMemo(() => {
     const map = new Map<string, AceVivaMember>();
     for (const m of MEMBERS) {
       map.set(m.id, m);
@@ -32,18 +40,54 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
     return map;
   }, []);
 
-  const filteredSchedule = React.useMemo(() => {
-    if (selectedMemberId === 'all') return HOME_SCHEDULE;
+  // Current active week group (if a specific week is chosen, otherwise defaults to current week for day-count stats)
+  const activeWeekGroup = useMemo(() => {
+    if (selectedWeekId === 'all') return null;
+    return THEME_WEEKS.find((w) => w.weekId === selectedWeekId) ?? null;
+  }, [selectedWeekId]);
+
+  // Reset day filter when switching weeks
+  const handleSelectWeek = (weekId: string) => {
+    setSelectedWeekId(weekId);
+    setSelectedDayMatchId('all');
+    setRequiredDaysInWeek(0);
+  };
+
+  // Helper: compute how many days a member attends in the week that `matchId` belongs to
+  const getMemberWeekAttendanceCount = useMemo(() => {
+    const map = new Map<string, { attended: number; total: number }>();
+    for (const week of THEME_WEEKS) {
+      const total = week.matches.length;
+      for (const m of MEMBERS) {
+        const attended = week.matches.filter((match) =>
+          match.attendingMemberIds.includes(m.id)
+        ).length;
+        for (const match of week.matches) {
+          map.set(`${match.id}:${m.id}`, { attended, total });
+        }
+      }
+    }
+    return map;
+  }, []);
+
+  const filteredSchedule = useMemo(() => {
+    let baseList = activeWeekGroup ? activeWeekGroup.matches : HOME_SCHEDULE;
+
+    if (selectedDayMatchId !== 'all') {
+      baseList = baseList.filter((m) => m.id === selectedDayMatchId);
+    }
+
+    if (selectedMemberId === 'all') return baseList;
     if (selectedMemberId === 'favorites') {
       if (favoriteIds.length === 0) return [];
-      return HOME_SCHEDULE.filter((match) =>
+      return baseList.filter((match) =>
         match.attendingMemberIds.some((id) => favoriteIds.includes(id))
       );
     }
-    return HOME_SCHEDULE.filter((match) =>
+    return baseList.filter((match) =>
       match.attendingMemberIds.includes(selectedMemberId)
     );
-  }, [selectedMemberId, favoriteIds]);
+  }, [activeWeekGroup, selectedDayMatchId, selectedMemberId, favoriteIds]);
 
   const activeFilterMember =
     selectedMemberId !== 'all' && selectedMemberId !== 'favorites'
@@ -66,7 +110,7 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
             臺中連莊主場主題週與女孩應援班表
           </h2>
           <p className="mt-2.5 max-w-3xl text-xs leading-relaxed text-[#212047]/70 sm:text-base lg:text-lg">
-            雙向連動檢視：點選下方任一女孩頭像標籤，即可篩選出她本季所有主場出席場次；點擊場次內的成員頭像卡，可開啟個人詳細應援檔案。
+            支援主題週與當週天數動態切換：可自由選擇「單週全部天數」、「指定單日（Day 1 / Day 2）」或依「當週出席天數（全勤 / 單日）」動態篩選女孩班表。
           </p>
           <p className="mt-2 max-w-3xl text-[11px] font-semibold text-[#3F8E67] lg:text-sm">
             ※ 粉絲自製免責說明：本班表整理自官方 Instagram 公開貼文，若有臨時排班異動或賽程調整，請一律以臺中連莊球團與 ACE VIVA 官方實際公告為準。
@@ -81,83 +125,183 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
         </div>
       </div>
 
-      {/* Interactive Member Attendance Filter Pills (Face Avatar + Mobile Swipeable Row) */}
+      {/* Dynamic Theme Week & Match-Day Controls */}
       <div className="mt-6 rounded-[1.75rem] bg-[#D5EFE9]/75 p-1.5 ring-1 ring-[#5BAE84]/25 sm:mt-8 sm:rounded-[2rem] sm:p-2">
         <div className="rounded-[calc(1.75rem-0.375rem)] bg-white p-3.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.9)] sm:rounded-[calc(2rem-0.5rem)] sm:p-5 lg:p-6">
-          <div className="flex flex-wrap items-center justify-between gap-2 pb-3">
-            <span className="font-mono-num text-[10px] font-bold tracking-[0.15em] text-[#212047]/65 uppercase sm:text-[11px] lg:text-xs">
-              FILTER BY MEMBER · 點選女孩頭像篩選出席場次（手機可左右滑動）
+          {/* Row 1: Theme Week Switcher */}
+          <div className="flex flex-col gap-2 border-b border-[#212047]/10 pb-3.5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+            <span className="font-mono-num text-[10px] font-extrabold tracking-[0.14em] text-[#212047]/70 uppercase sm:text-xs">
+              STEP A · 選擇主題週次（自動載入該週實際比賽天數）
             </span>
-            {selectedMemberId !== 'all' && (
+            <div className="no-scrollbar flex gap-1.5 overflow-x-auto pb-1 sm:flex-wrap sm:pb-0">
               <button
                 type="button"
-                onClick={() => onSelectMemberFilter('all')}
-                className="font-mono-num text-xs font-bold text-[#4FA87D] underline-offset-4 hover:underline lg:text-sm"
+                onClick={() => handleSelectWeek('all')}
+                className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-extrabold transition-all lg:px-4 lg:py-2 lg:text-sm ${
+                  selectedWeekId === 'all'
+                    ? 'bg-[#212047] text-white shadow-xs'
+                    : 'bg-[#F4FAF8] text-[#212047]/80 ring-1 ring-[#212047]/10 hover:bg-[#E6F5F1]'
+                }`}
               >
-                清除篩選（全部 {HOME_SCHEDULE.length} 場）
+                全部週次（{THEME_WEEKS.length} 週 / {HOME_SCHEDULE.length} 天）
               </button>
-            )}
+              {THEME_WEEKS.map((wk) => {
+                const isAct = selectedWeekId === wk.weekId;
+                return (
+                  <button
+                    key={wk.weekId}
+                    type="button"
+                    onClick={() => handleSelectWeek(wk.weekId)}
+                    className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-extrabold transition-all lg:px-4 lg:py-2 lg:text-sm ${
+                      isAct
+                        ? 'bg-[#212047] text-[#7ADAD0] shadow-xs ring-2 ring-[#5BAE84]'
+                        : wk.isCurrentWeek
+                          ? 'bg-[#E6F5F1] text-[#212047] ring-1 ring-[#5BAE84]/50 hover:bg-[#D5EFE9]'
+                          : 'bg-[#F4FAF8] text-[#212047]/80 ring-1 ring-[#212047]/10 hover:bg-[#E6F5F1]'
+                    }`}
+                  >
+                    {wk.isCurrentWeek ? `★ ${wk.weekShortLabel}` : wk.weekShortLabel}
+                    （{wk.matches.length} 天）
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
-          {/* Quick Global Filters */}
-          <div className="mb-2.5 flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => onSelectMemberFilter('all')}
-              className={`rounded-full px-3.5 py-1.5 text-xs font-bold whitespace-nowrap transition-all active:scale-[0.97] lg:px-4 lg:py-2 lg:text-sm ${
-                selectedMemberId === 'all'
-                  ? 'bg-[#212047] text-white shadow-sm'
-                  : 'bg-[#F4FAF8] text-[#212047]/80 ring-1 ring-[#212047]/10 hover:bg-[#E6F5F1]'
-              }`}
-            >
-              全部主場賽事 ({HOME_SCHEDULE.length})
-            </button>
-
-            <button
-              type="button"
-              onClick={() => onSelectMemberFilter('favorites')}
-              className={`flex items-center gap-1.5 rounded-full px-3.5 py-1.5 text-xs font-bold whitespace-nowrap transition-all active:scale-[0.97] lg:px-4 lg:py-2 lg:text-sm ${
-                selectedMemberId === 'favorites'
-                  ? 'bg-[#5BAE84] text-white shadow-sm'
-                  : 'bg-[#5BAE84]/15 text-[#212047] hover:bg-[#5BAE84]/25'
-              }`}
-            >
-              <span>只看「我的主推」出席場次</span>
-              <span className="rounded-full bg-[#212047]/15 px-1.5 py-0.2 font-mono-num text-[10px] lg:text-xs">
-                {favoriteIds.length}
+          {/* Row 2: Dynamic Match-Day Selector & Attendance Days Filter (Visible when a week is selected, or quick day toggles) */}
+          <div className="mt-3.5 flex flex-col gap-3 border-b border-[#212047]/10 pb-3.5 lg:flex-row lg:items-center lg:justify-between">
+            {/* Dynamic Day Toggles */}
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="mr-1 font-mono-num text-[10px] font-bold text-[#3F8E67] uppercase lg:text-xs">
+                當週天數切換：
               </span>
-            </button>
-          </div>
+              <button
+                type="button"
+                onClick={() => setSelectedDayMatchId('all')}
+                className={`rounded-full px-3 py-1 text-xs font-extrabold transition-all lg:text-sm ${
+                  selectedDayMatchId === 'all'
+                    ? 'bg-[#5BAE84] text-white shadow-2xs'
+                    : 'bg-[#F4FAF8] text-[#212047]/75 ring-1 ring-[#212047]/10 hover:bg-[#E6F5F1]'
+                }`}
+              >
+                {activeWeekGroup
+                  ? `當週全部（共 ${activeWeekGroup.matches.length} 天）`
+                  : `全部比賽日（${HOME_SCHEDULE.length} 天）`}
+              </button>
 
-          {/* 18 Members Strip: Horizontal Scroll on Mobile, Flex-Wrap on Desktop */}
-          <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1.5 sm:flex-wrap sm:overflow-visible sm:pb-0">
-            {MEMBERS.map((m) => {
-              const isSelected = selectedMemberId === m.id;
-              return (
+              {(activeWeekGroup
+                ? activeWeekGroup.matches
+                : HOME_SCHEDULE
+              ).map((m, idx) => {
+                const isDayAct = selectedDayMatchId === m.id;
+                const shortDate = m.date.slice(5);
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() =>
+                      setSelectedDayMatchId(isDayAct ? 'all' : m.id)
+                    }
+                    className={`rounded-full px-3 py-1 font-mono-num text-xs font-bold transition-all lg:text-sm ${
+                      isDayAct
+                        ? 'bg-[#212047] text-[#7ADAD0] shadow-2xs ring-1 ring-[#5BAE84]'
+                        : 'bg-[#F4FAF8] text-[#212047]/80 ring-1 ring-[#212047]/10 hover:bg-[#E6F5F1]'
+                    }`}
+                  >
+                    {activeWeekGroup ? `Day ${idx + 1} · ` : ''}
+                    {shortDate} ({m.dayOfWeek.split(' ')[0]})
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Dynamic Attendance Day-Count Filter (1 Day vs All Days in Week) */}
+            <div className="flex flex-wrap items-center gap-1.5">
+              <span className="font-mono-num text-[10px] font-bold text-[#212047]/65 uppercase lg:text-xs">
+                當週出席天數篩選：
+              </span>
+              {[
+                { days: 0, label: '全部出席女孩' },
+                { days: 2, label: '當週連 2 天全勤' },
+                { days: 1, label: '當週單日限定 (1 天)' },
+              ].map((opt) => (
                 <button
-                  key={m.id}
+                  key={opt.days}
                   type="button"
-                  onClick={() =>
-                    onSelectMemberFilter(isSelected ? 'all' : m.id)
-                  }
-                  className={`flex shrink-0 items-center gap-2 rounded-full py-1 pr-3 pl-1 text-xs font-bold whitespace-nowrap transition-all duration-300 active:scale-[0.97] lg:py-1.5 lg:pr-4 lg:pl-1.5 lg:text-sm ${
-                    isSelected
-                      ? 'bg-[#212047] text-[#7ADAD0] shadow-xs ring-2 ring-[#5BAE84]'
-                      : 'bg-[#F4FAF8] text-[#212047]/90 ring-1 ring-[#212047]/10 hover:bg-[#E6F5F1]'
+                  onClick={() => setRequiredDaysInWeek(opt.days)}
+                  className={`rounded-full px-2.5 py-1 text-[11px] font-bold transition-all lg:text-xs ${
+                    requiredDaysInWeek === opt.days
+                      ? 'bg-[#212047] text-white'
+                      : 'bg-[#F4FAF8] text-[#212047]/70 ring-1 ring-[#212047]/10 hover:bg-[#E6F5F1]'
                   }`}
                 >
-                  <MemberPortrait
-                    member={m}
-                    variant="avatar"
-                    className="h-7 w-7 shrink-0 rounded-full ring-1 ring-[#5BAE84]/40 lg:h-8 lg:w-8"
-                  />
-                  <span className="font-mono-num text-[10px] text-[#4FA87D] lg:text-xs">
-                    #{m.number}
-                  </span>
-                  <span>{m.name}</span>
+                  {opt.label}
                 </button>
-              );
-            })}
+              ))}
+            </div>
+          </div>
+
+          {/* Row 3: Member Avatar Filter Strip */}
+          <div className="mt-3.5">
+            <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5">
+              <span className="font-mono-num text-[10px] font-bold tracking-[0.15em] text-[#212047]/65 uppercase sm:text-[11px] lg:text-xs">
+                FILTER BY MEMBER · 點選女孩頭像篩選出席場次
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => onSelectMemberFilter('all')}
+                  className={`rounded-full px-3 py-1 text-xs font-bold transition-all ${
+                    selectedMemberId === 'all'
+                      ? 'bg-[#212047] text-white'
+                      : 'bg-[#F4FAF8] text-[#212047]/80 ring-1 ring-[#212047]/10'
+                  }`}
+                >
+                  全部成員
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onSelectMemberFilter('favorites')}
+                  className={`rounded-full px-3 py-1 text-xs font-bold transition-all ${
+                    selectedMemberId === 'favorites'
+                      ? 'bg-[#5BAE84] text-white'
+                      : 'bg-[#5BAE84]/15 text-[#212047]'
+                  }`}
+                >
+                  只看我的主推 ({favoriteIds.length})
+                </button>
+              </div>
+            </div>
+
+            <div className="no-scrollbar flex gap-2 overflow-x-auto pb-1.5 sm:flex-wrap sm:overflow-visible sm:pb-0">
+              {MEMBERS.map((m) => {
+                const isSelected = selectedMemberId === m.id;
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() =>
+                      onSelectMemberFilter(isSelected ? 'all' : m.id)
+                    }
+                    className={`flex shrink-0 items-center gap-2 rounded-full py-1 pr-3 pl-1 text-xs font-bold whitespace-nowrap transition-all duration-300 active:scale-[0.97] lg:py-1.5 lg:pr-4 lg:pl-1.5 lg:text-sm ${
+                      isSelected
+                        ? 'bg-[#212047] text-[#7ADAD0] shadow-xs ring-2 ring-[#5BAE84]'
+                        : 'bg-[#F4FAF8] text-[#212047]/90 ring-1 ring-[#212047]/10 hover:bg-[#E6F5F1]'
+                    }`}
+                  >
+                    <MemberPortrait
+                      member={m}
+                      variant="avatar"
+                      className="h-7 w-7 shrink-0 rounded-full ring-1 ring-[#5BAE84]/40 lg:h-8 lg:w-8"
+                    />
+                    <span className="font-mono-num text-[10px] text-[#4FA87D] lg:text-xs">
+                      #{m.number}
+                    </span>
+                    <span>{m.name}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       </div>
@@ -177,7 +321,7 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
                   #{activeFilterMember.number}
                 </span>
                 <span className="text-sm font-black sm:text-base lg:text-lg">
-                  「{activeFilterMember.name}」出席的主場場次（共{' '}
+                  「{activeFilterMember.name}」於所選範圍出席場次（共{' '}
                   {filteredSchedule.length} 場）
                 </span>
               </div>
@@ -193,24 +337,20 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
         </div>
       )}
 
-      {/* Empty State for Favorites Filter */}
-      {selectedMemberId === 'favorites' && favoriteIds.length === 0 && (
-        <div className="mt-6 rounded-[2rem] bg-white p-10 text-center ring-1 ring-[#212047]/10">
-          <p className="text-base font-bold text-[#212047] lg:text-lg">
-            尚未將任何成員加入「我的主推」收藏夾
-          </p>
-          <p className="mt-2 text-xs text-[#212047]/65 sm:text-sm lg:text-base">
-            請先在上方成員圖鑑卡片點擊愛心圖示收藏喜愛的女孩，即可在此一鍵篩選她們的出席班表。
-          </p>
-        </div>
-      )}
-
-      {/* Schedule Cards Grid (Mobile-First Face Roster Cards) */}
+      {/* Schedule Cards Grid */}
       <div className="mt-6 grid grid-cols-1 gap-5 sm:mt-8 sm:gap-6 lg:grid-cols-2 lg:gap-7">
         {filteredSchedule.map((match) => {
-          const attendingMembers = match.attendingMemberIds
+          const allAttendingMembers = match.attendingMemberIds
             .map((id) => memberMap.get(id))
             .filter((m): m is AceVivaMember => Boolean(m));
+
+          // Filter members inside the card if requiredDaysInWeek is active
+          const attendingMembers = allAttendingMembers.filter((m) => {
+            if (requiredDaysInWeek === 0) return true;
+            const stat = getMemberWeekAttendanceCount.get(`${match.id}:${m.id}`);
+            if (!stat) return true;
+            return stat.attended === requiredDaysInWeek;
+          });
 
           const stationSchedule = STATION_ROTATION_SCHEDULES.find(
             (s) => s.matchId === match.id
@@ -259,14 +399,14 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
                     </div>
                   </div>
 
-                  {/* Attending Roster Grid: Face-Centered Avatars in 3 Columns on Mobile, 4 on Tablet/Desktop */}
+                  {/* Attending Roster Grid */}
                   <div className="mt-5">
                     <div className="flex flex-wrap items-center justify-between gap-1">
                       <span className="font-mono-num text-[10px] font-bold tracking-[0.15em] text-[#212047]/65 uppercase lg:text-xs">
-                        ATTENDING ACE VIVA · 當日出席女孩班表 ({attendingMembers.length} 人)
+                        ATTENDING ACE VIVA · 當日出席女孩 ({attendingMembers.length} 人)
                       </span>
                       <span className="text-[11px] font-semibold text-[#4FA87D] lg:text-xs">
-                        點選頭像看檔案
+                        顯示「當週出席天數」與角色標籤
                       </span>
                     </div>
 
@@ -276,16 +416,12 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
                           selectedMemberId === m.id ||
                           (selectedMemberId === 'favorites' &&
                             favoriteIds.includes(m.id));
-                        const shortRole =
-                          m.category === 'mc'
-                            ? 'MC'
-                            : m.id === 'yuri'
-                              ? '隊長'
-                              : m.id === 'mamai'
-                                ? '團長'
-                                : m.nationality === 'KR'
-                                  ? 'KR'
-                                  : '';
+                        const weekStat = getMemberWeekAttendanceCount.get(
+                          `${match.id}:${m.id}`
+                        );
+                        const daysBadge = weekStat
+                          ? `${weekStat.attended}/${weekStat.total}天`
+                          : '';
 
                         return (
                           <button
@@ -314,15 +450,17 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
                                 >
                                   #{m.number}
                                 </span>
-                                {shortRole && (
+                                {daysBadge && (
                                   <span
                                     className={`rounded-xs px-1 py-0.2 font-mono-num text-[8px] font-bold lg:text-[9px] ${
-                                      isHighlighted
-                                        ? 'bg-[#5BAE84] text-white'
-                                        : 'bg-[#D5EFE9] text-[#212047] group-hover:bg-[#5BAE84] group-hover:text-white'
+                                      weekStat?.attended === weekStat?.total
+                                        ? isHighlighted
+                                          ? 'bg-[#5BAE84] text-white'
+                                          : 'bg-[#D5EFE9] text-[#212047] group-hover:bg-[#5BAE84] group-hover:text-white'
+                                        : 'bg-amber-400/25 text-amber-800 group-hover:bg-amber-400 group-hover:text-[#212047]'
                                     }`}
                                   >
-                                    {shortRole}
+                                    {daysBadge}
                                   </span>
                                 )}
                               </div>
@@ -336,7 +474,7 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
                     </div>
                   </div>
 
-                  {/* Mobile-Friendly Station Schedule Breakdown for Matches with Official Rotation Data (11/07 & 11/08) */}
+                  {/* Station Schedule Breakdown for Matches with Official Rotation Data */}
                   {stationSchedule && (
                     <div className="mt-4 rounded-2xl bg-[#F4FAF8] p-3 ring-1 ring-[#5BAE84]/35 lg:p-4">
                       <button

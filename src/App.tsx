@@ -11,9 +11,10 @@ import { MemberDetailDialog } from './components/MemberDetailDialog';
 import { GirlSeatRecommendationSection } from './components/GirlSeatRecommendationSection';
 import { SeatFinderSection } from './components/SeatFinderSection';
 import { ScheduleSection } from './components/ScheduleSection';
+import { ZodiacIcon, isCurrentMonthBirthday } from './components/ZodiacIcon';
 import type { AceZoneId } from './data/schedule';
 
-type RosterFilter = 'all' | MemberCategory | 'favorites';
+type RosterFilter = 'all' | MemberCategory | 'favorites' | 'birthday_month';
 type SortOption = 'default' | 'number_asc' | 'birthday_asc';
 
 const FAVORITES_STORAGE_KEY = 'ace_viva_favorites_v1';
@@ -41,6 +42,31 @@ export const App: React.FC = () => {
     girlId?: string;
     timestamp: number;
   } | null>(null);
+  const [copiedCardKey, setCopiedCardKey] = useState<string | null>(null);
+
+  const currentMonth = new Date().getMonth() + 1;
+
+  const handleCopyMemberInfo = async (
+    text: string,
+    key: string,
+    e: React.MouseEvent
+  ) => {
+    e.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+    setCopiedCardKey(key);
+    window.setTimeout(() => {
+      setCopiedCardKey((prev) => (prev === key ? null : prev));
+    }, 1800);
+  };
 
   const [favoriteIds, setFavoriteIds] = useState<string[]>(() => {
     try {
@@ -82,8 +108,11 @@ export const App: React.FC = () => {
       tw_member: MEMBERS.filter((m) => m.category === 'tw_member').length,
       kr_member: MEMBERS.filter((m) => m.category === 'kr_member').length,
       favorites: favoriteIds.length,
+      birthday_month: MEMBERS.filter((m) =>
+        isCurrentMonthBirthday(m.birthday, currentMonth)
+      ).length,
     };
-  }, [favoriteIds]);
+  }, [favoriteIds, currentMonth]);
 
   // Filtered and sorted members
   const displayedMembers = useMemo(() => {
@@ -92,6 +121,8 @@ export const App: React.FC = () => {
     const filtered = MEMBERS.filter((m) => {
       if (activeCategory === 'favorites') {
         if (!favoriteIds.includes(m.id)) return false;
+      } else if (activeCategory === 'birthday_month') {
+        if (!isCurrentMonthBirthday(m.birthday, currentMonth)) return false;
       } else if (activeCategory !== 'all' && m.category !== activeCategory) {
         return false;
       }
@@ -742,6 +773,27 @@ export const App: React.FC = () => {
               {categoryCounts.favorites}
             </span>
           </button>
+
+          {categoryCounts.birthday_month > 0 && (
+            <button
+              type="button"
+              onClick={() =>
+                setActiveCategory(
+                  activeCategory === 'birthday_month' ? 'all' : 'birthday_month'
+                )
+              }
+              className={`flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-xs font-black whitespace-nowrap transition-all active:scale-[0.97] sm:px-5 sm:py-2.5 lg:px-6 lg:py-3 lg:text-base ${
+                activeCategory === 'birthday_month'
+                  ? 'bg-amber-500 text-white shadow-sm ring-2 ring-[#212047]'
+                  : 'bg-amber-400/20 text-[#212047] ring-1 ring-amber-500/60 hover:bg-amber-400/35'
+              }`}
+            >
+              <span>★ {currentMonth} 月壽星</span>
+              <span className="rounded-full bg-[#212047] px-2 py-0.5 font-mono-num text-[10px] text-amber-300 lg:text-xs">
+                {categoryCounts.birthday_month}
+              </span>
+            </button>
+          )}
         </div>
 
         {/* Empty State */}
@@ -770,15 +822,26 @@ export const App: React.FC = () => {
         <div className="mt-6 grid grid-cols-2 gap-3 sm:mt-10 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
           {displayedMembers.map((member) => {
             const isFav = favoriteIds.includes(member.id);
+            const isBirthdayStar = isCurrentMonthBirthday(
+              member.birthday,
+              currentMonth
+            );
+            const nameCopyKey = `${member.id}:name`;
+            const igCopyKey = `${member.id}:ig`;
+
             return (
               <article
                 key={member.id}
-                className="group relative min-w-0 rounded-[1.5rem] bg-[#D5EFE9]/80 p-1 ring-1 ring-[#5BAE84]/30 transition-all duration-500 hover:-translate-y-1 hover:bg-[#5BAE84]/30 hover:shadow-[0_24px_60px_-15px_rgba(33,32,71,0.18)] sm:rounded-[2rem] sm:p-1.5"
+                className={`group relative min-w-0 rounded-[1.5rem] p-1 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_24px_60px_-15px_rgba(33,32,71,0.18)] sm:rounded-[2rem] sm:p-1.5 ${
+                  isBirthdayStar
+                    ? 'bg-gradient-to-br from-amber-300 via-[#5ECBC0] to-amber-400 ring-2 ring-amber-500 shadow-[0_14px_35px_-10px_rgba(245,158,11,0.35)]'
+                    : 'bg-[#D5EFE9]/80 ring-1 ring-[#5BAE84]/30 hover:bg-[#5BAE84]/30'
+                }`}
               >
                 {/* Inner Core */}
                 <div className="flex h-full flex-col justify-between overflow-hidden rounded-[calc(1.5rem-0.25rem)] bg-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.95)] sm:rounded-[calc(2rem-0.375rem)]">
                   <div>
-                    {/* Portrait Wrapper + Floating Favorite Heart */}
+                    {/* Portrait Wrapper + Floating Favorite Heart + Birthday Star Ribbon */}
                     <div className="relative">
                       <button
                         type="button"
@@ -798,6 +861,13 @@ export const App: React.FC = () => {
                           className="hidden aspect-[3/4] w-full sm:block"
                         />
                       </button>
+
+                      {/* Current Month Birthday Star Ribbon */}
+                      {isBirthdayStar && (
+                        <div className="pointer-events-none absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1 rounded-full bg-amber-500 px-2.5 py-1 font-mono-num text-[10px] font-black text-white shadow-md ring-2 ring-white sm:top-3.5 sm:left-3.5 sm:px-3 sm:text-xs">
+                          <span>★ {currentMonth} 月壽星</span>
+                        </div>
+                      )}
 
                       {/* Favorite Toggle Pill */}
                       <button
@@ -851,8 +921,34 @@ export const App: React.FC = () => {
                               {member.mbti}
                             </span>
                           </div>
-                          <div className="mt-0.5 font-mono-num text-[10px] font-medium text-[#212047]/55 sm:text-[11px] lg:text-xs">
-                            {member.birthday} · {member.zodiac}
+
+                          {/* Birthday (Highlighted if Current Month) + Custom Zodiac Icon */}
+                          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                            <span
+                              className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-mono-num text-[10px] font-bold sm:text-[11px] lg:text-xs ${
+                                isBirthdayStar
+                                  ? 'bg-amber-400/25 font-black text-amber-900 ring-1 ring-amber-500'
+                                  : 'bg-[#F4FAF8] text-[#212047]/70 ring-1 ring-[#212047]/10'
+                              }`}
+                            >
+                              {isBirthdayStar && (
+                                <span className="text-amber-600">★</span>
+                              )}
+                              <span>{member.birthday}</span>
+                              {isBirthdayStar && (
+                                <span className="hidden sm:inline">
+                                  · 本月壽星
+                                </span>
+                              )}
+                            </span>
+
+                            <span className="inline-flex items-center gap-1 rounded-full bg-[#F4FAF8] py-0.5 pr-2 pl-0.5 text-[10px] font-bold text-[#212047]/80 ring-1 ring-[#5BAE84]/30 sm:text-[11px] lg:text-xs">
+                              <ZodiacIcon
+                                zodiac={member.zodiac}
+                                className="h-4 w-4 sm:h-4.5 sm:w-4.5"
+                              />
+                              <span>{member.zodiac}</span>
+                            </span>
                           </div>
                         </div>
 
@@ -879,25 +975,66 @@ export const App: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Card Footer: Direct IG Link + Open Dossier Button */}
-                  <div className="flex items-center justify-between border-t border-[#212047]/[0.07] bg-[#F4FAF8] px-3 py-2.5 sm:px-5 sm:py-3 lg:px-6 lg:py-3.5">
-                    <a
-                      href={member.instagramUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="truncate font-mono-num text-[10px] font-semibold text-[#212047]/75 transition-colors hover:text-[#4FA87D] sm:text-[11px] lg:text-xs"
-                    >
-                      @{member.instagramHandle}
-                    </a>
+                  {/* Card Footer: Quick Copy Name & Copy @IG + Open Dossier Button */}
+                  <div className="flex flex-col gap-1.5 border-t border-[#212047]/[0.07] bg-[#F4FAF8] px-2.5 py-2 sm:px-4 sm:py-3 lg:px-5 lg:py-3.5">
+                    <div className="flex items-center justify-between gap-1">
+                      <a
+                        href={member.instagramUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="truncate font-mono-num text-[10px] font-semibold text-[#212047]/80 transition-colors hover:text-[#4FA87D] sm:text-xs lg:text-sm"
+                      >
+                        @{member.instagramHandle}
+                      </a>
 
-                    <button
-                      type="button"
-                      onClick={() => setSelectedMember(member)}
-                      className="shrink-0 inline-flex items-center gap-0.5 text-[11px] font-extrabold text-[#212047] whitespace-nowrap sm:text-xs lg:text-sm"
-                    >
-                      <span>檔案</span>
-                      <span className="text-[#4FA87D]">→</span>
-                    </button>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedMember(member)}
+                        className="shrink-0 inline-flex items-center gap-0.5 text-[11px] font-extrabold text-[#212047] whitespace-nowrap sm:text-xs lg:text-sm"
+                      >
+                        <span>檔案</span>
+                        <span className="text-[#4FA87D]">→</span>
+                      </button>
+                    </div>
+
+                    {/* 1-Click Copy Name & Copy @IG ID Buttons */}
+                    <div className="grid grid-cols-2 gap-1">
+                      <button
+                        type="button"
+                        onClick={(e) =>
+                          handleCopyMemberInfo(member.name, nameCopyKey, e)
+                        }
+                        className={`truncate rounded-lg px-1.5 py-1 font-mono-num text-[10px] font-bold transition-all active:scale-95 lg:py-1.5 lg:text-xs ${
+                          copiedCardKey === nameCopyKey
+                            ? 'bg-[#5BAE84] text-white'
+                            : 'bg-white text-[#212047] ring-1 ring-[#212047]/12 hover:bg-[#E6F5F1]'
+                        }`}
+                      >
+                        {copiedCardKey === nameCopyKey
+                          ? '已複製名字'
+                          : '複製名字'}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={(e) =>
+                          handleCopyMemberInfo(
+                            `@${member.instagramHandle}`,
+                            igCopyKey,
+                            e
+                          )
+                        }
+                        className={`truncate rounded-lg px-1.5 py-1 font-mono-num text-[10px] font-bold transition-all active:scale-95 lg:py-1.5 lg:text-xs ${
+                          copiedCardKey === igCopyKey
+                            ? 'bg-[#5BAE84] text-white'
+                            : 'bg-[#212047] text-[#7ADAD0] hover:bg-[#2E2C5E]'
+                        }`}
+                      >
+                        {copiedCardKey === igCopyKey
+                          ? '已複製 @IG'
+                          : '複製 @IG'}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </article>
