@@ -22,6 +22,11 @@ interface SeatFinderSectionProps {
     girlId?: string;
     timestamp: number;
   } | null;
+  onSeatChange?: (selection: {
+    matchId: string;
+    zone: AceZoneId;
+    seat: number;
+  }) => void;
   onOpenMemberDetail: (member: AceVivaMember) => void;
 }
 
@@ -86,6 +91,7 @@ const ALL_23_SEATS = Array.from({ length: 23 }, (_, i) => i + 1);
 export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
   favoriteIds,
   externalSelection,
+  onSeatChange,
   onOpenMemberDetail,
 }) => {
   const [selectedMatchId, setSelectedMatchId] = useState<string>('2026-11-07');
@@ -112,6 +118,14 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
       setTargetOshiId(externalSelection.girlId);
     }
   }, [externalSelection]);
+
+  React.useEffect(() => {
+    onSeatChange?.({
+      matchId: selectedMatchId,
+      zone: selectedZone,
+      seat: selectedSeat,
+    });
+  }, [selectedMatchId, selectedZone, selectedSeat, onSeatChange]);
 
   const memberMap = useMemo(() => {
     const map = new Map<string, AceVivaMember>();

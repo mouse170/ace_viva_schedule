@@ -12,12 +12,17 @@ import { GirlSeatRecommendationSection } from './components/GirlSeatRecommendati
 import { SeatFinderSection } from './components/SeatFinderSection';
 import { ScheduleSection } from './components/ScheduleSection';
 import { ZodiacIcon, isCurrentMonthBirthday } from './components/ZodiacIcon';
-import type { AceZoneId } from './data/schedule';
+import {
+  STATION_ROTATION_SCHEDULES,
+  getSeatPositionMapping,
+  type AceZoneId,
+} from './data/schedule';
 
 type RosterFilter = 'all' | MemberCategory | 'favorites' | 'birthday_month';
 type SortOption = 'default' | 'number_asc' | 'birthday_asc';
 
 const FAVORITES_STORAGE_KEY = 'ace_viva_favorites_v1';
+const USER_SEAT_STORAGE_KEY = 'ace_viva_user_seat_v1';
 
 function parseBirthdaySortKey(birthdayStr: string): number {
   const match = birthdayStr.match(/(\d+)\s*月\s*(\d+)\s*日/);
@@ -42,7 +47,40 @@ export const App: React.FC = () => {
     girlId?: string;
     timestamp: number;
   } | null>(null);
+  const [currentUserSeat, setCurrentUserSeat] = useState<{
+    matchId: string;
+    zone: AceZoneId;
+    seat: number;
+  }>(() => {
+    try {
+      const saved = localStorage.getItem(USER_SEAT_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && parsed.zone && parsed.seat) {
+          return {
+            matchId: parsed.matchId || '2026-11-07',
+            zone: parsed.zone as AceZoneId,
+            seat: Number(parsed.seat) || 12,
+          };
+        }
+      }
+    } catch {
+      // Ignore storage errors
+    }
+    return { matchId: '2026-11-07', zone: 'B', seat: 12 };
+  });
   const [copiedCardKey, setCopiedCardKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        USER_SEAT_STORAGE_KEY,
+        JSON.stringify(currentUserSeat)
+      );
+    } catch {
+      // Ignore storage quota errors
+    }
+  }, [currentUserSeat]);
 
   const currentMonth = new Date().getMonth() + 1;
 
@@ -114,7 +152,54 @@ export const App: React.FC = () => {
     };
   }, [favoriteIds, currentMonth]);
 
-  // Filtered and sorted members
+  // 計算「自己座位正前方女孩」映射表（依據使用者目前選擇的場次、區域與座位號 1-23 號）
+  const frontSeatMemberMap = useMemo(() => {
+    const schedule =
+      STATION_ROTATION_SCHEDULES.find(
+        (s) => s.matchId === currentUserSeat.matchId
+      ) ?? STATION_ROTATION_SCHEDULES[0];
+    const slotIndex = getSeatPositionMapping(currentUserSeat.seat).slotIndex;
+    const map = new Map<
+      string,
+      {
+        order: number;
+        setsList: string[];
+        setsLabel: string;
+        setsShortLabel: string;
+      }
+    >();
+
+    let orderCounter = 0;
+    for (const setObj of schedule.sets) {
+      // 破 10 分後佔單局 60% 時間，優先列入同局正前方順序，其次為開局 0-10 分
+      const after10GirlId =
+        setObj.after10Points[currentUserSeat.zone][slotIndex];
+      const initGirlId = setObj.initial[currentUserSeat.zone][slotIndex];
+
+      for (const gId of [after10GirlId, initGirlId]) {
+        if (!gId) continue;
+        const existing = map.get(gId);
+        if (!existing) {
+          orderCounter += 1;
+          map.set(gId, {
+            order: orderCounter,
+            setsList: [setObj.setShortLabel],
+            setsLabel: setObj.setShortLabel,
+            setsShortLabel: setObj.setShortLabel.replace(/\s+/g, ''),
+          });
+        } else if (!existing.setsList.includes(setObj.setShortLabel)) {
+          existing.setsList.push(setObj.setShortLabel);
+          existing.setsLabel = existing.setsList.join('、');
+          existing.setsShortLabel = existing.setsList
+            .join('/')
+            .replace(/\s+/g, '');
+        }
+      }
+    }
+    return map;
+  }, [currentUserSeat]);
+
+  // Filtered and sorted members (1. 主推成員最優先 -> 2. 自己座位前面的女孩次之 -> 3. 其餘成員)
   const displayedMembers = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
 
@@ -145,17 +230,54 @@ export const App: React.FC = () => {
       return haystack.includes(q);
     });
 
-    if (sortBy === 'number_asc') {
-      return [...filtered].sort((a, b) => a.numericOrder - b.numericOrder);
-    }
-    if (sortBy === 'birthday_asc') {
-      return [...filtered].sort(
-        (a, b) =>
+    return [...filtered].sort((a, b) => {
+      // 第一優先：我的主推成員
+      const aFavIndex = favoriteIds.indexOf(a.id);
+      const bFavIndex = favoriteIds.indexOf(b.id);
+      const aIsFav = aFavIndex !== -1;
+      const bIsFav = bFavIndex !== -1;
+      if (aIsFav !== bIsFav) {
+        return aIsFav ? -1 : 1;
+      }
+
+      // 第二優先：自己座位正前面的女孩
+      const aFront = frontSeatMemberMap.get(a.id);
+      const bFront = frontSeatMemberMap.get(b.id);
+      const aIsFront = Boolean(aFront);
+      const bIsFront = Boolean(bFront);
+      if (aIsFront !== bIsFront) {
+        return aIsFront ? -1 : 1;
+      }
+
+      // 同為座位正前方女孩且預設排序時，依登場局數順序排列
+      if (aFront && bFront && sortBy === 'default') {
+        if (aFront.order !== bFront.order) {
+          return aFront.order - bFront.order;
+        }
+      }
+
+      // 第三層：依使用者選擇的排序條件（背號 / 生日 / 預設編制）
+      if (sortBy === 'number_asc') {
+        return a.numericOrder - b.numericOrder;
+      }
+      if (sortBy === 'birthday_asc') {
+        return (
           parseBirthdaySortKey(a.birthday) - parseBirthdaySortKey(b.birthday)
-      );
-    }
-    return filtered;
-  }, [activeCategory, searchQuery, sortBy, favoriteIds]);
+        );
+      }
+      if (aIsFav && bIsFav) {
+        return aFavIndex - bFavIndex;
+      }
+      return 0;
+    });
+  }, [
+    activeCategory,
+    searchQuery,
+    sortBy,
+    favoriteIds,
+    currentMonth,
+    frontSeatMemberMap,
+  ]);
 
   // Featured members for Hero Bento
   const captainYuri = MEMBERS.find((m) => m.id === 'yuri')!;
@@ -671,28 +793,28 @@ export const App: React.FC = () => {
         </div>
       </section>
 
-      {/* Main Roster Directory Section (2-Column Face-First Grid on Mobile + 4-Col Poster Grid on Desktop) */}
+      {/* Main Roster Directory Section (3-Column High-Density Grid on Mobile Showing 6-9+ Members at Once + 3-4 Col Poster Grid on Desktop) */}
       <section
         id="roster-section"
-        className="mx-auto max-w-[1440px] px-3 py-16 sm:px-6 sm:py-24 lg:px-10"
+        className="mx-auto max-w-[1440px] px-2.5 py-12 sm:px-6 sm:py-24 lg:px-10"
       >
         {/* Section Heading */}
-        <div className="flex flex-col justify-between gap-5 border-b border-[#212047]/10 pb-8 lg:flex-row lg:items-end">
+        <div className="flex flex-col justify-between gap-4 border-b border-[#212047]/10 pb-5 sm:gap-5 sm:pb-8 lg:flex-row lg:items-end">
           <div>
             <span className="inline-flex items-center gap-2 rounded-full bg-[#5BAE84]/15 px-3 py-1 font-mono-num text-[10px] font-bold tracking-[0.14em] text-[#212047] uppercase ring-1 ring-[#5BAE84]/30 lg:text-sm">
               <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#5BAE84]" />
               <span>2026–2027 FAN-COMPILED ROSTER DIRECTORY · 粉絲整理成員圖鑑</span>
             </span>
-            <h2 className="mt-3 text-2xl font-black tracking-tight text-[#212047] sm:text-5xl">
+            <h2 className="mt-2.5 text-2xl font-black tracking-tight text-[#212047] sm:mt-3 sm:text-5xl">
               連莊女孩全體成員應援圖鑑
             </h2>
-            <p className="mt-2.5 max-w-3xl text-xs leading-relaxed text-[#212047]/70 sm:text-base lg:text-lg">
-              手機版採用雙欄臉部特寫圖鑑，點擊任一成員卡片即可開啟完整 WELCOME 打字機復古形象海報、背號、生日星座、MBTI 與主場出席預告（資料整理自官方公開貼文與維基百科，實際資訊以官方公告為準）。
+            <p className="mt-1.5 max-w-3xl text-xs leading-relaxed text-[#212047]/70 sm:mt-2.5 sm:text-base lg:text-lg">
+              自動依「<strong className="font-extrabold text-[#3F8E67]">1. 我的主推成員</strong> → <strong className="font-extrabold text-[#212047]">2. 你的座位（{currentUserSeat.zone} 區 {currentUserSeat.seat} 號）正前方女孩</strong> → 3. 其餘成員」優先排列；手機版採三欄精巧排版，單一畫面可同時瀏覽 6 至 9 位成員。
             </p>
           </div>
 
           {/* Search & Sort Controls */}
-          <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2.5">
             <div className="relative">
               <input
                 type="search"
@@ -700,7 +822,7 @@ export const App: React.FC = () => {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="搜尋姓名、背號、MBTI、雙棲球隊..."
                 aria-label="搜尋成員姓名、背號、MBTI、IG 或雙棲球隊"
-                className="w-full rounded-full bg-white py-2.5 pr-4 pl-10 text-xs font-medium text-[#212047] ring-1 ring-[#5BAE84]/35 transition-shadow placeholder:text-[#212047]/40 focus:ring-2 focus:ring-[#212047] focus:outline-none sm:w-64 lg:w-72 lg:py-3 lg:text-sm"
+                className="w-full rounded-full bg-white py-2 pr-4 pl-9 text-xs font-medium text-[#212047] ring-1 ring-[#5BAE84]/35 transition-shadow placeholder:text-[#212047]/40 focus:ring-2 focus:ring-[#212047] focus:outline-none sm:w-64 sm:py-2.5 sm:pl-10 lg:w-72 lg:py-3 lg:text-sm"
               />
               <svg
                 viewBox="0 0 24 24"
@@ -718,17 +840,105 @@ export const App: React.FC = () => {
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortOption)}
               aria-label="成員排序方式"
-              className="rounded-full bg-white px-4 py-2.5 text-xs font-bold text-[#212047] ring-1 ring-[#5BAE84]/35 focus:ring-2 focus:ring-[#212047] focus:outline-none lg:px-5 lg:py-3 lg:text-sm"
+              className="rounded-full bg-white px-3.5 py-2 text-xs font-bold text-[#212047] ring-1 ring-[#5BAE84]/35 focus:ring-2 focus:ring-[#212047] focus:outline-none sm:px-4 sm:py-2.5 lg:px-5 lg:py-3 lg:text-sm"
             >
-              <option value="default">排序：預設官方編制</option>
-              <option value="number_asc">排序：背號由小到大</option>
-              <option value="birthday_asc">排序：生日月份先後</option>
+              <option value="default">排序：主推 → 座位面前 → 預設</option>
+              <option value="number_asc">排序：主推 → 座位面前 → 背號</option>
+              <option value="birthday_asc">排序：主推 → 座位面前 → 生日</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Priority Order & Current Seat Quick-Sync Strip */}
+        <div className="mt-3.5 flex flex-col gap-2 rounded-2xl bg-[#212047] px-3 py-2.5 text-white shadow-xs ring-1 ring-[#5ECBC0]/35 sm:mt-5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:px-4 sm:py-3">
+          <div className="flex flex-wrap items-center gap-1.5 text-[11px] sm:gap-2 sm:text-xs">
+            <span className="font-mono-num font-bold text-[#7ADAD0]">
+              優先顯示順序：
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-full bg-[#5BAE84] px-2.5 py-0.5 font-extrabold text-white">
+              <span>1. ★ 我的主推 ({favoriteIds.length})</span>
+            </span>
+            <span className="text-white/50">→</span>
+            <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-0.5 font-extrabold text-[#5ECBC0] ring-1 ring-[#5ECBC0]/50">
+              <span>
+                2. ▲ 座位（{currentUserSeat.zone} 區 {currentUserSeat.seat} 號）面前女孩 ({frontSeatMemberMap.size})
+              </span>
+            </span>
+          </div>
+
+          {/* Inline Quick Seat Switcher so User Can Immediately Adjust "My Seat" in Roster */}
+          <div className="flex flex-wrap items-center gap-1.5 text-[11px] sm:text-xs">
+            <span className="font-mono-num text-white/75">設定你的座位：</span>
+            <select
+              value={currentUserSeat.matchId}
+              onChange={(e) => {
+                const next = { ...currentUserSeat, matchId: e.target.value };
+                setCurrentUserSeat(next);
+                setSeatSimulatorJump({ ...next, timestamp: Date.now() });
+              }}
+              aria-label="選擇場次日期"
+              className="rounded-lg bg-white/12 px-2 py-1 font-mono-num text-[11px] font-bold text-[#7ADAD0] ring-1 ring-white/20 focus:outline-none sm:text-xs"
+            >
+              {STATION_ROTATION_SCHEDULES.map((s) => (
+                <option
+                  key={s.matchId}
+                  value={s.matchId}
+                  className="bg-[#212047] text-white"
+                >
+                  {s.dayLabel}
+                </option>
+              ))}
+            </select>
+
+            <div className="flex items-center gap-1">
+              {(['A', 'B', 'C'] as AceZoneId[]).map((z) => (
+                <button
+                  key={z}
+                  type="button"
+                  onClick={() => {
+                    const next = { ...currentUserSeat, zone: z };
+                    setCurrentUserSeat(next);
+                    setSeatSimulatorJump({ ...next, timestamp: Date.now() });
+                  }}
+                  className={`rounded-lg px-2 py-0.5 font-mono-num text-[11px] font-extrabold transition-all sm:text-xs ${
+                    currentUserSeat.zone === z
+                      ? 'bg-[#5BAE84] text-white'
+                      : 'bg-white/10 text-white/75 hover:bg-white/20'
+                  }`}
+                >
+                  {z}區
+                </button>
+              ))}
+            </div>
+
+            <select
+              value={currentUserSeat.seat}
+              onChange={(e) => {
+                const next = {
+                  ...currentUserSeat,
+                  seat: Number(e.target.value),
+                };
+                setCurrentUserSeat(next);
+                setSeatSimulatorJump({ ...next, timestamp: Date.now() });
+              }}
+              aria-label="選擇座位號碼"
+              className="rounded-lg bg-white/12 px-2 py-1 font-mono-num text-[11px] font-bold text-white ring-1 ring-white/20 focus:outline-none sm:text-xs"
+            >
+              {Array.from({ length: 23 }, (_, i) => i + 1).map((n) => (
+                <option
+                  key={n}
+                  value={n}
+                  className="bg-[#212047] text-white"
+                >
+                  {n} 號席
+                </option>
+              ))}
             </select>
           </div>
         </div>
 
         {/* Category Filter Tabs */}
-        <div className="no-scrollbar -mx-1 mt-6 flex gap-2 overflow-x-auto px-1 pb-2 sm:mx-0 sm:mt-8 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
+        <div className="no-scrollbar -mx-1 mt-3.5 flex gap-1.5 overflow-x-auto px-1 pb-1.5 sm:mx-0 sm:mt-6 sm:flex-wrap sm:gap-2 sm:overflow-visible sm:px-0 sm:pb-0">
           {(['all', 'leader', 'mc', 'tw_member', 'kr_member'] as const).map(
             (catKey) => {
               const info = CATEGORY_LABELS[catKey];
@@ -738,7 +948,7 @@ export const App: React.FC = () => {
                   key={catKey}
                   type="button"
                   onClick={() => setActiveCategory(catKey)}
-                  className={`group flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-xs font-bold whitespace-nowrap transition-all active:scale-[0.97] sm:px-5 sm:py-2.5 lg:px-6 lg:py-3 lg:text-base ${
+                  className={`group flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-bold whitespace-nowrap transition-all active:scale-[0.97] sm:gap-2 sm:px-5 sm:py-2.5 sm:text-xs lg:px-6 lg:py-3 lg:text-base ${
                     isActive
                       ? 'bg-[#212047] text-white shadow-[0_10px_25px_-8px_rgba(33,32,71,0.45)]'
                       : 'bg-white text-[#212047]/80 ring-1 ring-[#212047]/10 hover:bg-[#E6F5F1]'
@@ -746,7 +956,7 @@ export const App: React.FC = () => {
                 >
                   <span>{info.label}</span>
                   <span
-                    className={`rounded-full px-2 py-0.5 font-mono-num text-[10px] lg:text-xs ${
+                    className={`rounded-full px-1.5 py-0.2 font-mono-num text-[9px] sm:px-2 sm:py-0.5 sm:text-[10px] lg:text-xs ${
                       isActive
                         ? 'bg-[#5BAE84] text-white'
                         : 'bg-[#E6F5F1] text-[#3F8E67]'
@@ -762,14 +972,14 @@ export const App: React.FC = () => {
           <button
             type="button"
             onClick={() => setActiveCategory('favorites')}
-            className={`flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-xs font-bold whitespace-nowrap transition-all active:scale-[0.97] sm:px-5 sm:py-2.5 lg:px-6 lg:py-3 lg:text-base ${
+            className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-bold whitespace-nowrap transition-all active:scale-[0.97] sm:gap-2 sm:px-5 sm:py-2.5 sm:text-xs lg:px-6 lg:py-3 lg:text-base ${
               activeCategory === 'favorites'
                 ? 'bg-[#5BAE84] text-white shadow-sm'
                 : 'bg-[#5BAE84]/15 text-[#212047] hover:bg-[#5BAE84]/25'
             }`}
           >
             <span>我的主推收藏</span>
-            <span className="rounded-full bg-[#212047]/15 px-2 py-0.5 font-mono-num text-[10px] lg:text-xs">
+            <span className="rounded-full bg-[#212047]/15 px-1.5 py-0.2 font-mono-num text-[9px] sm:px-2 sm:py-0.5 sm:text-[10px] lg:text-xs">
               {categoryCounts.favorites}
             </span>
           </button>
@@ -782,14 +992,14 @@ export const App: React.FC = () => {
                   activeCategory === 'birthday_month' ? 'all' : 'birthday_month'
                 )
               }
-              className={`flex shrink-0 items-center gap-2 rounded-full px-4 py-2 text-xs font-black whitespace-nowrap transition-all active:scale-[0.97] sm:px-5 sm:py-2.5 lg:px-6 lg:py-3 lg:text-base ${
+              className={`flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-black whitespace-nowrap transition-all active:scale-[0.97] sm:gap-2 sm:px-5 sm:py-2.5 sm:text-xs lg:px-6 lg:py-3 lg:text-base ${
                 activeCategory === 'birthday_month'
                   ? 'bg-amber-500 text-white shadow-sm ring-2 ring-[#212047]'
                   : 'bg-amber-400/20 text-[#212047] ring-1 ring-amber-500/60 hover:bg-amber-400/35'
               }`}
             >
               <span>★ {currentMonth} 月壽星</span>
-              <span className="rounded-full bg-[#212047] px-2 py-0.5 font-mono-num text-[10px] text-amber-300 lg:text-xs">
+              <span className="rounded-full bg-[#212047] px-1.5 py-0.2 font-mono-num text-[9px] text-amber-300 sm:px-2 sm:py-0.5 sm:text-[10px] lg:text-xs">
                 {categoryCounts.birthday_month}
               </span>
             </button>
@@ -818,10 +1028,11 @@ export const App: React.FC = () => {
           </div>
         )}
 
-        {/* Member Cards Grid: 2 Columns on Mobile (Face-Focused Avatar) / 3-4 Columns on Desktop */}
-        <div className="mt-6 grid grid-cols-2 gap-3 sm:mt-10 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
+        {/* Member Cards Grid: 3 Columns Compact on Mobile (6-9+ Visible at Once) / 2-4 Columns on Tablet & Desktop */}
+        <div className="mt-3.5 grid grid-cols-3 gap-2 sm:mt-8 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
           {displayedMembers.map((member) => {
             const isFav = favoriteIds.includes(member.id);
+            const frontInfo = frontSeatMemberMap.get(member.id);
             const isBirthdayStar = isCurrentMonthBirthday(
               member.birthday,
               currentMonth
@@ -832,16 +1043,20 @@ export const App: React.FC = () => {
             return (
               <article
                 key={member.id}
-                className={`group relative min-w-0 rounded-[1.5rem] p-1 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_24px_60px_-15px_rgba(33,32,71,0.18)] sm:rounded-[2rem] sm:p-1.5 ${
-                  isBirthdayStar
-                    ? 'bg-gradient-to-br from-amber-300 via-[#5ECBC0] to-amber-400 ring-2 ring-amber-500 shadow-[0_14px_35px_-10px_rgba(245,158,11,0.35)]'
-                    : 'bg-[#D5EFE9]/80 ring-1 ring-[#5BAE84]/30 hover:bg-[#5BAE84]/30'
+                className={`group relative min-w-0 rounded-2xl p-0.5 transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_24px_60px_-15px_rgba(33,32,71,0.18)] sm:rounded-[2rem] sm:p-1.5 ${
+                  isFav
+                    ? 'bg-[#5BAE84] ring-2 ring-[#5BAE84] shadow-[0_10px_28px_-8px_rgba(91,174,132,0.45)]'
+                    : frontInfo
+                      ? 'bg-[#212047]/20 ring-2 ring-[#5ECBC0] shadow-[0_10px_25px_-8px_rgba(33,32,71,0.2)]'
+                      : isBirthdayStar
+                        ? 'bg-gradient-to-br from-amber-300 via-[#5ECBC0] to-amber-400 ring-2 ring-amber-500 shadow-[0_14px_35px_-10px_rgba(245,158,11,0.35)]'
+                        : 'bg-[#D5EFE9]/80 ring-1 ring-[#5BAE84]/30 hover:bg-[#5BAE84]/30'
                 }`}
               >
                 {/* Inner Core */}
-                <div className="flex h-full flex-col justify-between overflow-hidden rounded-[calc(1.5rem-0.25rem)] bg-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.95)] sm:rounded-[calc(2rem-0.375rem)]">
+                <div className="flex h-full flex-col justify-between overflow-hidden rounded-[calc(1rem-2px)] bg-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.95)] sm:rounded-[calc(2rem-0.375rem)]">
                   <div>
-                    {/* Portrait Wrapper + Floating Favorite Heart + Birthday Star Ribbon */}
+                    {/* Portrait Wrapper + Priority Ribbon + Floating Favorite Heart */}
                     <div className="relative">
                       <button
                         type="button"
@@ -849,11 +1064,11 @@ export const App: React.FC = () => {
                         aria-label={`開啟 ${member.name} 的詳細個人檔案`}
                         className="block w-full text-left focus:outline-none"
                       >
-                        {/* Mobile: Square Face-Centered Close-Up; Tablet/Desktop: 3:4 Portrait */}
+                        {/* Mobile: Compact 5:4 Face-Centered Close-Up (Fits 3x2 = 6 to 3x3 = 9 Cards per Screen); Tablet/Desktop: 3:4 Portrait */}
                         <MemberPortrait
                           member={member}
                           variant="avatar"
-                          className="aspect-square w-full sm:hidden"
+                          className="aspect-[5/4] w-full sm:hidden"
                         />
                         <MemberPortrait
                           member={member}
@@ -862,12 +1077,23 @@ export const App: React.FC = () => {
                         />
                       </button>
 
-                      {/* Current Month Birthday Star Ribbon */}
-                      {isBirthdayStar && (
-                        <div className="pointer-events-none absolute top-2.5 left-2.5 z-20 inline-flex items-center gap-1 rounded-full bg-amber-500 px-2.5 py-1 font-mono-num text-[10px] font-black text-white shadow-md ring-2 ring-white sm:top-3.5 sm:left-3.5 sm:px-3 sm:text-xs">
-                          <span>★ {currentMonth} 月壽星</span>
+                      {/* Top-Left Priority / Birthday Badge */}
+                      {isFav ? (
+                        <div className="pointer-events-none absolute top-1.5 left-1.5 z-20 inline-flex items-center gap-0.5 rounded-full bg-[#5BAE84] px-1.5 py-0.5 font-mono-num text-[9px] font-black text-white shadow-xs ring-1 ring-white sm:top-3.5 sm:left-3.5 sm:px-3 sm:py-1 sm:text-xs">
+                          <span>★ 主推</span>
                         </div>
-                      )}
+                      ) : frontInfo ? (
+                        <div className="pointer-events-none absolute top-1.5 left-1.5 z-20 inline-flex items-center gap-0.5 rounded-full bg-[#212047]/90 px-1.5 py-0.5 font-mono-num text-[9px] font-black text-[#5ECBC0] shadow-xs ring-1 ring-[#5ECBC0] sm:top-3.5 sm:left-3.5 sm:px-3 sm:py-1 sm:text-xs">
+                          <span>
+                            ▲ {currentUserSeat.zone}
+                            {currentUserSeat.seat}面前
+                          </span>
+                        </div>
+                      ) : isBirthdayStar ? (
+                        <div className="pointer-events-none absolute top-1.5 left-1.5 z-20 inline-flex items-center gap-0.5 rounded-full bg-amber-500 px-1.5 py-0.5 font-mono-num text-[9px] font-black text-white shadow-xs ring-1 ring-white sm:top-3.5 sm:left-3.5 sm:px-3 sm:py-1 sm:text-xs">
+                          <span>★ {currentMonth}月壽星</span>
+                        </div>
+                      ) : null}
 
                       {/* Favorite Toggle Pill */}
                       <button
@@ -881,7 +1107,7 @@ export const App: React.FC = () => {
                             ? `將 ${member.name} 從我的主推移除`
                             : `將 ${member.name} 加入我的主推`
                         }
-                        className={`absolute top-2.5 right-2.5 z-20 flex h-8 w-8 items-center justify-center rounded-full transition-all active:scale-90 sm:top-3.5 sm:right-3.5 sm:h-9 sm:w-9 lg:h-10 lg:w-10 ${
+                        className={`absolute top-1.5 right-1.5 z-20 flex h-6 w-6 items-center justify-center rounded-full transition-all active:scale-90 sm:top-3.5 sm:right-3.5 sm:h-9 sm:w-9 lg:h-10 lg:w-10 ${
                           isFav
                             ? 'bg-[#5BAE84] text-white shadow-md'
                             : 'bg-[#212047]/65 text-white hover:bg-[#212047] hover:text-[#7ADAD0]'
@@ -892,7 +1118,7 @@ export const App: React.FC = () => {
                           fill={isFav ? 'currentColor' : 'none'}
                           stroke="currentColor"
                           strokeWidth="1.5"
-                          className="h-4 w-4 lg:h-5 lg:w-5"
+                          className="h-3.5 w-3.5 sm:h-4 sm:w-4 lg:h-5 lg:w-5"
                         >
                           <path
                             d="M12 20.5s-7.5-4.35-9.5-8.6C1.1 8.8 3.2 5 6.8 5c2.1 0 3.9 1.2 5.2 2.9C13.3 6.2 15.1 5 17.2 5c3.6 0 5.7 3.8 4.3 6.9-2 4.25-9.5 8.6-9.5 8.6z"
@@ -903,86 +1129,136 @@ export const App: React.FC = () => {
                       </button>
                     </div>
 
-                    {/* Card Body Info */}
-                    <div className="p-3 sm:p-5 lg:p-6">
-                      <div className="flex items-baseline justify-between gap-1.5">
-                        <div className="min-w-0">
-                          <div className="flex flex-wrap items-center gap-1.5">
-                            <h3 className="text-base font-black tracking-tight text-[#212047] sm:text-xl lg:text-2xl">
-                              <button
-                                type="button"
-                                onClick={() => setSelectedMember(member)}
-                                className="text-left hover:text-[#4FA87D] focus:outline-none"
-                              >
-                                {member.name}
-                              </button>
-                            </h3>
-                            <span className="rounded-md bg-[#E6F5F1] px-1.5 py-0.5 font-mono-num text-[9px] font-bold text-[#3F8E67] sm:px-2 sm:text-[10px] lg:text-xs">
-                              {member.mbti}
-                            </span>
-                          </div>
-
-                          {/* Birthday (Highlighted if Current Month) + Custom Zodiac Icon */}
-                          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                            <span
-                              className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-mono-num text-[10px] font-bold sm:text-[11px] lg:text-xs ${
-                                isBirthdayStar
-                                  ? 'bg-amber-400/25 font-black text-amber-900 ring-1 ring-amber-500'
-                                  : 'bg-[#F4FAF8] text-[#212047]/70 ring-1 ring-[#212047]/10'
-                              }`}
+                    {/* Card Body Info: Compact on Mobile (<sm) / Full Editorial on Tablet & Desktop (sm+) */}
+                    <div className="p-1.5 sm:p-5 lg:p-6">
+                      {/* Mobile Compact Body */}
+                      <div className="sm:hidden">
+                        <div className="flex items-baseline justify-between gap-1">
+                          <h3 className="truncate text-xs font-black tracking-tight text-[#212047]">
+                            <button
+                              type="button"
+                              onClick={() => setSelectedMember(member)}
+                              className="truncate text-left focus:outline-none"
                             >
-                              {isBirthdayStar && (
-                                <span className="text-amber-600">★</span>
-                              )}
-                              <span>{member.birthday}</span>
-                              {isBirthdayStar && (
-                                <span className="hidden sm:inline">
-                                  · 本月壽星
-                                </span>
-                              )}
-                            </span>
-
-                            <span className="inline-flex items-center gap-1 rounded-full bg-[#F4FAF8] py-0.5 pr-2 pl-0.5 text-[10px] font-bold text-[#212047]/80 ring-1 ring-[#5BAE84]/30 sm:text-[11px] lg:text-xs">
-                              <ZodiacIcon
-                                zodiac={member.zodiac}
-                                className="h-4 w-4 sm:h-4.5 sm:w-4.5"
-                              />
-                              <span>{member.zodiac}</span>
-                            </span>
-                          </div>
+                              {member.name}
+                            </button>
+                          </h3>
+                          <span className="shrink-0 font-mono-num text-[10px] font-extrabold text-[#4FA87D]">
+                            #{member.number}
+                          </span>
                         </div>
 
-                        <span className="shrink-0 font-editorial text-2xl font-bold text-[#4FA87D] italic sm:text-3xl lg:text-4xl">
-                          #{member.number}
-                        </span>
+                        {frontInfo ? (
+                          <div className="mt-0.5 truncate rounded bg-[#E6F5F1] px-1 py-0.2 font-mono-num text-[9px] font-extrabold text-[#212047]">
+                            ▲ {frontInfo.setsShortLabel}面前
+                          </div>
+                        ) : (
+                          <div className="mt-0.5 flex items-center justify-between gap-0.5 text-[9px] font-bold text-[#212047]/70">
+                            <span
+                              className={
+                                isBirthdayStar
+                                  ? 'font-black text-amber-700'
+                                  : 'truncate'
+                              }
+                            >
+                              {isBirthdayStar ? '★' : ''}
+                              {member.birthday.replace(/\s+/g, '')}
+                            </span>
+                            <ZodiacIcon
+                              zodiac={member.zodiac}
+                              className="h-3 w-3 shrink-0"
+                            />
+                          </div>
+                        )}
                       </div>
 
-                      <p className="mt-2 line-clamp-2 text-[11px] leading-relaxed text-[#212047]/70 sm:mt-2.5 sm:text-xs lg:text-sm">
-                        {member.tagline}
-                      </p>
+                      {/* Tablet / Desktop Full Body */}
+                      <div className="hidden sm:block">
+                        <div className="flex items-baseline justify-between gap-1.5">
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <h3 className="text-xl font-black tracking-tight text-[#212047] lg:text-2xl">
+                                <button
+                                  type="button"
+                                  onClick={() => setSelectedMember(member)}
+                                  className="text-left hover:text-[#4FA87D] focus:outline-none"
+                                >
+                                  {member.name}
+                                </button>
+                              </h3>
+                              <span className="rounded-md bg-[#E6F5F1] px-2 py-0.5 font-mono-num text-[10px] font-bold text-[#3F8E67] lg:text-xs">
+                                {member.mbti}
+                              </span>
+                            </div>
 
-                      {/* Dual Team Chips */}
-                      <div className="mt-2.5 hidden flex-wrap gap-1.5 sm:mt-3.5 sm:flex">
-                        {member.dualTeams.map((team) => (
-                          <span
-                            key={team}
-                            className="rounded-md bg-[#F4FAF8] px-2 py-0.5 text-[11px] font-semibold text-[#212047] ring-1 ring-[#5BAE84]/30 lg:px-2.5 lg:py-1 lg:text-xs"
-                          >
-                            {team}
+                            {frontInfo && (
+                              <div className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-[#212047] px-2.5 py-0.5 font-mono-num text-[11px] font-extrabold text-[#5ECBC0]">
+                                <span>
+                                  ▲ 你的座位 {currentUserSeat.zone}
+                                  {currentUserSeat.seat} 正前方（
+                                  {frontInfo.setsLabel}）
+                                </span>
+                              </div>
+                            )}
+
+                            {/* Birthday + Custom Zodiac Icon */}
+                            <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                              <span
+                                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-mono-num text-[11px] font-bold lg:text-xs ${
+                                  isBirthdayStar
+                                    ? 'bg-amber-400/25 font-black text-amber-900 ring-1 ring-amber-500'
+                                    : 'bg-[#F4FAF8] text-[#212047]/70 ring-1 ring-[#212047]/10'
+                                }`}
+                              >
+                                {isBirthdayStar && (
+                                  <span className="text-amber-600">★</span>
+                                )}
+                                <span>{member.birthday}</span>
+                                {isBirthdayStar && <span>· 本月壽星</span>}
+                              </span>
+
+                              <span className="inline-flex items-center gap-1 rounded-full bg-[#F4FAF8] py-0.5 pr-2 pl-0.5 text-[11px] font-bold text-[#212047]/80 ring-1 ring-[#5BAE84]/30 lg:text-xs">
+                                <ZodiacIcon
+                                  zodiac={member.zodiac}
+                                  className="h-4.5 w-4.5"
+                                />
+                                <span>{member.zodiac}</span>
+                              </span>
+                            </div>
+                          </div>
+
+                          <span className="shrink-0 font-editorial text-3xl font-bold text-[#4FA87D] italic lg:text-4xl">
+                            #{member.number}
                           </span>
-                        ))}
+                        </div>
+
+                        <p className="mt-2.5 line-clamp-2 text-xs leading-relaxed text-[#212047]/70 lg:text-sm">
+                          {member.tagline}
+                        </p>
+
+                        {/* Dual Team Chips */}
+                        <div className="mt-3.5 flex flex-wrap gap-1.5">
+                          {member.dualTeams.map((team) => (
+                            <span
+                              key={team}
+                              className="rounded-md bg-[#F4FAF8] px-2 py-0.5 text-[11px] font-semibold text-[#212047] ring-1 ring-[#5BAE84]/30 lg:px-2.5 lg:py-1 lg:text-xs"
+                            >
+                              {team}
+                            </span>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Card Footer: Quick Copy Name & Copy @IG + Open Dossier Button */}
-                  <div className="flex flex-col gap-1.5 border-t border-[#212047]/[0.07] bg-[#F4FAF8] px-2.5 py-2 sm:px-4 sm:py-3 lg:px-5 lg:py-3.5">
-                    <div className="flex items-center justify-between gap-1">
+                  {/* Card Footer: Compact 1-Row Quick Copy on Mobile / Full Footer on Desktop */}
+                  <div className="flex flex-col gap-1 border-t border-[#212047]/[0.07] bg-[#F4FAF8] px-1.5 py-1 sm:gap-1.5 sm:px-4 sm:py-3 lg:px-5 lg:py-3.5">
+                    <div className="hidden items-center justify-between gap-1 sm:flex">
                       <a
                         href={member.instagramUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="truncate font-mono-num text-[10px] font-semibold text-[#212047]/80 transition-colors hover:text-[#4FA87D] sm:text-xs lg:text-sm"
+                        className="truncate font-mono-num text-xs font-semibold text-[#212047]/80 transition-colors hover:text-[#4FA87D] lg:text-sm"
                       >
                         @{member.instagramHandle}
                       </a>
@@ -990,7 +1266,7 @@ export const App: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => setSelectedMember(member)}
-                        className="shrink-0 inline-flex items-center gap-0.5 text-[11px] font-extrabold text-[#212047] whitespace-nowrap sm:text-xs lg:text-sm"
+                        className="shrink-0 inline-flex items-center gap-0.5 text-xs font-extrabold text-[#212047] whitespace-nowrap lg:text-sm"
                       >
                         <span>檔案</span>
                         <span className="text-[#4FA87D]">→</span>
@@ -1004,15 +1280,15 @@ export const App: React.FC = () => {
                         onClick={(e) =>
                           handleCopyMemberInfo(member.name, nameCopyKey, e)
                         }
-                        className={`truncate rounded-lg px-1.5 py-1 font-mono-num text-[10px] font-bold transition-all active:scale-95 lg:py-1.5 lg:text-xs ${
+                        className={`truncate rounded-md px-1 py-0.5 font-mono-num text-[9px] font-bold transition-all active:scale-95 sm:rounded-lg sm:px-1.5 sm:py-1 sm:text-[10px] lg:py-1.5 lg:text-xs ${
                           copiedCardKey === nameCopyKey
                             ? 'bg-[#5BAE84] text-white'
                             : 'bg-white text-[#212047] ring-1 ring-[#212047]/12 hover:bg-[#E6F5F1]'
                         }`}
                       >
                         {copiedCardKey === nameCopyKey
-                          ? '已複製名字'
-                          : '複製名字'}
+                          ? '已複製'
+                          : '複製名'}
                       </button>
 
                       <button
@@ -1024,15 +1300,15 @@ export const App: React.FC = () => {
                             e
                           )
                         }
-                        className={`truncate rounded-lg px-1.5 py-1 font-mono-num text-[10px] font-bold transition-all active:scale-95 lg:py-1.5 lg:text-xs ${
+                        className={`truncate rounded-md px-1 py-0.5 font-mono-num text-[9px] font-bold transition-all active:scale-95 sm:rounded-lg sm:px-1.5 sm:py-1 sm:text-[10px] lg:py-1.5 lg:text-xs ${
                           copiedCardKey === igCopyKey
                             ? 'bg-[#5BAE84] text-white'
                             : 'bg-[#212047] text-[#7ADAD0] hover:bg-[#2E2C5E]'
                         }`}
                       >
                         {copiedCardKey === igCopyKey
-                          ? '已複製 @IG'
-                          : '複製 @IG'}
+                          ? '已複製'
+                          : '複製@IG'}
                       </button>
                     </div>
                   </div>
@@ -1048,6 +1324,7 @@ export const App: React.FC = () => {
         favoriteIds={favoriteIds}
         onOpenMemberDetail={(m) => setSelectedMember(m)}
         onJumpToSeatSimulator={(matchId, zone, seat, girlId) => {
+          setCurrentUserSeat({ matchId, zone, seat });
           setSeatSimulatorJump({
             matchId,
             zone,
@@ -1065,6 +1342,7 @@ export const App: React.FC = () => {
       <SeatFinderSection
         favoriteIds={favoriteIds}
         externalSelection={seatSimulatorJump}
+        onSeatChange={setCurrentUserSeat}
         onOpenMemberDetail={(m) => setSelectedMember(m)}
       />
 
