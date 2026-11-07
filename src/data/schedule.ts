@@ -488,39 +488,39 @@ const SLOT_META: Record<
   0 | 1 | 2,
   { label: string; range: [number, number]; core: string }
 > = {
-  0: { label: '左位（站位 1）', range: [1, 8], core: '4–5 號' },
-  1: { label: '中位（站位 2）', range: [9, 15], core: '12 號' },
-  2: { label: '右位（站位 3）', range: [16, 23], core: '19–20 號' },
+  0: { label: '觀眾右側（IG 左位 1–8 號）', range: [1, 8], core: '4–5 號' },
+  1: { label: '觀眾中央（IG 中位 9–15 號）', range: [9, 15], core: '12 號' },
+  2: { label: '觀眾左側（IG 右位 16–23 號）', range: [16, 23], core: '19–20 號' },
 };
 
 function computeSweetSpot(
   initSlot: 0 | 1 | 2,
   after10Slot: 0 | 1 | 2
 ): { range: [number, number]; label: string; reason: string } {
-  // 左位 (1-8) -> 中位 (9-15)
+  // 1-8 號 (觀眾右手邊) -> 9-15 號 (觀眾正中央)
   if (initSlot === 0 && after10Slot === 1) {
     return {
       range: [6, 13],
       label: '6 號 – 13 號（黃金交界 7–11 號）',
       reason:
-        '開局（0–10 分）站左位（1–8 號）、破 10 分後決勝長時段移至中位（9–15 號）；選擇 6–13 號可整局免大幅轉頭全程直視。',
+        '觀眾面向球場視角：開局（0–10 分）站你右手邊（1–8 號）、破 10 分後決勝長時段移至正中央（9–15 號）；選擇 6–13 號可整局免大幅轉頭全程直視。',
     };
   }
-  // 中位 (9-15) -> 右位 (16-23)
+  // 9-15 號 (觀眾正中央) -> 16-23 號 (觀眾左手邊)
   if (initSlot === 1 && after10Slot === 2) {
     return {
       range: [12, 19],
       label: '12 號 – 19 號（黃金交界 14–17 號）',
       reason:
-        '開局（0–10 分）站中位（9–15 號）、破 10 分後決勝長時段移至右位（16–23 號）；選擇 12–19 號可同時兼顧中右兩段視野。',
+        '觀眾面向球場視角：開局（0–10 分）站正中央（9–15 號）、破 10 分後決勝長時段移至你左手邊（16–23 號）；選擇 12–19 號可同時兼顧中央與左翼兩段視野。',
     };
   }
-  // 右位 (16-23) -> 左位 (1-8)
+  // 16-23 號 (觀眾左手邊) -> 1-8 號 (觀眾右手邊)
   return {
     range: [1, 8],
     label: '1 號 – 8 號（決勝期 C 位 4–5 號）或 16–23 號',
     reason:
-      '開局（0–10 分）站右位（16–23 號），主隊破 10 分後（11–25 分，佔單局 60% 以上時間）移至左位（1–8 號）；首推 1–8 號鎖定局末關鍵應援，或選 16–23 號鎖定開局。',
+      '觀眾面向球場視角：開局（0–10 分）站你左手邊（16–23 號），主隊破 10 分後（11–25 分，佔單局 60% 以上時間）移至你右手邊（1–8 號）；首推 1–8 號鎖定局末關鍵應援，或選 16–23 號鎖定開局。',
   };
 }
 
@@ -529,75 +529,75 @@ function computeCrossZoneAdjacentOption(
   initSlot: 0 | 1 | 2,
   after10Slot: 0 | 1 | 2
 ): CrossZoneAdjacentOption | null {
-  const touchesLeftEdge = initSlot === 0 || after10Slot === 0;
-  const touchesRightEdge = initSlot === 2 || after10Slot === 2;
+  const touchesSmallNumEdge = initSlot === 0 || after10Slot === 0; // 1–8 號（觀眾右手邊）
+  const touchesLargeNumEdge = initSlot === 2 || after10Slot === 2; // 16–23 號（觀眾左手邊）
 
-  if (zone === 'A' && touchesRightEdge) {
-    const isAfter10Right = after10Slot === 2;
+  if (zone === 'A' && touchesLargeNumEdge) {
+    const isAfter10Large = after10Slot === 2;
     return {
       adjacentZone: 'B',
       adjacentSeatRange: [1, 7],
       adjacentCoreSeat: 2,
-      boundaryName: 'A23 ↔ B1 跨區相連',
-      label: '跨區可坐：B 區 1–7 號（距 A 區右位僅 5–11 席）',
-      reason: isAfter10Right
-        ? '破 10 分後站 A 區右位（16–23 號），緊鄰 B 區 1 號；坐 B 區 1–7 號同樣在 12 席最佳拍攝範圍內，還能兼顧她在 B 區的局數。'
-        : '開局站 A 區右位（16–23 號），緊鄰 B 區 1 號；坐 B 區 1–7 號可跨區斜拍並兼顧她在 B 區的應援局數。',
+      boundaryName: '觀眾視角：左手邊 B1 ◀ 緊鄰 ▶ 右手邊 A23',
+      label: '跨區可坐（往左手邊緊鄰）：B 區 1–7 號（距 A 區 16–23 號僅 5–11 席）',
+      reason: isAfter10Large
+        ? '觀眾面向球場時，A 區左翼（16–23 號）往左緊鄰 B 區 1 號；坐 B 區 1–7 號往右前方看同樣在 12 席最佳拍攝範圍內，還能直接兼顧她在 B 區的局數。'
+        : '觀眾面向球場時，開局她站 A 區左翼（16–23 號）緊鄰左手邊 B 區 1 號；坐 B 區 1–7 號可跨區斜拍並兼顧她在 B 區的應援局數。',
     };
   }
 
-  if (zone === 'B' && touchesLeftEdge && !touchesRightEdge) {
-    const isAfter10Left = after10Slot === 0;
+  if (zone === 'B' && touchesSmallNumEdge && !touchesLargeNumEdge) {
+    const isAfter10Small = after10Slot === 0;
     return {
       adjacentZone: 'A',
       adjacentSeatRange: [17, 23],
       adjacentCoreSeat: 22,
-      boundaryName: 'A23 ↔ B1 跨區相連',
-      label: '跨區可坐：A 區 17–23 號（距 B 區左位僅 5–11 席）',
-      reason: isAfter10Left
-        ? '破 10 分後站 B 區左位（1–8 號），緊鄰 A 區 23 號；坐 A 區 17–23 號同樣在 12 席最佳拍攝範圍內，還能兼顧她在 A 區的局數。'
-        : '開局站 B 區左位（1–8 號），緊鄰 A 區 23 號；坐 A 區 17–23 號可跨區拍攝並兼顧她在 A 區的應援局數。',
+      boundaryName: '觀眾視角：左手邊 B1 ◀ 緊鄰 ▶ 右手邊 A23',
+      label: '跨區可坐（往右手邊緊鄰）：A 區 17–23 號（距 B 區 1–8 號僅 5–11 席）',
+      reason: isAfter10Small
+        ? '觀眾面向球場時，B 區右翼（1–8 號）往右緊鄰 A 區 23 號；坐 A 區 17–23 號往左前方看同樣在 12 席最佳拍攝範圍內，還能直接兼顧她在 A 區的局數。'
+        : '觀眾面向球場時，開局她站 B 區右翼（1–8 號）緊鄰右手邊 A 區 23 號；坐 A 區 17–23 號可跨區拍攝並兼顧她在 A 區的應援局數。',
     };
   }
 
-  if (zone === 'B' && touchesRightEdge && !touchesLeftEdge) {
-    const isAfter10Right = after10Slot === 2;
+  if (zone === 'B' && touchesLargeNumEdge && !touchesSmallNumEdge) {
+    const isAfter10Large = after10Slot === 2;
     return {
       adjacentZone: 'C',
       adjacentSeatRange: [1, 7],
       adjacentCoreSeat: 2,
-      boundaryName: 'B23 ↔ C1 跨區相連',
-      label: '跨區可坐：C 區 1–7 號（距 B 區右位僅 5–11 席）',
-      reason: isAfter10Right
-        ? '破 10 分後站 B 區右位（16–23 號），緊鄰 C 區 1 號；坐 C 區 1–7 號同樣在 12 席最佳拍攝範圍內，還能兼顧她在 C 區的局數。'
-        : '開局站 B 區右位（16–23 號），緊鄰 C 區 1 號；坐 C 區 1–7 號可跨區拍攝並兼顧她在 C 區的應援局數。',
+      boundaryName: '觀眾視角：左手邊 C1 ◀ 緊鄰 ▶ 右手邊 B23',
+      label: '跨區可坐（往左手邊緊鄰）：C 區 1–7 號（距 B 區 16–23 號僅 5–11 席）',
+      reason: isAfter10Large
+        ? '觀眾面向球場時，B 區左翼（16–23 號）往左緊鄰 C 區 1 號；坐 C 區 1–7 號往右前方看同樣在 12 席最佳拍攝範圍內，還能直接兼顧她在 C 區的局數。'
+        : '觀眾面向球場時，開局她站 B 區左翼（16–23 號）緊鄰左手邊 C 區 1 號；坐 C 區 1–7 號可跨區拍攝並兼顧她在 C 區的應援局數。',
     };
   }
 
-  if (zone === 'B' && touchesLeftEdge && touchesRightEdge) {
-    // 右位 (0-10) -> 左位 (>10)
+  if (zone === 'B' && touchesSmallNumEdge && touchesLargeNumEdge) {
+    // 16-23 (0-10) -> 1-8 (>10)
     return {
       adjacentZone: 'A',
       adjacentSeatRange: [17, 23],
       adjacentCoreSeat: 22,
-      boundaryName: 'A23 ↔ B1 跨區相連',
-      label: '跨區可坐：A 區 17–23 號（鎖定破 10 分 B 左）或 C 區 1–7 號（鎖定開局 B 右）',
+      boundaryName: '觀眾視角：左手邊 C1 ↔ B 區 ↔ 右手邊 A23',
+      label: '跨區可坐：右手邊 A 區 17–23 號（鎖定破 10 分 B 區 1–8 號）或左手邊 C 區 1–7 號',
       reason:
-        '破 10 分主力段站 B 區左位（1–8 號），緊鄰 A 區 17–23 號；開局站 B 區右位（16–23 號），緊鄰 C 區 1–7 號。',
+        '觀眾面向球場時，破 10 分主力段站 B 區右翼（1–8 號），緊鄰右手邊 A 區 17–23 號；開局站 B 區左翼（16–23 號），緊鄰左手邊 C 區 1–7 號。',
     };
   }
 
-  if (zone === 'C' && touchesLeftEdge) {
-    const isAfter10Left = after10Slot === 0;
+  if (zone === 'C' && touchesSmallNumEdge) {
+    const isAfter10Small = after10Slot === 0;
     return {
       adjacentZone: 'B',
       adjacentSeatRange: [17, 23],
       adjacentCoreSeat: 22,
-      boundaryName: 'B23 ↔ C1 跨區相連',
-      label: '跨區可坐：B 區 17–23 號（距 C 區左位僅 5–11 席）',
-      reason: isAfter10Left
-        ? '破 10 分後站 C 區左位（1–8 號），緊鄰 B 區 23 號；坐 B 區 17–23 號同樣在 12 席最佳拍攝範圍內，還能兼顧她在 B 區的局數。'
-        : '開局站 C 區左位（1–8 號），緊鄰 B 區 23 號；坐 B 區 17–23 號可跨區拍攝並兼顧她在 B 區的應援局數。',
+      boundaryName: '觀眾視角：左手邊 C1 ◀ 緊鄰 ▶ 右手邊 B23',
+      label: '跨區可坐（往右手邊緊鄰）：B 區 17–23 號（距 C 區 1–8 號僅 5–11 席）',
+      reason: isAfter10Small
+        ? '觀眾面向球場時，C 區右翼（1–8 號）往右緊鄰 B 區 23 號；坐 B 區 17–23 號往左前方看同樣在 12 席最佳拍攝範圍內，還能直接兼顧她在 B 區的局數。'
+        : '觀眾面向球場時，開局她站 C 區右翼（1–8 號）緊鄰右手邊 B 區 23 號；坐 B 區 17–23 號可跨區拍攝並兼顧她在 B 區的應援局數。',
     };
   }
 
@@ -1021,21 +1021,24 @@ export function getCrossZoneGoldenIntervals(
         : [1, 7];
 
     const boundaryTag =
-      id === 'AB' ? 'A23 ↔ B1 跨區交界黃金帶' : 'B23 ↔ C1 跨區交界黃金帶';
+      id === 'AB'
+        ? '觀眾視角：左 B1 ◀ ↔ ▶ 右 A23'
+        : '觀眾視角：左 C1 ◀ ↔ ▶ 右 B23';
     const junctionTitle =
       id === 'AB'
-        ? 'A 區大號 ↔ B 區小號 跨區黃金區間'
-        : 'B 區大號 ↔ C 區小號 跨區黃金區間';
+        ? '觀眾視角：左側 B 區小號 ↔ 右側 A 區大號 跨區黃金區間'
+        : '觀眾視角：左側 C 區小號 ↔ 右側 B 區大號 跨區黃金區間';
 
-    const combinedRangeLabel = `${leftZone} 區 ${leftRange[0]}–${leftRange[1]} 號 ↔ ${rightZone} 區 ${rightRange[0]}–${rightRange[1]} 號`;
+    // 依觀眾面向球場的左右手順序排列：左手邊為 rightZone (1–7 號)，右手邊為 leftZone (17–23 號)
+    const combinedRangeLabel = `◀ 左側 ${rightZone} 區 ${rightRange[0]}–${rightRange[1]} 號 ↔ 右側 ${leftZone} 區 ${leftRange[0]}–${leftRange[1]} 號 ▶`;
     const bestSingleSeatLabel = `${overallBest.zone} 區 ${overallBest.seat} 號`;
 
     const coveredSetsLabel =
       overallBest.coveredSets.length > 0
         ? overallBest.coveredSets.join(' ＋ ')
-        : `${leftSet?.setShortLabel ?? ''} ＋ ${rightSet?.setShortLabel ?? ''}`;
+        : `${rightSet?.setShortLabel ?? ''} ＋ ${leftSet?.setShortLabel ?? ''}`;
 
-    const summaryReason = `利用「${leftZone} 區 23 號緊鄰 ${rightZone} 區 1 號」無縫相接特性，坐在此跨區交界區間可同時在 12 席最佳視角內捕捉她在 ${leftZone} 區（${leftSet?.setShortLabel ?? ''}）與 ${rightZone} 區（${rightSet?.setShortLabel ?? ''}）的應援畫面，整場免換位即可橫跨雙區拍攝！`;
+    const summaryReason = `觀眾面向球場時，左手邊「${rightZone} 區 1 號」與右手邊「${leftZone} 區 23 號」無縫相接；坐在此跨區交界區間可同時在 12 席最佳正面視角內捕捉她在左手邊 ${rightZone} 區（${rightSet?.setShortLabel ?? ''}）與右手邊 ${leftZone} 區（${leftSet?.setShortLabel ?? ''}）的應援畫面，整場免換位即可橫跨雙區拍攝！`;
 
     return {
       id,

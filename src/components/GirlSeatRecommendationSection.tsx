@@ -22,14 +22,23 @@ interface GirlSeatRecommendationSectionProps {
   ) => void;
 }
 
-const SEAT_NUMBERS = Array.from({ length: 23 }, (_, i) => i + 1);
+// 依觀眾面向球場第一人稱視角排列：左手邊為 23 號（大號側），右手邊為 1 號（小號側）
+const SEAT_NUMBERS = Array.from({ length: 23 }, (_, i) => 23 - i);
 
 const MOBILE_SEAT_GROUPS = [
-  { label: '左位 1–8 號', seats: [1, 2, 3, 4, 5, 6, 7, 8], cols: 'grid-cols-8' },
-  { label: '中位 9–15 號', seats: [9, 10, 11, 12, 13, 14, 15], cols: 'grid-cols-7' },
   {
-    label: '右位 16–23 號',
-    seats: [16, 17, 18, 19, 20, 21, 22, 23],
+    label: '◀ 左側 23–16號',
+    seats: [23, 22, 21, 20, 19, 18, 17, 16],
+    cols: 'grid-cols-8',
+  },
+  {
+    label: '▲ 中央 15–9號',
+    seats: [15, 14, 13, 12, 11, 10, 9],
+    cols: 'grid-cols-7',
+  },
+  {
+    label: '右側 8–1號 ▶',
+    seats: [8, 7, 6, 5, 4, 3, 2, 1],
     cols: 'grid-cols-8',
   },
 ];
@@ -131,7 +140,7 @@ export const GirlSeatRecommendationSection: React.FC<
             以女孩為主的黃金座位推薦區間
           </h2>
           <p className="mt-2.5 max-w-4xl text-xs leading-relaxed text-[#212047]/75 sm:text-base lg:text-lg">
-            點選你想鎖定的連莊女孩，系統將自動追蹤她在「第 1、4 局」、「第 2、5 局」與「第 3 局」的跨區路線，以及單局得分破 10 分前後的區內移位，計算出「雙享黃金席」與「破 10 分主力 C 位席」推薦號碼區間。
+            點選你想鎖定的連莊女孩，系統將以「觀眾坐在看台面向球場」的真實左右手方向（◀ 左手邊為 C 區與 23–16 號大號側、正中央為 B 區與 15–9 號、右手邊為 A 區與 8–1 號小號側 ▶），自動推算「跨區免換位黃金區間」、「單局雙享黃金席」與「破 10 分主力 C 位席」。
           </p>
           <p className="mt-2 max-w-4xl text-[11px] font-semibold text-[#3F8E67] lg:text-sm">
             ※ 粉絲自製免責說明：本選位區間為依據官方公告站位表推算之輔助參考，現場實際座椅編號與臨時人員異動，請以球團與 ACE VIVA 官方最新實際公告為準。
@@ -325,7 +334,7 @@ export const GirlSeatRecommendationSection: React.FC<
                     <div className="mt-4 grid grid-cols-2 gap-2 border-t border-white/15 pt-3.5 text-xs lg:text-sm">
                       <div className="rounded-xl bg-white/10 p-2.5 lg:p-3">
                         <div className="font-mono-num text-[10px] text-[#7ADAD0] lg:text-xs">
-                          開局（0–10 分）正對
+                          開局 0–10 分 · {primaryRec.initialSlotLabel.slice(0, 4)}
                         </div>
                         <div className="mt-0.5 font-extrabold text-white">
                           {primaryRec.zone} 區 {primaryRec.initialSeatRange[0]}–
@@ -337,7 +346,7 @@ export const GirlSeatRecommendationSection: React.FC<
                       </div>
                       <div className="rounded-xl bg-[#5BAE84]/30 p-2.5 ring-1 ring-[#5ECBC0]/40 lg:p-3">
                         <div className="font-mono-num text-[10px] text-[#7ADAD0] lg:text-xs">
-                          破 10 分後（主力段）
+                          破 10 分後 · {primaryRec.after10SlotLabel.slice(0, 4)}
                         </div>
                         <div className="mt-0.5 font-extrabold text-white">
                           {primaryRec.zone} 區 {primaryRec.after10SeatRange[0]}–
@@ -357,7 +366,7 @@ export const GirlSeatRecommendationSection: React.FC<
                     <div className="flex flex-wrap items-center justify-between gap-1.5">
                       <span className="inline-flex items-center gap-1 rounded-full bg-[#5ECBC0] px-2.5 py-0.5 font-mono-num text-[10px] font-black tracking-wider text-[#212047] uppercase lg:text-xs">
                         <span>↔ CROSS-ZONE GOLDEN BAND</span>
-                        <span>· 跨區免換位黃金區間</span>
+                        <span>· 觀眾視角跨區黃金帶</span>
                       </span>
                       <span className="rounded-md bg-white/10 px-2 py-0.5 font-mono-num text-[10px] font-extrabold text-[#7ADAD0] lg:text-xs">
                         涵蓋 {topCrossZone.coveredPhasesCount}/6 階段於 12 席內
@@ -377,30 +386,8 @@ export const GirlSeatRecommendationSection: React.FC<
                       {topCrossZone.summaryReason}
                     </p>
 
-                    {/* Quick Jump Buttons for Both Sides of the Cross-Zone Boundary */}
+                    {/* Quick Jump Buttons Ordered by Audience Left-Hand (rightZone 1-7) to Right-Hand (leftZone 17-23) */}
                     <div className="mt-3.5 grid grid-cols-2 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (onJumpToSeatSimulator) {
-                            onJumpToSeatSimulator(
-                              currentMatchSchedule.matchId,
-                              topCrossZone.leftZone,
-                              topCrossZone.leftBestSeat,
-                              activeGirl.id
-                            );
-                          }
-                        }}
-                        className="flex flex-col items-start rounded-xl bg-white/10 px-3 py-2 text-left ring-1 ring-white/20 transition-all hover:bg-[#5BAE84] hover:text-white active:scale-95"
-                      >
-                        <span className="font-mono-num text-[10px] font-bold text-[#7ADAD0]">
-                          跨區左翼（{topCrossZone.leftZone} 區 {topCrossZone.leftSeatRange[0]}–{topCrossZone.leftSeatRange[1]} 號）
-                        </span>
-                        <span className="mt-0.5 text-xs font-black text-white lg:text-sm">
-                          模擬 {topCrossZone.leftZone} 區 {topCrossZone.leftBestSeat} 號席 →
-                        </span>
-                      </button>
-
                       <button
                         type="button"
                         onClick={() => {
@@ -416,10 +403,32 @@ export const GirlSeatRecommendationSection: React.FC<
                         className="flex flex-col items-start rounded-xl bg-white/10 px-3 py-2 text-left ring-1 ring-white/20 transition-all hover:bg-[#5BAE84] hover:text-white active:scale-95"
                       >
                         <span className="font-mono-num text-[10px] font-bold text-[#7ADAD0]">
-                          跨區右翼（{topCrossZone.rightZone} 區 {topCrossZone.rightSeatRange[0]}–{topCrossZone.rightSeatRange[1]} 號）
+                          ◀ 觀眾左手邊（{topCrossZone.rightZone} 區 {topCrossZone.rightSeatRange[0]}–{topCrossZone.rightSeatRange[1]} 號）
                         </span>
                         <span className="mt-0.5 text-xs font-black text-white lg:text-sm">
                           模擬 {topCrossZone.rightZone} 區 {topCrossZone.rightBestSeat} 號席 →
+                        </span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (onJumpToSeatSimulator) {
+                            onJumpToSeatSimulator(
+                              currentMatchSchedule.matchId,
+                              topCrossZone.leftZone,
+                              topCrossZone.leftBestSeat,
+                              activeGirl.id
+                            );
+                          }
+                        }}
+                        className="flex flex-col items-start rounded-xl bg-white/10 px-3 py-2 text-left ring-1 ring-white/20 transition-all hover:bg-[#5BAE84] hover:text-white active:scale-95"
+                      >
+                        <span className="font-mono-num text-[10px] font-bold text-[#7ADAD0]">
+                          觀眾右手邊（{topCrossZone.leftZone} 區 {topCrossZone.leftSeatRange[0]}–{topCrossZone.leftSeatRange[1]} 號） ▶
+                        </span>
+                        <span className="mt-0.5 text-xs font-black text-white lg:text-sm">
+                          模擬 {topCrossZone.leftZone} 區 {topCrossZone.leftBestSeat} 號席 →
                         </span>
                       </button>
                     </div>
@@ -507,8 +516,8 @@ export const GirlSeatRecommendationSection: React.FC<
                   {/* Middle Row: 3 Interval Breakdown Cards */}
                   <div className="mt-3.5 grid grid-cols-2 gap-2.5 sm:mt-4 sm:grid-cols-3 sm:gap-3">
                     <div className="rounded-2xl bg-white p-3 ring-1 ring-[#212047]/10 lg:p-4">
-                      <div className="font-mono-num text-[10px] font-bold text-[#212047]/55 uppercase lg:text-xs">
-                        開局（0–10 分）
+                      <div className="font-mono-num text-[10px] font-bold text-[#212047]/65 uppercase lg:text-xs">
+                        開局 0–10 分 · {rec.initialSlotLabel}
                       </div>
                       <div className="mt-1 text-sm font-black text-[#212047] sm:text-base lg:text-lg">
                         {rec.zone} 區 {rec.initialSeatRange[0]}–
@@ -521,7 +530,7 @@ export const GirlSeatRecommendationSection: React.FC<
 
                     <div className="rounded-2xl bg-[#212047] p-3 text-white lg:p-4">
                       <div className="font-mono-num text-[10px] font-bold text-[#7ADAD0] uppercase lg:text-xs">
-                        破 10 分後（主力段）
+                        破 10 分後 · {rec.after10SlotLabel}
                       </div>
                       <div className="mt-1 text-sm font-black text-white sm:text-base lg:text-lg">
                         {rec.zone} 區 {rec.after10SeatRange[0]}–
@@ -581,11 +590,11 @@ export const GirlSeatRecommendationSection: React.FC<
                     </div>
                   )}
 
-                  {/* Bottom Row: 1-23 Seat Heatmap Bar (Mobile 3-Station Stacked / Desktop 23-Col Linear) */}
+                  {/* Bottom Row: 23->1 Audience View Seat Heatmap Bar */}
                   <div className="mt-4">
                     <div className="mb-2 flex flex-wrap items-center justify-between gap-1.5 text-[11px] lg:text-xs">
-                      <span className="font-mono-num font-bold text-[#212047]/75">
-                        {rec.zone} 區 1–23 號推薦標示（點擊號碼可模擬該座位視角）：
+                      <span className="font-mono-num font-bold text-[#212047]/80">
+                        ▲ 觀眾面向球場視角尺規（◀ 左手邊 23 號 → 右手邊 1 號 ▶，點擊號碼模擬雷達）：
                       </span>
                       <div className="flex flex-wrap items-center gap-2.5 text-[10px] font-bold lg:text-xs">
                         <span className="inline-flex items-center gap-1 text-[#212047]">

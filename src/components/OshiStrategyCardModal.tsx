@@ -329,7 +329,7 @@ async function renderStrategyCardToDataUrl(
     );
   }
 
-  // 4. Mini Top-Down Arena Orientation Strip (IG Direction Aligned)
+  // 4. Mini Audience-Perspective Arena Orientation Strip (Facing the Court: Left = C, Center = B, Right = A)
   const mapY = 394;
   drawRoundedRect(ctx, 64, mapY, W - 128, 126, 24);
   ctx.fillStyle = '#14132D';
@@ -341,7 +341,7 @@ async function renderStrategyCardToDataUrl(
   ctx.fillStyle = '#7ADAD0';
   fillTextFit(
     ctx,
-    '▼ 場館方位速查（同官方 IG 圖：觀眾在上方往下看球賽 ▼ · 啦啦隊站前緣往上應援 ▲）',
+    '▲ 觀眾面向球場視角方位（觀眾在下方往前看球場 ▲ · 左手邊 C 區 23 號 ◀ ↔ ▶ 右手邊 A 區 1 號）',
     90,
     mapY + 29,
     W - 180,
@@ -350,12 +350,16 @@ async function renderStrategyCardToDataUrl(
     fontSans
   );
 
-  const zones: ('A' | 'B' | 'C')[] = ['A', 'B', 'C'];
+  const audienceZones: { id: 'C' | 'B' | 'A'; label: string }[] = [
+    { id: 'C', label: '◀ 左手邊：2F C 區' },
+    { id: 'B', label: '正中央：2F B 區' },
+    { id: 'A', label: '右手邊：2F A 區 ▶' },
+  ];
   const zoneBoxW = (W - 128 - 52 - 24) / 3;
-  zones.forEach((zId, idx) => {
+  audienceZones.forEach((zItem, idx) => {
     const zx = 90 + idx * (zoneBoxW + 12);
     const zy = mapY + 52;
-    const recForZone = recs.find((r) => r.zone === zId);
+    const recForZone = recs.find((r) => r.zone === zItem.id);
 
     drawRoundedRect(ctx, zx, zy, zoneBoxW, 54, 14);
     ctx.fillStyle =
@@ -369,8 +373,7 @@ async function renderStrategyCardToDataUrl(
     ctx.stroke();
 
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = `800 21px ${fontSans}`;
-    ctx.fillText(`2F 集氣 ${zId} 區`, zx + 18, zy + 27);
+    fillTextFit(ctx, zItem.label, zx + 14, zy + 27, zoneBoxW - 135, 800, 19, fontSans);
 
     if (recForZone) {
       ctx.fillStyle = '#7ADAD0';
@@ -378,11 +381,11 @@ async function renderStrategyCardToDataUrl(
       fillTextFit(
         ctx,
         `(${recForZone.setShortLabel})`,
-        zx + zoneBoxW - 16,
+        zx + zoneBoxW - 14,
         zy + 27,
-        140,
+        120,
         700,
-        18,
+        17,
         fontMono
       );
       ctx.textAlign = 'left';
@@ -471,7 +474,7 @@ async function renderStrategyCardToDataUrl(
     ctx.fillStyle = '#3F8E67';
     fillTextFit(
       ctx,
-      `開局 0–10 分（${rec.initialSlotLabel.slice(0, 2)}）`,
+      `開局 0–10 分（${rec.initialSlotLabel.slice(0, 4)}）`,
       108,
       colY + 26,
       colInnerW,
@@ -511,7 +514,7 @@ async function renderStrategyCardToDataUrl(
     ctx.fillStyle = '#7ADAD0';
     fillTextFit(
       ctx,
-      `破 10 分換位後（${rec.after10SlotLabel.slice(0, 2)}）`,
+      `破 10 分換位後（${rec.after10SlotLabel.slice(0, 4)}）`,
       col2X + 16,
       colY + 26,
       colInnerW,
@@ -587,13 +590,14 @@ async function renderStrategyCardToDataUrl(
       fontSans
     );
 
-    // 1-23 Single-Line Seat Ruler Bar
+    // 23 -> 1 Single-Line Seat Ruler Bar (Audience First-Person Order: Left 23 -> Right 1)
     const rulerY = currentY + 210;
     const totalRulerW = W - 128 - 56;
     const seatBoxW = (totalRulerW - 22 * 4) / 23;
 
-    for (let sNum = 1; sNum <= 23; sNum++) {
-      const sx = 92 + (sNum - 1) * (seatBoxW + 4);
+    for (let idx = 0; idx < 23; idx++) {
+      const sNum = 23 - idx;
+      const sx = 92 + idx * (seatBoxW + 4);
       const inInit =
         sNum >= rec.initialSeatRange[0] && sNum <= rec.initialSeatRange[1];
       const inAfter10 =
@@ -632,12 +636,12 @@ async function renderStrategyCardToDataUrl(
   ctx.fillStyle = '#7ADAD0';
   fillTextFit(
     ctx,
-    '■ 深藍格：破 10 分主力正對席（佔單局 60% 時間）   ■ 綠格：開局 0–10 分正對席',
+    '■ 深藍：破 10 分主力席（佔 60% 時間）  ■ 綠：開局 0–10 分正對席  ◀ 尺規為觀眾面向球場視角：左 23 號 → 右 1 號 ▶',
     64,
     H - 78,
     W - 128,
     700,
-    19,
+    18,
     fontSans
   );
 
