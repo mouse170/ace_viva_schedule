@@ -109,9 +109,9 @@ export const MemberDetailDialog: React.FC<MemberDetailDialogProps> = ({
             <div className="flex items-center justify-between border-b border-[#212047]/[0.08] bg-white/70 px-6 py-4 sm:px-8">
               <div className="flex items-center gap-2.5">
                 <img
-                  src="./images/logo.png"
-                  alt="Ace Viva Logo"
-                  className="h-6 w-6 rounded-full object-contain"
+                  src="./favicon.svg"
+                  alt="粉絲自製應援雷達徽章"
+                  className="h-6 w-6 rounded-lg object-contain"
                 />
                 <span className="font-mono-num text-[11px] font-bold tracking-[0.2em] text-[#212047]/70 uppercase">
                   ACE VIVA FAN GUIDE DOSSIER · {member.roleBadge}

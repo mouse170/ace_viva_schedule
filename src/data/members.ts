@@ -47,7 +47,7 @@ export const TEAM_INFO = {
   foundedYear: '2026 年 8 月',
   activeSeason: '2026–2027 賽季',
   homeArena: '臺中市國立臺灣體育運動大學體育館',
-  logoPath: './images/logo.png',
+  logoPath: './favicon.svg',
   officialInstagramHandle: 'ace_viva_official',
   officialInstagramUrl: 'https://www.instagram.com/ace_viva_official/',
   clubInstagramHandle: 'winstreakvolleyball',

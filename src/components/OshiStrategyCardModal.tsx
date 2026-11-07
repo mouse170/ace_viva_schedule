@@ -128,18 +128,8 @@ function getExplicitCrossZoneGuide(rec: GirlSetZoneRecommendation): {
   };
 }
 
-function loadImage(src: string): Promise<HTMLImageElement | null> {
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => resolve(img);
-    img.onerror = () => resolve(null);
-    img.src = src;
-  });
-}
-
 /**
- * 繪製共用頂部背景、外框與成員英雄橫幅左側頭像
+ * 繪製共用頂部背景、外框與原創幾何背號雷達徽章（完全不載入官方 IG 照片，避免社群分享圖版權疑慮）
  */
 async function drawCardShellAndAvatar(
   ctx: CanvasRenderingContext2D,
@@ -221,55 +211,88 @@ async function drawCardShellAndAvatar(
   ctx.lineWidth = 2;
   ctx.stroke();
 
-  // Load & Draw Member Avatar (Face-centered crop)
-  const avatarImg = await loadImage(member.localImagePath);
+  // Draw Original Geometric Jersey & Radar Crest Emblem (Copyright-Safe, No Official IG Photo)
   const avatarX = 96;
   const avatarY = heroY + 42;
   const avatarSize = 168;
+  const cx = avatarX + avatarSize / 2;
+  const cy = avatarY + avatarSize / 2;
 
   ctx.save();
   ctx.beginPath();
-  ctx.arc(
-    avatarX + avatarSize / 2,
-    avatarY + avatarSize / 2,
-    avatarSize / 2,
-    0,
-    Math.PI * 2
-  );
+  ctx.arc(cx, cy, avatarSize / 2, 0, Math.PI * 2);
   ctx.closePath();
   ctx.clip();
 
-  if (avatarImg) {
-    const sWidth = avatarImg.width * 0.72;
-    const sHeight = sWidth;
-    const sx = (avatarImg.width - sWidth) / 2;
-    const sy = avatarImg.height * 0.04;
-    ctx.drawImage(
-      avatarImg,
-      sx,
-      sy,
-      sWidth,
-      sHeight,
-      avatarX,
-      avatarY,
-      avatarSize,
-      avatarSize
-    );
-  } else {
-    ctx.fillStyle = '#5BAE84';
-    ctx.fillRect(avatarX, avatarY, avatarSize, avatarSize);
-  }
+  const crestGrad = ctx.createLinearGradient(
+    avatarX,
+    avatarY,
+    avatarX + avatarSize,
+    avatarY + avatarSize
+  );
+  crestGrad.addColorStop(0, '#14132D');
+  crestGrad.addColorStop(0.55, '#212047');
+  crestGrad.addColorStop(1, '#265347');
+  ctx.fillStyle = crestGrad;
+  ctx.fillRect(avatarX, avatarY, avatarSize, avatarSize);
+
+  // Subtle Radar Fan Sector inside Emblem
+  ctx.beginPath();
+  ctx.moveTo(cx, avatarY + avatarSize - 18);
+  ctx.lineTo(avatarX + 22, avatarY + 34);
+  ctx.lineTo(avatarX + avatarSize - 22, avatarY + 34);
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(94, 203, 192, 0.16)';
+  ctx.fill();
+
+  // Inner Dashed Ring
+  ctx.beginPath();
+  ctx.arc(cx, cy, avatarSize / 2 - 14, 0, Math.PI * 2);
+  ctx.setLineDash([6, 5]);
+  ctx.strokeStyle = 'rgba(122, 218, 208, 0.4)';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Top Label inside Crest
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#7ADAD0';
+  fillTextFit(ctx, 'JERSEY NO.', cx, avatarY + 42, 110, 800, 14, fontMono);
+
+  // Large Stylized Jersey Number
+  ctx.fillStyle = '#FFFFFF';
+  fillTextFit(
+    ctx,
+    `#${member.number}`,
+    cx,
+    cy + 6,
+    132,
+    900,
+    52,
+    fontMono
+  );
+
+  // Bottom Member Name Pill inside Crest
+  drawRoundedRect(ctx, cx - 54, avatarY + avatarSize - 46, 108, 26, 13);
+  ctx.fillStyle = '#5BAE84';
+  ctx.fill();
+  ctx.fillStyle = '#FFFFFF';
+  fillTextFit(
+    ctx,
+    member.name,
+    cx,
+    avatarY + avatarSize - 33,
+    94,
+    800,
+    15,
+    fontSans
+  );
+  ctx.textAlign = 'left';
   ctx.restore();
 
-  // Avatar Ring
+  // Outer Emblem Ring
   ctx.beginPath();
-  ctx.arc(
-    avatarX + avatarSize / 2,
-    avatarY + avatarSize / 2,
-    avatarSize / 2 + 3,
-    0,
-    Math.PI * 2
-  );
+  ctx.arc(cx, cy, avatarSize / 2 + 3, 0, Math.PI * 2);
   ctx.strokeStyle = '#5ECBC0';
   ctx.lineWidth = 5;
   ctx.stroke();

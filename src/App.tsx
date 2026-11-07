@@ -179,8 +179,8 @@ export const App: React.FC = () => {
           >
             <img
               src={TEAM_INFO.logoPath}
-              alt="Ace Viva Logo"
-              className="h-5 w-5 shrink-0 rounded-full bg-white object-contain p-0.5 sm:h-6 sm:w-6 lg:h-7 lg:w-7"
+              alt="粉絲自製應援雷達圖示"
+              className="h-5 w-5 shrink-0 rounded-lg object-contain sm:h-6 sm:w-6 lg:h-7 lg:w-7"
             />
             <span>ACE VIVA</span>
             <span className="hidden rounded-full bg-[#5BAE84]/35 px-2 py-0.5 font-mono-num text-[9px] font-bold tracking-normal text-[#7ADAD0] ring-1 ring-[#5ECBC0]/40 sm:inline-block lg:text-xs">
@@ -326,13 +326,13 @@ export const App: React.FC = () => {
                 </div>
               </div>
 
-              {/* Official Logo + Display Title */}
+              {/* Fan-Made Emblem Icon + Display Title */}
               <div className="mt-4 flex items-center gap-3.5 sm:mt-6 sm:gap-5">
-                <div className="shrink-0 rounded-full bg-white p-1.5 shadow-[0_14px_35px_rgba(33,32,71,0.12)] ring-2 ring-[#5BAE84]/35 sm:p-2">
+                <div className="shrink-0 rounded-[1.5rem] bg-[#D5EFE9] p-1.5 shadow-[0_14px_35px_rgba(33,32,71,0.12)] ring-2 ring-[#5BAE84]/35 sm:rounded-[2rem] sm:p-2">
                   <img
                     src={TEAM_INFO.logoPath}
-                    alt="Ace Viva 連莊女孩 Logo"
-                    className="h-14 w-14 rounded-full object-contain sm:h-24 sm:w-24 lg:h-28 lg:w-28"
+                    alt="連莊女孩粉絲自製應援雷達主圖示"
+                    className="h-14 w-14 rounded-2xl object-contain sm:h-24 sm:w-24 lg:h-28 lg:w-28"
                   />
                 </div>
                 <div className="min-w-0">
@@ -593,8 +593,8 @@ export const App: React.FC = () => {
                 <div className="flex items-center gap-3">
                   <img
                     src={TEAM_INFO.logoPath}
-                    alt="Ace Viva Logo"
-                    className="h-9 w-9 shrink-0 rounded-full bg-white p-0.5 object-contain sm:h-10 sm:w-10"
+                    alt="粉絲自製應援雷達圖示"
+                    className="h-9 w-9 shrink-0 rounded-xl object-contain sm:h-10 sm:w-10"
                   />
                   <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 font-mono-num text-[10px] font-semibold tracking-[0.18em] text-[#7ADAD0] uppercase lg:text-xs">
                     TEAM CHRONICLE · 品牌成軍誌要
@@ -1148,8 +1148,8 @@ export const App: React.FC = () => {
               <div className="flex flex-wrap items-center gap-3">
                 <img
                   src={TEAM_INFO.logoPath}
-                  alt="Ace Viva Logo"
-                  className="h-10 w-10 shrink-0 rounded-full bg-white p-0.5 object-contain lg:h-12 lg:w-12"
+                  alt="粉絲自製應援雷達圖示"
+                  className="h-10 w-10 shrink-0 rounded-xl object-contain lg:h-12 lg:w-12"
                 />
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-editorial text-2xl font-bold tracking-wider text-[#7ADAD0] italic lg:text-3xl">
