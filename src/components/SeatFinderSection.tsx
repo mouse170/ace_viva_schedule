@@ -980,27 +980,12 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                     <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
                       {isNear ? (
                         <span className="text-xs font-bold text-[#7ADAD0] lg:text-sm">
-                          ★ 距離 {seatsDiff} 席（位於 12 席最佳正面拍攝射程內）
+                          ★ 距離 {seatsDiff} 席（12 席最佳正面拍攝射程內）
                         </span>
                       ) : (
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className="text-xs font-bold text-amber-300 lg:text-sm">
-                            相距 {seatsDiff} 席（超過 12 席，視角偏斜可能拍不到清楚正面）
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSelectedZone(activePhaseOshiDistance.girlZone);
-                              setSelectedSeat(
-                                activePhaseOshiDistance.girlCoreSeat
-                              );
-                            }}
-                            className="rounded-full bg-amber-400 px-3 py-1 font-mono-num text-[11px] font-black text-[#212047] hover:bg-amber-300 active:scale-95 lg:text-xs"
-                          >
-                            移至 {activePhaseOshiDistance.girlZone}
-                            {activePhaseOshiDistance.girlCoreSeat} 號 →
-                          </button>
-                        </div>
+                        <span className="text-xs font-bold text-amber-300 lg:text-sm">
+                          ▲ 相距 {seatsDiff} 席（超過 12 席，視角偏斜可能拍不到正面）
+                        </span>
                       )}
 
                       <button
