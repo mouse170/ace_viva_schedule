@@ -113,8 +113,8 @@ export const MemberDetailDialog: React.FC<MemberDetailDialogProps> = ({
                   alt="粉絲自製應援雷達徽章"
                   className="h-6 w-6 rounded-lg object-contain"
                 />
-                <span className="font-mono-num text-[11px] font-bold tracking-[0.2em] text-[#212047]/70 uppercase">
-                  ACE VIVA FAN GUIDE DOSSIER · {member.roleBadge}
+                <span className="font-mono-num text-[11px] font-bold tracking-[0.14em] text-[#212047]/70">
+                  連莊女孩成員個人檔案 · {member.roleBadge}
                 </span>
               </div>
               <form method="dialog">
@@ -124,7 +124,7 @@ export const MemberDetailDialog: React.FC<MemberDetailDialogProps> = ({
                   aria-label="關閉成員詳細檔案"
                   className="group flex items-center gap-2 rounded-full bg-[#212047]/[0.06] px-4 py-1.5 text-xs font-semibold text-[#212047] transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-[#212047] hover:text-white active:scale-[0.97]"
                 >
-                  <span>關閉 ESC</span>
+                  <span>關閉</span>
                   <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#212047]/10 transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:rotate-90 group-hover:bg-white/20">
                     <svg
                       viewBox="0 0 24 24"
@@ -158,15 +158,28 @@ export const MemberDetailDialog: React.FC<MemberDetailDialogProps> = ({
                     href={member.instagramUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group flex w-full items-center justify-between rounded-full bg-[#212047] py-2.5 pr-2.5 pl-6 text-sm font-semibold text-white transition-all duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-[#2E2C5E] active:scale-[0.98]"
+                    className="group flex w-full items-center justify-between rounded-full bg-gradient-to-r from-[#212047] via-[#2C2A5E] to-[#3F8E67] py-3 pr-3 pl-6 text-sm font-black text-white shadow-md ring-1 ring-[#5ECBC0]/45 transition-all hover:brightness-110 active:scale-[0.98]"
                   >
-                    <span>前往 Instagram (@{member.instagramHandle})</span>
+                    <span className="flex items-center gap-2">
+                      <svg
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        className="h-4 w-4 text-[#5ECBC0]"
+                      >
+                        <rect x="2" y="2" width="20" height="20" rx="5" />
+                        <circle cx="12" cy="12" r="4" />
+                        <circle cx="17.5" cy="6.5" r="1" fill="currentColor" />
+                      </svg>
+                      <span>一鍵開啟 IG (@{member.instagramHandle})</span>
+                    </span>
                     <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#5BAE84] text-white transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 group-hover:scale-105">
                       <svg
                         viewBox="0 0 24 24"
                         fill="none"
                         stroke="currentColor"
-                        strokeWidth="1.25"
+                        strokeWidth="1.5"
                         className="h-4 w-4"
                       >
                         <path d="M7 17L17 7M17 7H8M17 7V16" strokeLinecap="round" strokeLinejoin="round" />
@@ -216,12 +229,12 @@ export const MemberDetailDialog: React.FC<MemberDetailDialogProps> = ({
                   <div className="flex flex-wrap items-baseline justify-between gap-4 border-b border-[#212047]/10 pb-5">
                     <div>
                       <div className="flex items-center gap-2.5">
-                        <span className="rounded-full bg-[#212047] px-3 py-0.5 font-mono-num text-[10px] font-semibold tracking-[0.2em] text-[#7ADAD0] uppercase">
+                        <span className="rounded-full bg-[#212047] px-3 py-0.5 font-mono-num text-[10px] font-semibold tracking-[0.14em] text-[#7ADAD0]">
                           {member.category === 'mc'
-                            ? `OFFICIAL MC · #${member.number}`
-                            : `JERSEY #${member.number}`}
+                            ? `主場主持人 · #${member.number}`
+                            : `背號 #${member.number}`}
                         </span>
-                        <span className="font-mono-num text-xs tracking-[0.18em] text-[#212047]/60 uppercase">
+                        <span className="font-mono-num text-xs tracking-[0.12em] text-[#212047]/60">
                           {member.englishOrKoreanName}
                         </span>
                       </div>
@@ -237,8 +250,17 @@ export const MemberDetailDialog: React.FC<MemberDetailDialogProps> = ({
                         )}
                       </h2>
 
-                      {/* Quick Copy Bar: Copy Name & Copy IG ID (with @) */}
+                      {/* Quick Open IG + Copy Name & Copy IG ID */}
                       <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <a
+                          href={member.instagramUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 rounded-full bg-[#5BAE84] px-3 py-1 font-mono-num text-xs font-black text-white shadow-2xs transition-colors hover:bg-[#3F8E67]"
+                        >
+                          <span>開啟 IG (@{member.instagramHandle}) ↗</span>
+                        </a>
+
                         <button
                           type="button"
                           onClick={() => handleCopyText(member.name, 'name')}
@@ -269,7 +291,7 @@ export const MemberDetailDialog: React.FC<MemberDetailDialogProps> = ({
                           <span>
                             {copiedKey === 'ig'
                               ? `已複製：@${member.instagramHandle}`
-                              : `複製 IG ID（@${member.instagramHandle}）`}
+                              : `複製 IG 帳號（@${member.instagramHandle}）`}
                           </span>
                         </button>
                       </div>
@@ -298,8 +320,8 @@ export const MemberDetailDialog: React.FC<MemberDetailDialogProps> = ({
                       }`}
                     >
                       <div className="flex items-center justify-between gap-1">
-                        <span className="font-mono-num text-[10px] tracking-[0.18em] text-[#212047]/60 uppercase">
-                          BIRTHDAY 生日
+                        <span className="font-mono-num text-[10px] tracking-[0.14em] text-[#212047]/60">
+                          生日
                         </span>
                         {isCurrentMonthBirthday(member.birthday) && (
                           <span className="rounded-full bg-amber-500 px-1.5 py-0.2 font-mono-num text-[9px] font-black text-white">
@@ -312,8 +334,8 @@ export const MemberDetailDialog: React.FC<MemberDetailDialogProps> = ({
                       </div>
                     </div>
                     <div className="rounded-2xl bg-white px-4 py-3 ring-1 ring-[#212047]/[0.08]">
-                      <div className="font-mono-num text-[10px] tracking-[0.18em] text-[#212047]/50 uppercase">
-                        ZODIAC 星座
+                      <div className="font-mono-num text-[10px] tracking-[0.14em] text-[#212047]/50">
+                        星座
                       </div>
                       <div className="mt-1 flex items-center gap-1.5 text-sm font-bold text-[#212047]">
                         <ZodiacIcon
@@ -324,16 +346,16 @@ export const MemberDetailDialog: React.FC<MemberDetailDialogProps> = ({
                       </div>
                     </div>
                     <div className="rounded-2xl bg-[#E6F5F1] px-4 py-3 ring-1 ring-[#5BAE84]/30">
-                      <div className="font-mono-num text-[10px] tracking-[0.18em] text-[#3F8E67] uppercase">
-                        OFFICIAL MBTI
+                      <div className="font-mono-num text-[10px] tracking-[0.14em] text-[#3F8E67]">
+                        MBTI 性格
                       </div>
                       <div className="mt-1 font-mono-num text-sm font-extrabold text-[#212047]">
                         {member.mbti}
                       </div>
                     </div>
                     <div className="rounded-2xl bg-white px-4 py-3 ring-1 ring-[#212047]/[0.08]">
-                      <div className="font-mono-num text-[10px] tracking-[0.18em] text-[#212047]/50 uppercase">
-                        NUMBER 背號
+                      <div className="font-mono-num text-[10px] tracking-[0.14em] text-[#212047]/50">
+                        背號
                       </div>
                       <div className="mt-1 font-mono-num text-sm font-bold text-[#4FA87D]">
                         #{member.number}
@@ -344,8 +366,8 @@ export const MemberDetailDialog: React.FC<MemberDetailDialogProps> = ({
                   {/* Dual Teams Badges */}
                   {member.dualTeams.length > 0 && (
                     <div className="mt-5">
-                      <div className="font-mono-num text-[10px] tracking-[0.2em] text-[#212047]/55 uppercase">
-                        ACTIVE DUAL IDENTITIES · 同步活躍身分與雙棲團隊
+                      <div className="font-mono-num text-[10px] tracking-[0.14em] text-[#212047]/55">
+                        同步活躍身分與雙棲團隊
                       </div>
                       <div className="mt-2 flex flex-wrap gap-2">
                         {member.dualTeams.map((team) => (
@@ -362,8 +384,8 @@ export const MemberDetailDialog: React.FC<MemberDetailDialogProps> = ({
 
                   {/* Career Timeline */}
                   <div className="mt-6">
-                    <div className="font-mono-num text-[10px] tracking-[0.2em] text-[#212047]/55 uppercase">
-                      CAREER CHRONICLE · 應援與演藝資歷
+                    <div className="font-mono-num text-[10px] tracking-[0.14em] text-[#212047]/55">
+                      應援與演藝資歷
                     </div>
                     <div className="mt-2.5 space-y-2">
                       {member.career.map((item, idx) => (
@@ -402,8 +424,8 @@ export const MemberDetailDialog: React.FC<MemberDetailDialogProps> = ({
                 <div className="rounded-2xl bg-[#212047] p-4 text-white">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div>
-                      <span className="font-mono-num text-[10px] tracking-[0.2em] text-[#7ADAD0] uppercase">
-                        HOME COURT SCHEDULE · 近期主場出席預告
+                      <span className="font-mono-num text-[10px] tracking-[0.14em] text-[#7ADAD0]">
+                        近期主場出席預告
                       </span>
                       <div className="mt-0.5 text-xs text-white/75">
                         已排定出席 {attendingMatches.length} 場臺中連莊主場賽事
@@ -426,7 +448,7 @@ export const MemberDetailDialog: React.FC<MemberDetailDialogProps> = ({
                         key={match.id}
                         className="rounded-lg border border-white/15 bg-white/10 px-2.5 py-1 font-mono-num text-[11px] text-white/90"
                       >
-                        {match.date} ({match.dayOfWeek.split(' ')[0]}) vs {match.opponent}
+                        {match.date} ({match.dayOfWeek.split(' ')[0]}) 對戰 {match.opponent}
                       </span>
                     ))}
                   </div>

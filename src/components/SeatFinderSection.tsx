@@ -39,24 +39,24 @@ const ZONES: {
 }[] = [
   {
     id: 'A',
-    shortTitle: 'A 區（左）',
-    title: '2F ACE 集氣 A 區',
-    subtitle: '左側看台 · 1–23 號（A23 接 B1）',
-    badge: 'ZONE A',
+    shortTitle: 'A 區（右）',
+    title: '2F 集氣 A 區',
+    subtitle: '觀眾右手邊看台 · 1–23 號（A23 接 B1）',
+    badge: '集氣 A 區',
   },
   {
     id: 'B',
     shortTitle: 'B 區（中）',
-    title: '2F ACE 集氣 B 區',
-    subtitle: '中央看台 · 1–23 號（B1 接 A23 · B23 接 C1）',
-    badge: 'ZONE B',
+    title: '2F 集氣 B 區',
+    subtitle: '正中央看台 · 1–23 號（B1 接 A23 · B23 接 C1）',
+    badge: '集氣 B 區',
   },
   {
     id: 'C',
-    shortTitle: 'C 區（右）',
-    title: '2F ACE 集氣 C 區',
-    subtitle: '右側看台 · 1–23 號（C1 接 B23）',
-    badge: 'ZONE C',
+    shortTitle: 'C 區（左）',
+    title: '2F 集氣 C 區',
+    subtitle: '觀眾左手邊看台 · 1–23 號（C1 接 B23）',
+    badge: '集氣 C 區',
   },
 ];
 
@@ -247,9 +247,9 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
       {/* Section Heading */}
       <div className="flex flex-col justify-between gap-5 border-b border-[#212047]/10 pb-7 lg:flex-row lg:items-end lg:pb-10">
         <div className="min-w-0">
-          <div className="inline-flex flex-wrap items-center gap-2 rounded-full bg-[#5BAE84]/15 px-3 py-1 font-mono-num text-[10px] font-bold tracking-[0.14em] text-[#212047] uppercase ring-1 ring-[#5BAE84]/35 sm:text-xs lg:text-sm">
+          <div className="inline-flex flex-wrap items-center gap-2 rounded-full bg-[#5BAE84]/15 px-3 py-1 font-mono-num text-[10px] font-bold tracking-[0.14em] text-[#212047] ring-1 ring-[#5BAE84]/35 sm:text-xs lg:text-sm">
             <span className="h-2 w-2 shrink-0 rounded-full bg-[#5BAE84]" />
-            <span>2F ACE 集氣區 · 1–23 號直線選位與相對位置雷達</span>
+            <span>2F 集氣區 · 1–23 號直線選位與相對位置雷達</span>
           </div>
           <h2 className="mt-3 text-2xl font-black tracking-tight text-[#212047] sm:text-4xl lg:text-5xl">
             選擇區域與拉動座位編號，查看面前女孩與主推雷達
@@ -275,7 +275,7 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                       : 'text-[#212047]/75 hover:bg-white/60 hover:text-[#212047]'
                   }`}
                 >
-                  Day {idx + 1} · {sched.dateLabel.split(' ')[0]} vs{' '}
+                  第 {idx + 1} 日 · {sched.dateLabel.split(' ')[0]} 對戰{' '}
                   {sched.opponent}
                 </button>
               );
@@ -316,7 +316,7 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="rounded-full bg-[#212047] px-2.5 py-0.5 font-mono-num text-[10px] font-bold text-[#7ADAD0] lg:px-3 lg:py-1 lg:text-xs">
-                  RADAR TARGET · 雷達定位主推
+                  雷達定位主推
                 </span>
                 <span className="text-xs font-extrabold text-[#212047] lg:text-base">
                   點選要在雷達上計算相對席次的主推：
@@ -383,8 +383,8 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
           {/* STEP 01: Select Zone (A / B / C) */}
           <div>
             <div className="flex flex-wrap items-center justify-between gap-1.5">
-              <span className="font-mono-num text-[11px] font-extrabold tracking-[0.12em] text-[#212047] uppercase sm:text-xs lg:text-base">
-                STEP 01 · 選擇「2F ACE 集氣區」區域（A / B / C 區）
+              <span className="font-mono-num text-[11px] font-extrabold tracking-[0.12em] text-[#212047] sm:text-xs lg:text-base">
+                步驟一 · 選擇「2F 集氣區」區域（A / B / C 區）
               </span>
               <span className="text-[11px] font-medium text-[#212047]/65 lg:text-sm">
                 看台連續相接：A23 ↔ B1 · B23 ↔ C1
@@ -481,8 +481,8 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
             {/* Single-Row Top Header: Selected Seat Pill on Left + -1/+1 Stepper on Right */}
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="font-mono-num text-[11px] font-extrabold tracking-[0.1em] text-[#212047] uppercase sm:text-xs lg:text-base">
-                  STEP 02 · 直線選擇座位（1–23 號）
+                <span className="font-mono-num text-[11px] font-extrabold tracking-[0.1em] text-[#212047] sm:text-xs lg:text-base">
+                  步驟二 · 直線選擇座位（1–23 號）
                 </span>
                 <div className="inline-flex items-center gap-1.5 rounded-full bg-[#212047] px-3 py-1 text-white shadow-xs">
                   <span className="font-mono-num text-xs font-extrabold text-[#5ECBC0] sm:text-sm lg:text-base">
@@ -633,8 +633,8 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
               <div className="flex flex-col gap-3 border-b border-white/15 pb-4 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="rounded-full bg-[#5BAE84] px-3 py-0.5 font-mono-num text-[10px] font-extrabold tracking-wider text-white uppercase lg:text-xs">
-                      AUDIENCE VIEW RADAR · 觀眾面向球場視角雷達
+                    <span className="rounded-full bg-[#5BAE84] px-3 py-0.5 font-mono-num text-[10px] font-extrabold tracking-wider text-white lg:text-xs">
+                      觀眾面向球場視角雷達
                     </span>
                     <span className="font-mono-num text-xs font-bold text-[#7ADAD0] lg:text-sm">
                       {currentMatchSchedule.dateLabel} · 你的座位：{selectedZone}{' '}
@@ -1012,7 +1012,7 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#212047]/10 pb-3">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="rounded-full bg-[#212047] px-2.5 py-0.5 font-mono-num text-[10px] font-extrabold text-[#7ADAD0] lg:text-xs">
-                      ZONE {selectedZone} STAGE · 2F 集氣 {selectedZone} 區面前三位女孩
+                      2F 集氣 {selectedZone} 區面前三位女孩
                     </span>
                     <span className="text-xs font-extrabold text-[#3F8E67] lg:text-sm">
                       {currentSetArrangement.setLabel} ·{' '}
@@ -1043,20 +1043,20 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                       slotIdx === 2
                         ? {
                             shortLabel: '◀ 左側 23–16號',
-                            label: '◀ 左手邊 23–16 號（IG 右位）',
+                            label: '◀ 左手邊 23–16 號（官方右位）',
                             seats: '23–16 號',
                             coreSeat: 19,
                           }
                         : slotIdx === 1
                           ? {
                               shortLabel: '▲ 中央 15–9號',
-                              label: '▲ 正中央 15–9 號（IG 中位）',
+                              label: '▲ 正中央 15–9 號（官方中位）',
                               seats: '15–9 號',
                               coreSeat: 12,
                             }
                           : {
                               shortLabel: '右側 8–1號 ▶',
-                              label: '右手邊 8–1 號（IG 左位） ▶',
+                              label: '右手邊 8–1 號（官方左位） ▶',
                               seats: '8–1 號',
                               coreSeat: 5,
                             };
@@ -1134,8 +1134,17 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                             </span>
                           </div>
 
-                          {/* Action Pills inside each card */}
+                          {/* Action Pills inside each card (With 1-Click Open IG Button!) */}
                           <div className="mt-2 flex flex-wrap items-center justify-center gap-1">
+                            <a
+                              href={m.instagramUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="rounded-full bg-[#5BAE84] px-2 py-0.5 font-mono-num text-[10px] font-black text-white transition-colors hover:bg-[#3F8E67] lg:px-2.5 lg:py-1 lg:text-xs"
+                            >
+                              IG ↗
+                            </a>
                             <button
                               type="button"
                               onClick={() => onOpenMemberDetail(m)}
@@ -1145,7 +1154,7 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                                   : 'bg-[#F4FAF8] text-[#212047] ring-1 ring-[#212047]/10 hover:bg-[#D5EFE9]'
                               }`}
                             >
-                              檔案 ↗
+                              檔案
                             </button>
                             {!isDirectFront && (
                               <button
@@ -1178,7 +1187,7 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
 
               {/* 4. Summary of All Girls Visiting This Exact Seat Across All 5 Sets */}
               <div className="mt-4 flex flex-col gap-2 border-t border-white/15 pt-3.5 sm:flex-row sm:items-center sm:justify-between">
-                <div className="font-mono-num text-[10px] font-bold tracking-[0.1em] text-[#7ADAD0] uppercase lg:text-xs">
+                <div className="font-mono-num text-[10px] font-bold tracking-[0.1em] text-[#7ADAD0] lg:text-xs">
                   整場 5 局會輪流站到你「{selectedZone} 區 {selectedSeat}{' '}
                   號正前方」的 6 位女孩：
                 </div>
@@ -1206,9 +1215,8 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
           {/* Complete 5-Set Timeline Matrix for the Selected Zone & Seat */}
           <div className="mt-6 border-t border-[#212047]/10 pt-6 sm:mt-8 sm:pt-8">
             <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-              <span className="font-mono-num text-xs font-extrabold tracking-[0.12em] text-[#212047] uppercase lg:text-base">
-                ALL 5 SETS TIMELINE · 「ACE 集氣 {selectedZone} 區 — 第{' '}
-                {selectedSeat} 號席」整場五局完整輪換班表
+              <span className="font-mono-num text-xs font-extrabold tracking-[0.12em] text-[#212047] lg:text-base">
+                「2F 集氣 {selectedZone} 區 · 第 {selectedSeat} 號席」整場五局完整輪換班表
               </span>
               <span className="text-[11px] font-semibold text-[#4FA87D] lg:text-sm">
                 綠底／深藍底星號（★）為該局正對你第 {selectedSeat} 號座位的女孩

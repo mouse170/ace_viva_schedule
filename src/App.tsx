@@ -37,6 +37,7 @@ export const App: React.FC = () => {
   const [selectedMember, setSelectedMember] = useState<AceVivaMember | null>(
     null
   );
+  const [isTeamIntroOpen, setIsTeamIntroOpen] = useState(false);
   const [scheduleMemberFilter, setScheduleMemberFilter] = useState<
     string | 'all' | 'favorites'
   >('all');
@@ -293,10 +294,10 @@ export const App: React.FC = () => {
       <header className="fixed inset-x-0 top-0 z-30 flex justify-center px-2 pt-2.5 pointer-events-none sm:px-4 sm:pt-4">
         <nav
           aria-label="主要導覽列"
-          className="pointer-events-auto flex w-full max-w-[calc(100vw-1rem)] items-center justify-between gap-1 rounded-full bg-[#212047]/95 p-1.5 text-white shadow-[0_16px_40px_rgba(33,32,71,0.32)] ring-1 ring-[#5ECBC0]/30 backdrop-blur-2xl sm:max-w-fit sm:gap-2 sm:px-3 lg:gap-3 lg:px-4 lg:py-2"
+          className="pointer-events-auto flex w-full max-w-[calc(100vw-1rem)] items-center justify-between gap-1 rounded-full bg-[#212047]/95 p-1.5 text-white shadow-[0_16px_40px_rgba(33,32,71,0.32)] ring-1 ring-[#5ECBC0]/30 backdrop-blur-2xl sm:max-w-fit sm:gap-2 sm:px-3 lg:gap-2.5 lg:px-4 lg:py-2"
         >
           <a
-            href="#top"
+            href="#roster-section"
             className="flex shrink-0 items-center gap-1.5 rounded-full bg-white/10 py-1 pr-2.5 pl-1.5 text-xs font-extrabold tracking-wider text-white whitespace-nowrap transition-colors hover:bg-white/20 sm:gap-2 sm:pr-3 lg:text-sm"
           >
             <img
@@ -304,7 +305,7 @@ export const App: React.FC = () => {
               alt="粉絲自製應援雷達圖示"
               className="h-5 w-5 shrink-0 rounded-lg object-contain sm:h-6 sm:w-6 lg:h-7 lg:w-7"
             />
-            <span>ACE VIVA</span>
+            <span>連莊女孩</span>
             <span className="hidden rounded-full bg-[#5BAE84]/35 px-2 py-0.5 font-mono-num text-[9px] font-bold tracking-normal text-[#7ADAD0] ring-1 ring-[#5ECBC0]/40 sm:inline-block lg:text-xs">
               粉絲自製
             </span>
@@ -313,14 +314,8 @@ export const App: React.FC = () => {
           {/* Desktop Navigation Links */}
           <div className="hidden items-center gap-1.5 lg:flex">
             <a
-              href="#about-section"
-              className="rounded-full px-3.5 py-1.5 text-sm font-semibold text-white/80 whitespace-nowrap transition-colors hover:bg-white/10 hover:text-[#7ADAD0] xl:text-base"
-            >
-              團隊誌要
-            </a>
-            <a
               href="#roster-section"
-              className="rounded-full px-3.5 py-1.5 text-sm font-semibold text-white/80 whitespace-nowrap transition-colors hover:bg-white/10 hover:text-[#7ADAD0] xl:text-base"
+              className="rounded-full bg-white/10 px-3.5 py-1.5 text-sm font-extrabold text-white whitespace-nowrap transition-colors hover:bg-white/20 hover:text-[#7ADAD0] xl:text-base"
             >
               成員圖鑑 ({MEMBERS.length})
             </a>
@@ -345,6 +340,15 @@ export const App: React.FC = () => {
           </div>
 
           <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
+            {/* 頁首「啦啦隊介紹」點選開啟按鈕（手機與電腦皆常駐於頁首） */}
+            <button
+              type="button"
+              onClick={() => setIsTeamIntroOpen(true)}
+              className="flex items-center gap-1 rounded-full bg-white/12 px-2.5 py-1 text-[11px] font-extrabold text-[#7ADAD0] whitespace-nowrap ring-1 ring-[#5ECBC0]/45 transition-all hover:bg-[#5BAE84] hover:text-white sm:px-3 sm:py-1.5 sm:text-xs lg:px-3.5 lg:text-sm"
+            >
+              <span>啦啦隊介紹</span>
+            </button>
+
             <button
               type="button"
               onClick={() => {
@@ -353,7 +357,7 @@ export const App: React.FC = () => {
                   .getElementById('roster-section')
                   ?.scrollIntoView({ behavior: 'smooth' });
               }}
-              className="flex items-center gap-1 rounded-full bg-[#5BAE84]/25 px-2 py-1 text-[11px] font-bold text-[#7ADAD0] whitespace-nowrap ring-1 ring-[#5BAE84]/45 transition-all hover:bg-[#5BAE84] hover:text-white sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-xs lg:px-4 lg:text-sm"
+              className="flex items-center gap-1 rounded-full bg-[#5BAE84]/25 px-2 py-1 text-[11px] font-bold text-[#7ADAD0] whitespace-nowrap ring-1 ring-[#5BAE84]/45 transition-all hover:bg-[#5BAE84] hover:text-white sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-xs lg:px-3.5 lg:text-sm"
             >
               <span>我的主推</span>
               <span className="rounded-full bg-[#5BAE84] px-1.5 py-0.2 font-mono-num text-[10px] font-extrabold text-white lg:text-xs">
@@ -367,14 +371,14 @@ export const App: React.FC = () => {
               rel="noopener noreferrer"
               className="flex shrink-0 items-center gap-1 rounded-full bg-[#5BAE84] px-2.5 py-1 text-[11px] font-extrabold text-white whitespace-nowrap transition-transform hover:bg-[#4FA87D] active:scale-[0.97] sm:px-3 sm:py-1.5 sm:text-xs lg:px-4 lg:text-sm"
             >
-              <span>IG 官方</span>
+              <span>官方 IG</span>
               <span aria-hidden="true">↗</span>
             </a>
           </div>
         </nav>
       </header>
 
-      {/* Mobile Fixed Bottom Quick-Navigation Bar (Thumb-Friendly 4 Core Sections) */}
+      {/* Mobile Fixed Bottom Quick-Navigation Bar (Thumb-Friendly 4 Core Sections - Pure Chinese) */}
       <nav
         aria-label="手機版底部快速導覽列"
         className="fixed inset-x-0 bottom-0 z-30 border-t border-[#5ECBC0]/25 bg-[#212047]/95 px-2 py-2 text-white shadow-[0_-10px_30px_rgba(33,32,71,0.28)] backdrop-blur-xl lg:hidden"
@@ -385,7 +389,7 @@ export const App: React.FC = () => {
             className="flex flex-col items-center justify-center rounded-xl bg-white/10 py-1.5 text-center text-[11px] font-extrabold text-white whitespace-nowrap active:bg-[#5BAE84]"
           >
             <span className="font-mono-num text-[9px] text-[#7ADAD0]">
-              18 MEMBERS
+              18 位成員
             </span>
             <span>成員圖鑑</span>
           </a>
@@ -394,7 +398,7 @@ export const App: React.FC = () => {
             className="flex flex-col items-center justify-center rounded-xl bg-[#5BAE84] py-1.5 text-center text-[11px] font-extrabold text-white whitespace-nowrap shadow-xs active:bg-[#4FA87D]"
           >
             <span className="font-mono-num text-[9px] text-white/90">
-              RECOMMEND
+              選位攻略
             </span>
             <span>女孩選位</span>
           </a>
@@ -403,7 +407,7 @@ export const App: React.FC = () => {
             className="flex flex-col items-center justify-center rounded-xl bg-white/10 py-1.5 text-center text-[11px] font-extrabold text-[#7ADAD0] whitespace-nowrap ring-1 ring-[#5ECBC0]/35 active:bg-[#5BAE84] active:text-white"
           >
             <span className="font-mono-num text-[9px] text-white/80">
-              ZONE A/B/C
+              A/B/C 區
             </span>
             <span>23 席查詢</span>
           </a>
@@ -412,404 +416,40 @@ export const App: React.FC = () => {
             className="flex flex-col items-center justify-center rounded-xl bg-white/10 py-1.5 text-center text-[11px] font-extrabold text-white whitespace-nowrap active:bg-[#5BAE84]"
           >
             <span className="font-mono-num text-[9px] text-[#7ADAD0]">
-              SCHEDULE
+              主題週
             </span>
             <span>應援班表</span>
           </a>
         </div>
       </nav>
 
-      {/* Hero Section: Editorial Split + Asymmetrical Bento */}
-      <section
-        id="top"
-        className="relative flex items-center overflow-hidden pt-20 pb-14 sm:pt-28 sm:pb-20 lg:min-h-[100dvh] lg:pt-32 lg:pb-28"
-      >
-        {/* Subtle Mint & Indigo Architectural Background Glow */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -top-36 right-0 h-[520px] w-[520px] rounded-full bg-radial from-[#5ECBC0]/28 via-[#5BAE84]/10 to-transparent blur-3xl sm:h-[680px] sm:w-[680px]"
-        />
-
-        <div className="mx-auto w-full max-w-[1440px] px-3 sm:px-6 lg:px-10">
-          <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-12 lg:gap-12">
-            {/* Left Column: Fan-Made Identity, Editorial Typography & Nested CTA */}
-            <div className="w-full min-w-0 animate-editorial-entry lg:col-span-6">
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="inline-flex items-center gap-2 rounded-full bg-[#212047] px-3 py-1.5 shadow-xs ring-1 ring-[#5ECBC0]/40 lg:px-4 lg:py-2">
-                  <span className="h-2 w-2 shrink-0 rounded-full bg-[#5ECBC0]" />
-                  <span className="font-mono-num text-[10px] font-bold tracking-[0.12em] text-[#7ADAD0] uppercase lg:text-xs">
-                    UNOFFICIAL FAN-MADE GUIDE · 粉絲自製應援網站
-                  </span>
-                </div>
-                <div className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 shadow-xs ring-1 ring-[#5BAE84]/35 lg:px-4 lg:py-2">
-                  <span className="font-mono-num text-[10px] font-bold tracking-[0.12em] text-[#212047] lg:text-xs">
-                    TPVL 臺中連莊啦啦隊
-                  </span>
-                </div>
-              </div>
-
-              {/* Fan-Made Emblem Icon + Display Title */}
-              <div className="mt-4 flex items-center gap-3.5 sm:mt-6 sm:gap-5">
-                <div className="shrink-0 rounded-[1.5rem] bg-[#D5EFE9] p-1.5 shadow-[0_14px_35px_rgba(33,32,71,0.12)] ring-2 ring-[#5BAE84]/35 sm:rounded-[2rem] sm:p-2">
-                  <img
-                    src={TEAM_INFO.logoPath}
-                    alt="連莊女孩粉絲自製應援雷達主圖示"
-                    className="h-14 w-14 rounded-2xl object-contain sm:h-24 sm:w-24 lg:h-28 lg:w-28"
-                  />
-                </div>
-                <div className="min-w-0">
-                  <h1 className="text-2xl leading-[1.1] font-black tracking-tight text-[#212047] sm:text-5xl lg:text-6xl xl:text-7xl">
-                    <span className="block font-editorial text-3xl font-bold tracking-tight text-[#4FA87D] italic sm:text-6xl lg:text-7xl">
-                      Ace Viva
-                    </span>
-                    <span className="mt-0.5 block">連莊女孩應援圖鑑</span>
-                  </h1>
-                  <div className="mt-1.5 inline-flex items-center gap-1.5 rounded-md bg-[#E6F5F1] px-2 py-0.5 text-[10px] font-extrabold text-[#3F8E67] ring-1 ring-[#5BAE84]/35 sm:px-2.5 sm:text-xs lg:text-sm">
-                    <span>粉絲自製選位指南與班表查詢工具（非官方）</span>
-                  </div>
-                </div>
-              </div>
-
-              <p className="mt-4 max-w-2xl text-sm leading-relaxed font-medium text-[#212047]/80 sm:mt-6 sm:text-lg lg:text-xl">
-                由粉絲自發整理之臺中連莊啦啦隊應援指南。收錄 2026 年 8 月成軍之創隊隊長{' '}
-                <strong className="font-bold text-[#212047]">
-                  Yuri（#6 陳洛心）
-                </strong>
-                、應援團長{' '}
-                <strong className="font-bold text-[#212047]">馬妹（#41）</strong>
-                、主場雙 MC{' '}
-                <strong className="font-bold text-[#212047]">
-                  巫苡萱（#111）&amp; 心璇（#25）
-                </strong>{' '}
-                與韓國職棒「韓籍三本柱」{' '}
-                <strong className="font-bold text-[#212047]">
-                  車榮玹（#21）、李珠熙（#20）、鄭熙靜（#42）
-                </strong>{' '}
-                共 18 位成員檔案、2F 集氣區選位推薦與俯瞰座位雷達。
-              </p>
-
-              {/* Hero Fan-Made Disclaimer Notice Box */}
-              <div className="mt-4 max-w-2xl rounded-2xl border border-[#5BAE84]/35 bg-white/90 px-3.5 py-3 text-xs leading-relaxed text-[#212047]/80 shadow-xs sm:px-4 lg:p-4 lg:text-sm">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="font-mono-num text-[10px] font-extrabold tracking-[0.12em] text-[#3F8E67] uppercase lg:text-xs">
-                    DISCLAIMER · 非官方粉絲自製免責聲明
-                  </span>
-                  <a
-                    href="#disclaimer-section"
-                    className="font-mono-num text-[10px] font-bold text-[#4FA87D] underline underline-offset-2 hover:text-[#212047] lg:text-xs"
-                  >
-                    完整聲明 ↓
-                  </a>
-                </div>
-                <p className="mt-1">
-                  本站為球迷粉絲自製之非營利應援工具，非球團或啦啦隊官方網站。所有出席名單、2F 集氣區各局站位、座位編號對應及活動資訊，請一律以{' '}
-                  <a
-                    href={TEAM_INFO.officialInstagramUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-bold text-[#212047] underline decoration-[#5BAE84] underline-offset-2 hover:text-[#4FA87D]"
-                  >
-                    ACE VIVA 官方 IG (@ace_viva_official)
-                  </a>{' '}
-                  與球團最新實際公告為準。
-                </p>
-              </div>
-
-              {/* Nested CTA Buttons */}
-              <div className="mt-6 flex flex-wrap items-center gap-3 sm:mt-8 sm:gap-4">
-                <a
-                  href="#girl-seat-guide-section"
-                  className="group flex items-center gap-3 rounded-full bg-[#212047] py-2 pr-2 pl-5 text-xs font-bold text-white shadow-[0_18px_40px_-12px_rgba(33,32,71,0.45)] transition-all hover:bg-[#2D2C5A] active:scale-[0.98] sm:py-2.5 sm:pr-2.5 sm:pl-7 sm:text-sm lg:py-3 lg:pr-3 lg:pl-8 lg:text-base"
-                >
-                  <span>女孩專屬黃金座位推薦</span>
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#5BAE84] text-white sm:h-9 sm:w-9 lg:h-10 lg:w-10">
-                    ↗
-                  </span>
-                </a>
-
-                <a
-                  href="#seat-finder-section"
-                  className="group flex items-center gap-2.5 rounded-full bg-white py-2 pr-2 pl-5 text-xs font-bold text-[#212047] ring-1 ring-[#5BAE84]/40 transition-all hover:bg-[#E6F5F1] active:scale-[0.98] sm:py-2.5 sm:pr-2.5 sm:pl-6 sm:text-sm lg:py-3 lg:pr-3 lg:pl-7 lg:text-base"
-                >
-                  <span>2F 集氣區 23 席拉桿查詢</span>
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#E6F5F1] text-[#3F8E67] sm:h-9 sm:w-9 lg:h-10 lg:w-10">
-                    →
-                  </span>
-                </a>
-              </div>
-
-              {/* Key Roster Metrics Strip */}
-              <div className="mt-8 grid grid-cols-2 gap-2.5 sm:mt-12 sm:grid-cols-4 sm:gap-3">
-                <div className="rounded-2xl bg-white p-3.5 ring-1 ring-[#5BAE84]/25 sm:p-4">
-                  <div className="font-editorial text-2xl font-bold text-[#212047] italic sm:text-3xl">
-                    16 + 2
-                  </div>
-                  <div className="mt-0.5 text-xs font-semibold text-[#212047]/65">
-                    16 位隊員與 2 位 MC
-                  </div>
-                </div>
-                <div className="rounded-2xl bg-white p-3.5 ring-1 ring-[#5BAE84]/25 sm:p-4">
-                  <div className="font-editorial text-2xl font-bold text-[#4FA87D] italic sm:text-3xl">
-                    03 KOR
-                  </div>
-                  <div className="mt-0.5 text-xs font-semibold text-[#212047]/65">
-                    KBO 韓籍三本柱加盟
-                  </div>
-                </div>
-                <div className="rounded-2xl bg-white p-3.5 ring-1 ring-[#5BAE84]/25 sm:p-4">
-                  <div className="font-editorial text-2xl font-bold text-[#212047] italic sm:text-3xl">
-                    2026.08
-                  </div>
-                  <div className="mt-0.5 text-xs font-semibold text-[#212047]/65">
-                    LEXX 原質娛樂經紀
-                  </div>
-                </div>
-                <div className="rounded-2xl bg-white p-3.5 ring-1 ring-[#5BAE84]/25 sm:p-4">
-                  <div className="font-editorial text-2xl font-bold text-[#4FA87D] italic sm:text-3xl">
-                    TPVL
-                  </div>
-                  <div className="mt-0.5 text-xs font-semibold text-[#212047]/65">
-                    臺中連莊主場應援
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Column: Asymmetrical Bento Spotlight Cards with Face-Centered Avatars */}
-            <div className="w-full lg:col-span-6">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-12">
-                {/* Main Spotlight: Captain Yuri (#6) */}
-                <div className="sm:col-span-7">
-                  <div className="rounded-[1.75rem] bg-[#D5EFE9] p-1.5 ring-1 ring-[#5BAE84]/35 sm:rounded-[2rem]">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedMember(captainYuri)}
-                      className="group relative block w-full overflow-hidden rounded-[calc(1.75rem-0.375rem)] bg-[#212047] text-left shadow-[inset_0_1px_1px_rgba(255,255,255,0.2)] sm:rounded-[calc(2rem-0.375rem)]"
-                    >
-                      <MemberPortrait
-                        member={captainYuri}
-                        className="aspect-[4/4] w-full sm:aspect-[3/4]"
-                      />
-                      <div className="flex items-center justify-between bg-[#212047] px-4 py-3.5 text-white sm:px-5 sm:py-4">
-                        <div>
-                          <div className="font-mono-num text-[10px] tracking-[0.18em] text-[#7ADAD0]">
-                            INAUGURAL CAPTAIN · 創隊首任隊長
-                          </div>
-                          <div className="mt-0.5 text-lg font-extrabold">
-                            Yuri 陳洛心 (#6)
-                          </div>
-                        </div>
-                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#5BAE84] text-white transition-transform duration-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
-                          ↗
-                        </span>
-                      </div>
-                    </button>
-                  </div>
-                </div>
-
-                {/* Right Stacked Bento Cards (With Face Close-Up Avatars) */}
-                <div className="flex flex-col justify-between gap-4 sm:col-span-5">
-                  {/* Cheer Leader Mamai (#41) */}
-                  <div className="rounded-[1.75rem] bg-[#D5EFE9] p-1.5 ring-1 ring-[#5BAE84]/35 sm:rounded-[2rem]">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedMember(leaderMamai)}
-                      className="group flex w-full flex-col justify-between rounded-[calc(1.75rem-0.375rem)] bg-[#212047] p-4 text-left text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.15)] transition-all hover:bg-[#2C2A5A] sm:rounded-[calc(2rem-0.375rem)]"
-                    >
-                      <div className="flex items-center gap-3.5">
-                        <MemberPortrait
-                          member={leaderMamai}
-                          variant="avatar"
-                          className="h-16 w-16 shrink-0 rounded-2xl ring-2 ring-[#5ECBC0]"
-                        />
-                        <div>
-                          <span className="rounded-full bg-[#5BAE84]/25 px-2.5 py-0.5 font-mono-num text-[10px] font-bold tracking-[0.12em] text-[#7ADAD0]">
-                            CHEER LEADER #41
-                          </span>
-                          <div className="mt-1 text-lg font-black text-white">
-                            馬妹 · 應援團長
-                          </div>
-                        </div>
-                      </div>
-                      <p className="mt-3 text-xs leading-relaxed text-white/75">
-                        掌握連莊主場口號節奏，同步效力味全龍 Dragon Beauties。
-                      </p>
-                      <div className="mt-3 flex items-center justify-between border-t border-white/10 pt-2.5 font-mono-num text-[11px] text-[#7ADAD0]">
-                        <span>@{leaderMamai.instagramHandle}</span>
-                        <span className="transition-transform duration-500 group-hover:translate-x-1">
-                          檢視檔案 →
-                        </span>
-                      </div>
-                    </button>
-                  </div>
-
-                  {/* Korean 3 Pillars Card */}
-                  <div className="rounded-[1.75rem] bg-[#D5EFE9] p-1.5 ring-1 ring-[#5BAE84]/35 sm:rounded-[2rem]">
-                    <div className="flex h-full flex-col justify-between rounded-[calc(1.75rem-0.375rem)] bg-white p-4 shadow-[inset_0_1px_1px_rgba(255,255,255,0.9)] sm:rounded-[calc(2rem-0.375rem)]">
-                      <div>
-                        <div className="flex items-center justify-between">
-                          <span className="font-mono-num text-[10px] font-bold tracking-[0.18em] text-[#4FA87D] uppercase">
-                            KOREAN THREE PILLARS
-                          </span>
-                          <span className="rounded-full bg-[#212047] px-2 py-0.5 font-mono-num text-[10px] text-[#7ADAD0]">
-                            KOR × 3
-                          </span>
-                        </div>
-                        <h2 className="mt-1.5 text-base font-black text-[#212047]">
-                          韓籍三本柱強勢加盟
-                        </h2>
-                      </div>
-
-                      <div className="mt-3 space-y-2">
-                        {koreanAces.map((kr) => (
-                          <button
-                            key={kr.id}
-                            type="button"
-                            onClick={() => setSelectedMember(kr)}
-                            className="group flex w-full items-center justify-between rounded-xl bg-[#F4FAF8] px-3 py-2 text-left ring-1 ring-[#5BAE84]/25 transition-all hover:bg-[#212047] hover:text-white"
-                          >
-                            <div className="flex items-center gap-3">
-                              <MemberPortrait
-                                member={kr}
-                                variant="avatar"
-                                className="h-11 w-11 shrink-0 rounded-full ring-2 ring-[#5BAE84]/45"
-                              />
-                              <div>
-                                <div className="flex items-center gap-1.5">
-                                  <span className="font-mono-num text-xs font-extrabold text-[#4FA87D] group-hover:text-[#7ADAD0]">
-                                    #{kr.number}
-                                  </span>
-                                  <span className="text-sm font-black">
-                                    {kr.name}
-                                  </span>
-                                </div>
-                                <div className="text-[11px] opacity-65">
-                                  {kr.realOrAltName} · MBTI {kr.mbti}
-                                </div>
-                              </div>
-                            </div>
-                            <span className="font-mono-num text-xs font-bold text-[#4FA87D] group-hover:text-[#7ADAD0]">
-                              檔案 ↗
-                            </span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Brand Chronicle & Wikipedia History Section */}
-      <section
-        id="about-section"
-        className="mx-auto max-w-[1440px] px-3 py-14 sm:px-6 sm:py-20 lg:px-10"
-      >
-        <div className="rounded-[1.75rem] bg-[#5BAE84]/30 p-1.5 ring-1 ring-[#212047]/15 sm:rounded-[2rem] sm:p-2">
-          <div className="rounded-[calc(1.75rem-0.375rem)] bg-[#212047] px-4 py-8 text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.12)] sm:rounded-[calc(2rem-0.375rem)] sm:px-12 sm:py-16">
-            <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-10">
-              <div className="lg:col-span-5">
-                <div className="flex items-center gap-3">
-                  <img
-                    src={TEAM_INFO.logoPath}
-                    alt="粉絲自製應援雷達圖示"
-                    className="h-9 w-9 shrink-0 rounded-xl object-contain sm:h-10 sm:w-10"
-                  />
-                  <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 font-mono-num text-[10px] font-semibold tracking-[0.18em] text-[#7ADAD0] uppercase lg:text-xs">
-                    TEAM CHRONICLE · 品牌成軍誌要
-                  </span>
-                </div>
-                <h2 className="mt-4 text-2xl font-black tracking-tight text-white sm:text-4xl lg:text-5xl">
-                  臺中連莊全新應援品牌
-                  <span className="mt-1 block font-editorial text-3xl font-bold text-[#5ECBC0] italic sm:text-4xl lg:text-5xl">
-                    Ace Viva 連莊女孩
-                  </span>
-                </h2>
-                <p className="mt-3 text-xs leading-relaxed text-white/75 sm:mt-4 sm:text-sm lg:text-base">
-                  2025 年台灣職業排球聯盟（TPVL）成立，臺中連莊職業排球隊於 2026 年 8
-                  月新賽季重新組建專屬啦啦隊品牌「Ace Viva（連莊女孩）」，由 LEXX
-                  原質娛樂負責經紀營運，打造結合高規格韓流應援、女團唱跳與競技特技的主場視覺體驗。
-                </p>
-
-                <div className="mt-5 flex flex-wrap gap-2 sm:mt-6 sm:gap-2.5">
-                  <a
-                    href={TEAM_INFO.officialInstagramUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-full bg-[#5BAE84] px-3.5 py-2 text-xs font-extrabold text-white transition-transform hover:bg-[#4FA87D] active:scale-[0.97] lg:px-4 lg:py-2.5 lg:text-sm"
-                  >
-                    <span>連莊女孩 (@{TEAM_INFO.officialInstagramHandle})</span>
-                    <span>↗</span>
-                  </a>
-                  <a
-                    href={TEAM_INFO.clubInstagramUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/5 px-3.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-white/15 lg:px-4 lg:py-2.5 lg:text-sm"
-                  >
-                    <span>臺中連莊球團 (@{TEAM_INFO.clubInstagramHandle})</span>
-                    <span>↗</span>
-                  </a>
-                  <a
-                    href={TEAM_INFO.wikipediaUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/5 px-3.5 py-2 text-xs font-semibold text-white transition-colors hover:bg-white/15 lg:px-4 lg:py-2.5 lg:text-sm"
-                  >
-                    <span>維基百科條目</span>
-                    <span>↗</span>
-                  </a>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-3 lg:col-span-7">
-                {TEAM_INFO.historyMilestones.map((milestone) => (
-                  <div
-                    key={milestone.date}
-                    className="flex flex-col justify-between rounded-2xl border border-[#5ECBC0]/20 bg-white/[0.05] p-4 sm:p-5 lg:p-6"
-                  >
-                    <div>
-                      <div className="font-mono-num text-xs font-bold tracking-[0.2em] text-[#7ADAD0] lg:text-sm">
-                        {milestone.date}
-                      </div>
-                      <h3 className="mt-2 text-sm font-extrabold text-white sm:text-base lg:text-xl">
-                        {milestone.title}
-                      </h3>
-                      <p className="mt-1.5 text-xs leading-relaxed text-white/75 lg:text-sm">
-                        {milestone.description}
-                      </p>
-                    </div>
-                    <div className="mt-4 border-t border-white/10 pt-2.5 font-mono-num text-[10px] tracking-[0.16em] text-[#7ADAD0]/60 uppercase lg:text-xs">
-                      OFFICIAL MILESTONE
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Main Roster Directory Section (3-Column High-Density Grid on Mobile Showing 6-9+ Members at Once + 3-4 Col Poster Grid on Desktop) */}
+      {/* Main Roster Directory Section (Page Starts Directly with Member Directory!) */}
       <section
         id="roster-section"
-        className="mx-auto max-w-[1440px] px-2.5 py-12 sm:px-6 sm:py-24 lg:px-10"
+        className="mx-auto max-w-[1440px] px-2.5 pt-20 pb-12 sm:px-6 sm:pt-26 sm:pb-20 lg:px-10 lg:pt-28"
       >
         {/* Section Heading */}
         <div className="flex flex-col justify-between gap-4 border-b border-[#212047]/10 pb-5 sm:gap-5 sm:pb-8 lg:flex-row lg:items-end">
           <div>
-            <span className="inline-flex items-center gap-2 rounded-full bg-[#5BAE84]/15 px-3 py-1 font-mono-num text-[10px] font-bold tracking-[0.14em] text-[#212047] uppercase ring-1 ring-[#5BAE84]/30 lg:text-sm">
-              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#5BAE84]" />
-              <span>2026–2027 FAN-COMPILED ROSTER DIRECTORY · 粉絲整理成員圖鑑</span>
-            </span>
-            <h2 className="mt-2.5 text-2xl font-black tracking-tight text-[#212047] sm:mt-3 sm:text-5xl">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-2 rounded-full bg-[#5BAE84]/15 px-3 py-1 font-mono-num text-[11px] font-bold tracking-[0.08em] text-[#212047] ring-1 ring-[#5BAE84]/30 lg:text-sm">
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#5BAE84]" />
+                <span>2026–2027 粉絲整理成員圖鑑 · 連莊女孩全體 18 人陣容</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => setIsTeamIntroOpen(true)}
+                className="inline-flex items-center gap-1 rounded-full bg-[#212047] px-3 py-1 text-[11px] font-extrabold text-[#7ADAD0] shadow-2xs ring-1 ring-[#5ECBC0]/40 transition-colors hover:bg-[#5BAE84] hover:text-white lg:text-xs"
+              >
+                <span>點此查看啦啦隊介紹與成軍誌要</span>
+                <span>↗</span>
+              </button>
+            </div>
+            <h1 className="mt-2.5 text-2xl font-black tracking-tight text-[#212047] sm:mt-3 sm:text-5xl">
               連莊女孩全體成員應援圖鑑
-            </h2>
+            </h1>
             <p className="mt-1.5 max-w-3xl text-xs leading-relaxed text-[#212047]/70 sm:mt-2.5 sm:text-base lg:text-lg">
-              自動依「<strong className="font-extrabold text-[#3F8E67]">1. 我的主推成員</strong> → <strong className="font-extrabold text-[#212047]">2. 你的座位（{currentUserSeat.zone} 區 {currentUserSeat.seat} 號）正前方女孩</strong> → 3. 其餘成員」優先排列；手機版採三欄精巧排版，單一畫面可同時瀏覽 6 至 9 位成員。
+              自動依「<strong className="font-extrabold text-[#3F8E67]">1. 我的主推成員</strong> → <strong className="font-extrabold text-[#212047]">2. 你的座位（{currentUserSeat.zone} 區 {currentUserSeat.seat} 號）正前方女孩</strong> → 3. 其餘成員」優先排列；點擊卡片上方的 IG 按鈕即可一鍵開啟成員官方 Instagram。
             </p>
           </div>
 
@@ -1251,30 +891,43 @@ export const App: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Card Footer: Compact 1-Row Quick Copy on Mobile / Full Footer on Desktop */}
-                  <div className="flex flex-col gap-1 border-t border-[#212047]/[0.07] bg-[#F4FAF8] px-1.5 py-1 sm:gap-1.5 sm:px-4 sm:py-3 lg:px-5 lg:py-3.5">
-                    <div className="hidden items-center justify-between gap-1 sm:flex">
-                      <a
-                        href={member.instagramUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="truncate font-mono-num text-xs font-semibold text-[#212047]/80 transition-colors hover:text-[#4FA87D] lg:text-sm"
-                      >
-                        @{member.instagramHandle}
-                      </a>
+                  {/* Card Footer: Prominent 1-Click Open IG Button + Quick Copy on Both Mobile & Desktop */}
+                  <div className="flex flex-col gap-1 border-t border-[#212047]/[0.07] bg-[#F4FAF8] px-1.5 py-1.5 sm:gap-2 sm:px-4 sm:py-3.5 lg:px-5 lg:py-4">
+                    {/* Prominent 1-Click Open Instagram Button (Visible on Both Mobile & Desktop!) */}
+                    <a
+                      href={member.instagramUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      aria-label={`一鍵開啟 ${member.name} 的官方 Instagram (@${member.instagramHandle})`}
+                      className="flex w-full items-center justify-between gap-1 rounded-lg bg-gradient-to-r from-[#212047] via-[#2C2A5E] to-[#3F8E67] px-2 py-1 text-white shadow-xs ring-1 ring-[#5ECBC0]/40 transition-all hover:brightness-110 active:scale-95 sm:rounded-xl sm:px-3.5 sm:py-2"
+                    >
+                      <span className="flex min-w-0 items-center gap-1 sm:gap-2">
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          className="h-3 w-3 shrink-0 text-[#5ECBC0] sm:h-4 sm:w-4"
+                        >
+                          <rect x="2" y="2" width="20" height="20" rx="5" />
+                          <circle cx="12" cy="12" r="4" />
+                          <circle cx="17.5" cy="6.5" r="1" fill="currentColor" />
+                        </svg>
+                        <span className="truncate font-mono-num text-[10px] font-black tracking-tight text-white sm:hidden">
+                          IG ↗
+                        </span>
+                        <span className="hidden truncate font-mono-num text-xs font-black text-white sm:inline lg:text-sm">
+                          IG @{member.instagramHandle}
+                        </span>
+                      </span>
+                      <span className="hidden shrink-0 rounded-full bg-[#5BAE84] px-2 py-0.5 text-[10px] font-extrabold text-white sm:inline-block lg:text-xs">
+                        一鍵開啟 ↗
+                      </span>
+                    </a>
 
-                      <button
-                        type="button"
-                        onClick={() => setSelectedMember(member)}
-                        className="shrink-0 inline-flex items-center gap-0.5 text-xs font-extrabold text-[#212047] whitespace-nowrap lg:text-sm"
-                      >
-                        <span>檔案</span>
-                        <span className="text-[#4FA87D]">→</span>
-                      </button>
-                    </div>
-
-                    {/* 1-Click Copy Name & Copy @IG ID Buttons */}
-                    <div className="grid grid-cols-2 gap-1">
+                    {/* Secondary Row: Copy Name / Copy @IG / Open Profile */}
+                    <div className="grid grid-cols-2 gap-1 sm:grid-cols-3 sm:gap-1.5">
                       <button
                         type="button"
                         onClick={(e) =>
@@ -1303,12 +956,21 @@ export const App: React.FC = () => {
                         className={`truncate rounded-md px-1 py-0.5 font-mono-num text-[9px] font-bold transition-all active:scale-95 sm:rounded-lg sm:px-1.5 sm:py-1 sm:text-[10px] lg:py-1.5 lg:text-xs ${
                           copiedCardKey === igCopyKey
                             ? 'bg-[#5BAE84] text-white'
-                            : 'bg-[#212047] text-[#7ADAD0] hover:bg-[#2E2C5E]'
+                            : 'bg-[#212047]/90 text-[#7ADAD0] hover:bg-[#212047]'
                         }`}
                       >
                         {copiedCardKey === igCopyKey
                           ? '已複製'
                           : '複製@IG'}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setSelectedMember(member)}
+                        className="hidden items-center justify-center gap-0.5 rounded-lg bg-[#E6F5F1] px-1.5 py-1 text-[10px] font-extrabold text-[#212047] ring-1 ring-[#5BAE84]/35 transition-colors hover:bg-[#5BAE84] hover:text-white sm:inline-flex lg:py-1.5 lg:text-xs"
+                      >
+                        <span>詳細檔案</span>
+                        <span>→</span>
                       </button>
                     </div>
                   </div>
@@ -1364,8 +1026,8 @@ export const App: React.FC = () => {
           <div className="mb-10 rounded-[1.75rem] border border-[#5ECBC0]/35 bg-white/[0.06] p-5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.12)] sm:p-7 lg:p-8">
             <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3.5">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="rounded-full bg-[#5BAE84] px-3 py-1 font-mono-num text-[10px] font-extrabold tracking-[0.14em] text-white uppercase lg:text-xs">
-                  FAN-MADE DISCLAIMER · 粉絲自製與免責聲明
+                <span className="rounded-full bg-[#5BAE84] px-3 py-1 font-mono-num text-[10px] font-extrabold tracking-[0.14em] text-white lg:text-xs">
+                  粉絲自製與免責聲明
                 </span>
                 <span className="font-mono-num text-xs font-bold text-[#7ADAD0] lg:text-sm">
                   非官方應援網站 · 請以官方實際公告為準
@@ -1377,45 +1039,45 @@ export const App: React.FC = () => {
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-[#7ADAD0] transition-colors hover:bg-[#5BAE84] hover:text-white lg:px-4 lg:py-1.5 lg:text-sm"
               >
-                <span>前往 ACE VIVA 官方 IG 查閱最新公告</span>
+                <span>前往連莊女孩官方 IG 查閱最新公告</span>
                 <span>↗</span>
               </a>
             </div>
 
             <div className="mt-4 grid grid-cols-1 gap-4 text-xs leading-relaxed text-white/80 md:grid-cols-3 lg:text-sm">
               <div className="rounded-2xl bg-white/[0.04] p-4 ring-1 ring-white/10 lg:p-5">
-                <div className="font-mono-num text-[10px] font-bold tracking-[0.15em] text-[#7ADAD0] uppercase lg:text-xs">
+                <div className="font-mono-num text-[10px] font-bold tracking-[0.15em] text-[#7ADAD0] lg:text-xs">
                   01 · 網站性質說明
                 </div>
                 <div className="mt-1 font-extrabold text-white lg:text-base">
                   純粉絲自製之非營利應援工具
                 </div>
                 <p className="mt-1.5 text-white/75">
-                  本網站由支持臺中連莊職業排球隊與 ACE VIVA（連莊女孩）之球迷粉絲獨立製作與維護，旨在方便球迷查詢成員資料、應援班表與集氣區視角，與球團及經紀公司無任何官方委任或商業從屬關係。
+                  本網站由支持臺中連莊職業排球隊與連莊女孩（Ace Viva）之球迷粉絲獨立製作與維護，旨在方便球迷查詢成員資料、應援班表與集氣區視角，與球團及經紀公司無任何官方委任或商業從屬關係。
                 </p>
               </div>
 
               <div className="rounded-2xl bg-white/[0.04] p-4 ring-1 ring-white/10 lg:p-5">
-                <div className="font-mono-num text-[10px] font-bold tracking-[0.15em] text-[#7ADAD0] uppercase lg:text-xs">
+                <div className="font-mono-num text-[10px] font-bold tracking-[0.15em] text-[#7ADAD0] lg:text-xs">
                   02 · 班表與座位推算免責
                 </div>
                 <div className="mt-1 font-extrabold text-white lg:text-base">
                   一律以官方最新實際公告為準
                 </div>
                 <p className="mt-1.5 text-white/75">
-                  站內所列之出席名單、2F ACE 集氣區（A / B / C 區）各局站位、破 10 分換位規則、1–23 號座位視角對應與主推距離計算，均為依據官方公開貼文所作之輔助推算；若遇現場座位編號調整、動線變更或成員臨時異動，概以官方與現場實際公告為準。
+                  站內所列之出席名單、2F 集氣區（A / B / C 區）各局站位、破 10 分換位規則、1–23 號座位視角對應與主推距離計算，均為依據官方公開貼文所作之輔助推算；若遇現場座位編號調整、動線變更或成員臨時異動，概以官方與現場實際公告為準。
                 </p>
               </div>
 
               <div className="rounded-2xl bg-white/[0.04] p-4 ring-1 ring-white/10 lg:p-5">
-                <div className="font-mono-num text-[10px] font-bold tracking-[0.15em] text-[#7ADAD0] uppercase lg:text-xs">
+                <div className="font-mono-num text-[10px] font-bold tracking-[0.15em] text-[#7ADAD0] lg:text-xs">
                   03 · 圖像與商標權歸屬
                 </div>
                 <div className="mt-1 font-extrabold text-white lg:text-base">
                   權利歸屬原官方與成員所有
                 </div>
                 <p className="mt-1.5 text-white/75">
-                  本站引用之隊徽 Logo、WELCOME 成員形象照及相關名稱，其著作權、商標權與肖像權均歸屬臺中連莊職業排球隊（Win+Streak）、LEXX 原質娛樂及各成員本人所有，本站僅作非營利應援推廣與資訊索引使用。
+                  本站引用之成員形象照及相關名稱，其著作權、商標權與肖像權均歸屬臺中連莊職業排球隊、LEXX 原質娛樂及各成員本人所有，本站僅作非營利應援推廣與資訊索引使用。
                 </p>
               </div>
             </div>
@@ -1430,8 +1092,8 @@ export const App: React.FC = () => {
                   className="h-10 w-10 shrink-0 rounded-xl object-contain lg:h-12 lg:w-12"
                 />
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-editorial text-2xl font-bold tracking-wider text-[#7ADAD0] italic lg:text-3xl">
-                    ACE VIVA · 連莊女孩應援指南
+                  <span className="text-2xl font-black tracking-wider text-[#7ADAD0] lg:text-3xl">
+                    連莊女孩應援指南
                   </span>
                   <span className="rounded-md bg-white/10 px-2 py-0.5 font-mono-num text-[10px] font-bold text-white/80 lg:text-xs">
                     粉絲自製非官方網站
@@ -1445,8 +1107,8 @@ export const App: React.FC = () => {
 
             <div className="md:col-span-6">
               <div className="rounded-2xl border border-[#5ECBC0]/25 bg-white/[0.05] p-4 sm:p-5 lg:p-6">
-                <div className="font-mono-num text-[10px] font-bold tracking-[0.2em] text-[#7ADAD0] uppercase lg:text-xs">
-                  OFFICIAL CHANNELS · 官方資訊查證管道
+                <div className="font-mono-num text-[10px] font-bold tracking-[0.2em] text-[#7ADAD0] lg:text-xs">
+                  官方資訊查證管道
                 </div>
                 <p className="mt-2 text-xs leading-relaxed text-white/80 lg:text-sm">
                   購票選位前或進場應援當日，建議先前往以下官方社群確認最新班表與現場活動公告：
@@ -1458,7 +1120,7 @@ export const App: React.FC = () => {
                     rel="noopener noreferrer"
                     className="rounded-full bg-[#5BAE84] px-3.5 py-1.5 text-xs font-extrabold text-white transition-colors hover:bg-[#4FA87D] lg:px-4 lg:py-2 lg:text-sm"
                   >
-                    ACE VIVA 官方 IG (@{TEAM_INFO.officialInstagramHandle}) ↗
+                    連莊女孩官方 IG (@{TEAM_INFO.officialInstagramHandle}) ↗
                   </a>
                   <a
                     href={TEAM_INFO.clubInstagramUrl}
@@ -1483,7 +1145,7 @@ export const App: React.FC = () => {
 
           <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-6 text-xs text-white/55 sm:mt-10 sm:pt-8 lg:text-sm">
             <span>
-              © 2026–2027 ACE VIVA Unofficial Fan-Made Guide · 粉絲自製應援網站（非官方，所有資訊以官方實際公告為準）
+              © 2026–2027 連莊女孩粉絲自製應援網站（非官方，所有資訊以官方實際公告為準）
             </span>
             <div className="flex flex-wrap items-center gap-5">
               <a
@@ -1492,7 +1154,7 @@ export const App: React.FC = () => {
                 rel="noopener noreferrer"
                 className="hover:text-[#7ADAD0]"
               >
-                Instagram (@ace_viva_official)
+                官方 IG (@ace_viva_official)
               </a>
               <a
                 href={TEAM_INFO.wikipediaUrl}
@@ -1506,6 +1168,243 @@ export const App: React.FC = () => {
           </div>
         </div>
       </footer>
+
+      {/* 頁首點選開啟之「啦啦隊介紹与成軍誌要」收納彈窗（平常不佔用頁面空間） */}
+      {isTeamIntroOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-[#212047]/80 p-3 backdrop-blur-md sm:p-6"
+          onClick={() => setIsTeamIntroOpen(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="連莊女孩啦啦隊介紹與成軍誌要"
+            className="max-h-[90dvh] w-full max-w-4xl overflow-y-auto rounded-[1.75rem] bg-[#D5EFE9] p-1.5 shadow-2xl ring-1 ring-[#5ECBC0]/45 sm:rounded-[2rem] sm:p-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="rounded-[calc(1.75rem-0.375rem)] bg-white p-4 sm:rounded-[calc(2rem-0.375rem)] sm:p-7">
+              {/* Top Modal Header */}
+              <div className="flex items-center justify-between gap-3 border-b border-[#212047]/10 pb-4">
+                <div className="flex items-center gap-3">
+                  <img
+                    src={TEAM_INFO.logoPath}
+                    alt="粉絲自製應援雷達圖示"
+                    className="h-10 w-10 shrink-0 rounded-xl object-contain sm:h-12 sm:w-12"
+                  />
+                  <div>
+                    <span className="inline-block rounded-full bg-[#212047] px-2.5 py-0.5 text-[10px] font-bold text-[#7ADAD0] sm:text-xs">
+                      臺中連莊職業排球隊專屬啦啦隊
+                    </span>
+                    <h2 className="mt-0.5 text-lg font-black text-[#212047] sm:text-2xl">
+                      連莊女孩（Ace Viva）啦啦隊介紹與成軍誌要
+                    </h2>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsTeamIntroOpen(false)}
+                  className="shrink-0 rounded-full bg-[#212047]/10 px-4 py-1.5 text-xs font-extrabold text-[#212047] transition-colors hover:bg-[#212047] hover:text-white"
+                >
+                  關閉 ✕
+                </button>
+              </div>
+
+              {/* Team Introduction Text & Metrics */}
+              <div className="mt-4 rounded-2xl bg-[#F4FAF8] p-4 ring-1 ring-[#5BAE84]/30 sm:p-5">
+                <p className="text-xs leading-relaxed text-[#212047]/85 sm:text-sm lg:text-base">
+                  2025 年台灣職業排球聯盟（TPVL）成立，臺中連莊職業排球隊於 2026 年 8 月新賽季重新組建專屬啦啦隊品牌「Ace Viva（連莊女孩）」，由 LEXX 原質娛樂負責經紀營運。團隊由創隊首任隊長{' '}
+                  <strong className="font-black text-[#212047]">
+                    Yuri（#6 陳洛心）
+                  </strong>
+                  、應援團長{' '}
+                  <strong className="font-black text-[#212047]">
+                    馬妹（#41）
+                  </strong>
+                  、主場雙主持人{' '}
+                  <strong className="font-black text-[#212047]">
+                    巫苡萱（#111）與心璇（#25）
+                  </strong>
+                  ，以及韓國職棒「韓籍三本柱」{' '}
+                  <strong className="font-black text-[#212047]">
+                    車榮玹（#21）、李珠熙（#20）、鄭熙靜（#42）
+                  </strong>{' '}
+                  等共 18 位成員組成。
+                </p>
+
+                <div className="mt-4 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
+                  <div className="rounded-xl bg-white p-3 ring-1 ring-[#5BAE84]/25">
+                    <div className="font-mono-num text-lg font-black text-[#212047] sm:text-xl">
+                      16 + 2 人
+                    </div>
+                    <div className="text-xs font-bold text-[#212047]/65">
+                      16 位隊員與 2 位主持
+                    </div>
+                  </div>
+                  <div className="rounded-xl bg-white p-3 ring-1 ring-[#5BAE84]/25">
+                    <div className="font-mono-num text-lg font-black text-[#4FA87D] sm:text-xl">
+                      韓籍三本柱
+                    </div>
+                    <div className="text-xs font-bold text-[#212047]/65">
+                      車榮玹 · 李珠熙 · 鄭熙靜
+                    </div>
+                  </div>
+                  <div className="rounded-xl bg-white p-3 ring-1 ring-[#5BAE84]/25">
+                    <div className="font-mono-num text-lg font-black text-[#212047] sm:text-xl">
+                      2026 年 8 月
+                    </div>
+                    <div className="text-xs font-bold text-[#212047]/65">
+                      LEXX 原質娛樂經紀
+                    </div>
+                  </div>
+                  <div className="rounded-xl bg-white p-3 ring-1 ring-[#5BAE84]/25">
+                    <div className="font-mono-num text-lg font-black text-[#4FA87D] sm:text-xl">
+                      臺中台體大
+                    </div>
+                    <div className="text-xs font-bold text-[#212047]/65">
+                      2F 集氣區 A / B / C 應援
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Core Leaders Quick Cards (Captain, Cheer Leader, Korean 3 Pillars) */}
+              <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsTeamIntroOpen(false);
+                    setSelectedMember(captainYuri);
+                  }}
+                  className="flex items-center gap-3 rounded-2xl bg-[#212047] p-3.5 text-left text-white ring-1 ring-[#5ECBC0]/40 transition-transform hover:scale-[1.01]"
+                >
+                  <MemberPortrait
+                    member={captainYuri}
+                    variant="avatar"
+                    className="h-14 w-14 shrink-0 rounded-full ring-2 ring-[#5ECBC0]"
+                  />
+                  <div className="min-w-0">
+                    <span className="rounded-full bg-[#5BAE84] px-2 py-0.5 text-[10px] font-bold text-white">
+                      創隊首任隊長 #6
+                    </span>
+                    <div className="mt-1 text-base font-black">
+                      Yuri 陳洛心
+                    </div>
+                    <div className="text-xs text-[#7ADAD0]">點此檢視檔案 →</div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsTeamIntroOpen(false);
+                    setSelectedMember(leaderMamai);
+                  }}
+                  className="flex items-center gap-3 rounded-2xl bg-[#212047] p-3.5 text-left text-white ring-1 ring-[#5ECBC0]/40 transition-transform hover:scale-[1.01]"
+                >
+                  <MemberPortrait
+                    member={leaderMamai}
+                    variant="avatar"
+                    className="h-14 w-14 shrink-0 rounded-full ring-2 ring-[#5ECBC0]"
+                  />
+                  <div className="min-w-0">
+                    <span className="rounded-full bg-[#5BAE84] px-2 py-0.5 text-[10px] font-bold text-white">
+                      應援團長 #41
+                    </span>
+                    <div className="mt-1 text-base font-black">馬妹</div>
+                    <div className="text-xs text-[#7ADAD0]">點此檢視檔案 →</div>
+                  </div>
+                </button>
+
+                <div className="flex flex-col justify-center rounded-2xl bg-[#E6F5F1] p-3.5 ring-1 ring-[#5BAE84]/40">
+                  <div className="text-[11px] font-extrabold text-[#3F8E67]">
+                    韓籍三本柱強勢加盟
+                  </div>
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">
+                    {koreanAces.map((kr) => (
+                      <button
+                        key={kr.id}
+                        type="button"
+                        onClick={() => {
+                          setIsTeamIntroOpen(false);
+                          setSelectedMember(kr);
+                        }}
+                        className="inline-flex items-center gap-1 rounded-full bg-white px-2.5 py-1 text-xs font-black text-[#212047] ring-1 ring-[#212047]/15 hover:bg-[#212047] hover:text-white"
+                      >
+                        <MemberPortrait
+                          member={kr}
+                          variant="avatar"
+                          className="h-5 w-5 rounded-full"
+                        />
+                        <span>
+                          #{kr.number} {kr.name}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Historical Milestones */}
+              <div className="mt-4">
+                <div className="text-xs font-extrabold text-[#212047]">
+                  品牌成軍重要里程碑
+                </div>
+                <div className="mt-2 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
+                  {TEAM_INFO.historyMilestones.map((milestone) => (
+                    <div
+                      key={milestone.date}
+                      className="rounded-2xl bg-[#212047] p-4 text-white"
+                    >
+                      <div className="font-mono-num text-xs font-bold text-[#7ADAD0]">
+                        {milestone.date}
+                      </div>
+                      <div className="mt-1 text-sm font-extrabold text-white">
+                        {milestone.title}
+                      </div>
+                      <p className="mt-1 text-xs leading-relaxed text-white/75">
+                        {milestone.description}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Official Channels & Fan Disclaimer Footer */}
+              <div className="mt-5 flex flex-wrap items-center justify-between gap-2 border-t border-[#212047]/10 pt-4">
+                <div className="flex flex-wrap gap-2">
+                  <a
+                    href={TEAM_INFO.officialInstagramUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-full bg-[#5BAE84] px-4 py-2 text-xs font-extrabold text-white hover:bg-[#4FA87D]"
+                  >
+                    連莊女孩官方 IG (@{TEAM_INFO.officialInstagramHandle}) ↗
+                  </a>
+                  <a
+                    href={TEAM_INFO.clubInstagramUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-full bg-[#212047] px-4 py-2 text-xs font-bold text-white hover:bg-[#2E2C5E]"
+                  >
+                    臺中連莊球團 IG (@{TEAM_INFO.clubInstagramHandle}) ↗
+                  </a>
+                  <a
+                    href={TEAM_INFO.wikipediaUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-full bg-[#F4FAF8] px-4 py-2 text-xs font-bold text-[#212047] ring-1 ring-[#212047]/15 hover:bg-[#E6F5F1]"
+                  >
+                    維基百科條目 ↗
+                  </a>
+                </div>
+                <span className="text-[11px] font-semibold text-[#212047]/65">
+                  ※ 本站為粉絲自製非官方應援工具，實際資訊請以官方公告為準。
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Native <dialog> Member Detail Modal */}
       <MemberDetailDialog

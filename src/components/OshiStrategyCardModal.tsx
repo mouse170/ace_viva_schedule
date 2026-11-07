@@ -389,7 +389,7 @@ async function renderSeatRadarCardToDataUrl(
   ctx.fillStyle = '#7ADAD0';
   fillTextFit(
     ctx,
-    `FIXED SEAT RADAR · 背號 #${member.number} · @${member.instagramHandle}`,
+    `固定座位視角雷達 · 背號 #${member.number} · @${member.instagramHandle}`,
     infoX,
     heroY + 38,
     pillW,
@@ -895,7 +895,7 @@ async function renderZoneHoppingCardToDataUrl(
   ctx.fillStyle = '#7ADAD0';
   fillTextFit(
     ctx,
-    `ZONE-HOPPING VISUAL GUIDE · 背號 #${member.number} · @${member.instagramHandle}`,
+    `局間換位與跨區圖解 · 背號 #${member.number} · @${member.instagramHandle}`,
     infoX,
     heroY + 38,
     pillW,
@@ -1459,8 +1459,8 @@ export const OshiStrategyCardModal: React.FC<OshiStrategyCardModalProps> = ({
           {/* Top Header */}
           <div className="flex items-center justify-between gap-2 border-b border-[#212047]/10 pb-3.5">
             <div>
-              <span className="font-mono-num text-[10px] font-extrabold tracking-[0.15em] text-[#3F8E67] uppercase sm:text-xs">
-                OSHI STRATEGY CARD GENERATOR · 主推圖解攻略卡產生器
+              <span className="font-mono-num text-[10px] font-extrabold tracking-[0.15em] text-[#3F8E67] sm:text-xs">
+                主推圖解攻略卡產生器
               </span>
               <h3 className="text-lg font-black text-[#212047] sm:text-2xl">
                 {activeGirl.name}（#{activeGirl.number}）專屬視角圖解卡
@@ -1628,7 +1628,7 @@ export const OshiStrategyCardModal: React.FC<OshiStrategyCardModalProps> = ({
                         : 'bg-white text-[#212047]/75 ring-1 ring-[#212047]/10 hover:bg-[#E6F5F1]'
                     }`}
                   >
-                    {sched.dayLabel}（vs {sched.opponent}）
+                    {sched.dayLabel}（對戰 {sched.opponent}）
                   </button>
                 );
               })}

@@ -83,9 +83,9 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
       <div className="flex flex-col justify-between gap-5 border-b border-[#212047]/10 pb-8 lg:flex-row lg:items-end">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-2 rounded-full bg-[#5BAE84]/15 px-3 py-1 font-mono-num text-[10px] font-bold tracking-[0.16em] text-[#212047] uppercase ring-1 ring-[#5BAE84]/30 lg:px-4 lg:py-1.5 lg:text-xs">
+            <span className="inline-flex items-center gap-2 rounded-full bg-[#5BAE84]/15 px-3 py-1 font-mono-num text-[10px] font-bold tracking-[0.16em] text-[#212047] ring-1 ring-[#5BAE84]/30 lg:px-4 lg:py-1.5 lg:text-xs">
               <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#5BAE84]" />
-              <span>UPCOMING THEME WEEKS · 主題週合併班表</span>
+              <span>主題週合併班表</span>
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-[#212047] px-3 py-1 font-mono-num text-[10px] font-bold text-[#7ADAD0] lg:text-xs">
               <span>已隱藏過期主題日 · 同週班表合併顯示</span>
@@ -106,13 +106,13 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
             雙色高亮提醒。
           </p>
           <p className="mt-2 max-w-3xl text-[11px] font-semibold text-[#3F8E67] lg:text-sm">
-            ※ 粉絲自製免責說明：本班表整理自官方 Instagram 公開貼文，若有臨時排班異動或賽程調整，請一律以臺中連莊球團與 ACE VIVA 官方實際公告為準。
+            ※ 粉絲自製免責說明：本班表整理自官方 Instagram 公開貼文，若有臨時排班異動或賽程調整，請一律以臺中連莊球團與連莊女孩官方實際公告為準。
           </p>
         </div>
 
         <div className="flex items-center gap-3 self-start lg:self-end">
           <div className="rounded-2xl bg-[#212047] px-3.5 py-2 text-xs text-white sm:px-4 sm:py-2.5 lg:px-5 lg:py-3 lg:text-sm">
-            <span className="font-mono-num text-[#7ADAD0]">VENUE · </span>
+            <span className="font-mono-num text-[#7ADAD0]">主場館 · </span>
             <span>國立臺灣體育運動大學體育館（臺中主場）</span>
           </div>
         </div>
@@ -124,8 +124,8 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
           {/* Row 1: Active Theme Week Switcher (Expired Weeks Filtered Out) */}
           <div className="flex flex-col gap-2 border-b border-[#212047]/10 pb-3.5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="font-mono-num text-[10px] font-extrabold tracking-[0.14em] text-[#212047]/70 uppercase sm:text-xs">
-                STEP A · 選擇未過期主題週次
+              <span className="font-mono-num text-[10px] font-extrabold tracking-[0.14em] text-[#212047]/70 sm:text-xs">
+                步驟一 · 選擇未過期主題週次
               </span>
               <span className="rounded-full bg-[#E6F5F1] px-2.5 py-0.5 font-mono-num text-[10px] font-bold text-[#3F8E67]">
                 10/31–11/01 開幕週已過期不顯示
@@ -171,33 +171,33 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
           <div className="mt-3.5 flex flex-col gap-3 border-b border-[#212047]/10 pb-3.5 lg:flex-row lg:items-center lg:justify-between">
             {/* Color Legend for Same-Week Merged Roster */}
             <div className="flex flex-wrap items-center gap-2">
-              <span className="font-mono-num text-[10px] font-bold text-[#212047]/70 uppercase lg:text-xs">
+              <span className="font-mono-num text-[10px] font-bold text-[#212047]/70 lg:text-xs">
                 同週班表顏色圖例：
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-[#E6F5F1] px-2.5 py-1 text-[11px] font-extrabold text-[#212047] ring-1 ring-[#5BAE84]/40 lg:text-xs">
                 <span className="h-2 w-2 rounded-full bg-[#5BAE84]" />
-                <span>兩日全勤（週六 &amp; 週日皆出席）</span>
+                <span>兩日全勤（週六與週日皆出席）</span>
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 px-2.5 py-1 text-[11px] font-extrabold text-amber-900 ring-1 ring-amber-500/50 lg:text-xs">
                 <span className="h-2 w-2 rounded-full bg-amber-500" />
-                <span>週六限定（僅 Day 1 出席）</span>
+                <span>週六限定（僅週六首日出席）</span>
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-500/15 px-2.5 py-1 text-[11px] font-extrabold text-rose-900 ring-1 ring-rose-500/50 lg:text-xs">
                 <span className="h-2 w-2 rounded-full bg-rose-500" />
-                <span>週日限定（僅 Day 2 出席）</span>
+                <span>週日限定（僅週日次日出席）</span>
               </span>
             </div>
 
             {/* Quick Roster Filter Pills */}
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className="font-mono-num text-[10px] font-bold text-[#212047]/65 uppercase lg:text-xs">
+              <span className="font-mono-num text-[10px] font-bold text-[#212047]/65 lg:text-xs">
                 名單檢視切換：
               </span>
               {[
                 { id: 'all' as const, label: '同週合併全名單' },
                 { id: 'diff_only' as const, label: '只看兩日異動成員' },
-                { id: 'day1' as const, label: '只看週六場 (Day 1)' },
-                { id: 'day2' as const, label: '只看週日場 (Day 2)' },
+                { id: 'day1' as const, label: '只看週六場' },
+                { id: 'day2' as const, label: '只看週日場' },
               ].map((opt) => (
                 <button
                   key={opt.id}
@@ -220,8 +220,8 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
           {/* Row 3: Member Avatar Filter Strip */}
           <div className="mt-3.5">
             <div className="flex flex-wrap items-center justify-between gap-2 pb-2.5">
-              <span className="font-mono-num text-[10px] font-bold tracking-[0.15em] text-[#212047]/65 uppercase sm:text-[11px] lg:text-xs">
-                FILTER BY MEMBER · 點選女孩頭像篩選出席主題週
+              <span className="font-mono-num text-[10px] font-bold tracking-[0.15em] text-[#212047]/65 sm:text-[11px] lg:text-xs">
+                依成員篩選 · 點選女孩頭像篩選出席主題週
               </span>
               <div className="flex items-center gap-2">
                 <button
@@ -421,14 +421,14 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
                           <div>
                             <div className="flex items-center gap-1.5">
                               <span className="rounded-md bg-amber-500 px-2 py-0.5 font-mono-num text-[10px] font-black text-white">
-                                DAY 1 · 週六
+                                週六場
                               </span>
                               <span className="font-mono-num text-xs font-extrabold text-[#212047] lg:text-sm">
                                 {day1Match.date} ({day1Match.time})
                               </span>
                             </div>
                             <div className="mt-1 text-xs font-bold text-[#212047]/80 lg:text-sm">
-                              臺中連莊 vs {day1Match.opponent}
+                              臺中連莊 對戰 {day1Match.opponent}
                             </div>
                           </div>
                           <div className="text-right font-mono-num text-[11px] font-bold text-amber-900">
@@ -447,14 +447,14 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
                           <div>
                             <div className="flex items-center gap-1.5">
                               <span className="rounded-md bg-rose-500 px-2 py-0.5 font-mono-num text-[10px] font-black text-white">
-                                DAY 2 · 週日
+                                週日場
                               </span>
                               <span className="font-mono-num text-xs font-extrabold text-[#212047] lg:text-sm">
                                 {day2Match.date} ({day2Match.time})
                               </span>
                             </div>
                             <div className="mt-1 text-xs font-bold text-[#212047]/80 lg:text-sm">
-                              臺中連莊 vs {day2Match.opponent}
+                              臺中連莊 對戰 {day2Match.opponent}
                             </div>
                           </div>
                           <div className="text-right font-mono-num text-[11px] font-bold text-rose-900">
@@ -527,9 +527,8 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
                   {/* Merged Attending Roster Grid */}
                   <div className="mt-5">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <span className="font-mono-num text-[10px] font-bold tracking-[0.15em] text-[#212047]/65 uppercase lg:text-xs">
-                        MERGED WEEK ROSTER · 當週出席女孩合併名單（顯示{' '}
-                        {attendingMembers.length} 人）
+                      <span className="font-mono-num text-[10px] font-bold tracking-[0.15em] text-[#212047]/65 lg:text-xs">
+                        當週出席女孩合併名單（顯示 {attendingMembers.length} 人）
                       </span>
                       <span className="text-[11px] font-bold text-[#212047]/70 lg:text-xs">
                         綠標＝兩日全勤 ｜ 琥珀橘框＝週六限定 ｜ 玫瑰粉框＝週日限定
@@ -575,43 +574,55 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
                         }
 
                         return (
-                          <button
+                          <div
                             key={m.id}
-                            type="button"
                             onClick={() => onOpenMemberDetail(m)}
-                            className={`group relative flex min-w-0 items-center gap-2 rounded-2xl p-2 text-left transition-all duration-300 active:scale-95 sm:p-2.5 ${cardStyle}`}
+                            className={`group relative flex min-w-0 cursor-pointer items-center justify-between gap-1.5 rounded-2xl p-2 text-left transition-all duration-300 sm:p-2.5 ${cardStyle}`}
                           >
-                            <MemberPortrait
-                              member={m}
-                              variant="avatar"
-                              className={`h-10 w-10 shrink-0 rounded-full sm:h-11 sm:w-11 lg:h-12 lg:w-12 ${avatarRingStyle}`}
-                            />
-                            <div className="min-w-0 flex-1">
-                              <div className="flex flex-wrap items-center gap-1">
-                                <span
-                                  className={`font-mono-num text-[10px] font-extrabold lg:text-xs ${
-                                    status === 'day1_only'
-                                      ? 'text-amber-700 group-hover:text-white'
-                                      : status === 'day2_only'
-                                        ? 'text-rose-700 group-hover:text-white'
-                                        : isSelectedOrFav
-                                          ? 'text-[#7ADAD0]'
-                                          : 'text-[#4FA87D] group-hover:text-[#7ADAD0]'
-                                  }`}
-                                >
-                                  #{m.number}
-                                </span>
-                                <span
-                                  className={`rounded-full px-1.5 py-0.2 font-mono-num text-[9px] font-extrabold whitespace-nowrap ${badgeStyle}`}
-                                >
-                                  {badgeText}
-                                </span>
-                              </div>
-                              <div className="mt-0.5 truncate text-xs font-black sm:text-sm lg:text-base">
-                                {m.name}
+                            <div className="flex min-w-0 items-center gap-2">
+                              <MemberPortrait
+                                member={m}
+                                variant="avatar"
+                                className={`h-10 w-10 shrink-0 rounded-full sm:h-11 sm:w-11 lg:h-12 lg:w-12 ${avatarRingStyle}`}
+                              />
+                              <div className="min-w-0">
+                                <div className="flex flex-wrap items-center gap-1">
+                                  <span
+                                    className={`font-mono-num text-[10px] font-extrabold lg:text-xs ${
+                                      status === 'day1_only'
+                                        ? 'text-amber-700 group-hover:text-white'
+                                        : status === 'day2_only'
+                                          ? 'text-rose-700 group-hover:text-white'
+                                          : isSelectedOrFav
+                                            ? 'text-[#7ADAD0]'
+                                            : 'text-[#4FA87D] group-hover:text-[#7ADAD0]'
+                                    }`}
+                                  >
+                                    #{m.number}
+                                  </span>
+                                  <span
+                                    className={`rounded-full px-1.5 py-0.2 font-mono-num text-[9px] font-extrabold whitespace-nowrap ${badgeStyle}`}
+                                  >
+                                    {badgeText}
+                                  </span>
+                                </div>
+                                <div className="mt-0.5 truncate text-xs font-black sm:text-sm lg:text-base">
+                                  {m.name}
+                                </div>
                               </div>
                             </div>
-                          </button>
+
+                            <a
+                              href={m.instagramUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              aria-label={`一鍵開啟 ${m.name} 的官方 IG`}
+                              className="shrink-0 rounded-full bg-[#212047] px-2 py-1 font-mono-num text-[10px] font-black text-[#7ADAD0] shadow-2xs ring-1 ring-[#5ECBC0]/40 transition-colors hover:bg-[#5BAE84] hover:text-white"
+                            >
+                              IG ↗
+                            </a>
+                          </div>
                         );
                       })}
                     </div>
@@ -663,7 +674,7 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
                                       : 'bg-white text-[#212047]/75 ring-1 ring-[#212047]/15 hover:bg-[#E6F5F1]'
                                   }`}
                                 >
-                                  {sched.dayLabel} vs {sched.opponent}
+                                  {sched.dayLabel} 對戰 {sched.opponent}
                                 </button>
                               );
                             })}
