@@ -34,6 +34,64 @@ function drawRoundedRect(
   ctx.closePath();
 }
 
+/**
+ * 自動縮放字級並限制最大寬度的 Canvas 文字繪製輔助函式，確保絕不超出容器邊界破版
+ */
+function fillTextFit(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  x: number,
+  y: number,
+  maxWidth: number,
+  fontWeight: number | string,
+  initialFontSize: number,
+  fontFamily: string,
+  minFontSize = 13
+) {
+  let size = initialFontSize;
+  ctx.font = `${fontWeight} ${size}px ${fontFamily}`;
+  while (ctx.measureText(text).width > maxWidth && size > minFontSize) {
+    size -= 1;
+    ctx.font = `${fontWeight} ${size}px ${fontFamily}`;
+  }
+  ctx.fillText(text, x, y, maxWidth);
+}
+
+function getShortSweetSpotNote(rec: GirlSetZoneRecommendation): {
+  mainRangeText: string;
+  subNoteText: string;
+} {
+  const mainRangeText = `${rec.zone} 區 ${rec.sweetSpotRange[0]}–${rec.sweetSpotRange[1]} 號`;
+  if (rec.crossZoneOption) {
+    return {
+      mainRangeText,
+      subNoteText: `跨區鄰接：${rec.crossZoneOption.adjacentZone} 區 ${rec.crossZoneOption.adjacentSeatRange[0]}–${rec.crossZoneOption.adjacentSeatRange[1]} 號`,
+    };
+  }
+  if (
+    (rec.initialSlotIndex === 0 && rec.after10SlotIndex === 1) ||
+    (rec.initialSlotIndex === 1 && rec.after10SlotIndex === 0)
+  ) {
+    return {
+      mainRangeText,
+      subNoteText: '交界黃金核心：7–11 號席',
+    };
+  }
+  if (
+    (rec.initialSlotIndex === 1 && rec.after10SlotIndex === 2) ||
+    (rec.initialSlotIndex === 2 && rec.after10SlotIndex === 1)
+  ) {
+    return {
+      mainRangeText,
+      subNoteText: '交界黃金核心：14–17 號席',
+    };
+  }
+  return {
+    mainRangeText,
+    subNoteText: `決勝主力核心：${rec.after10CoreSeats}`,
+  };
+}
+
 function loadImage(src: string): Promise<HTMLImageElement | null> {
   return new Promise((resolve) => {
     const img = new Image();
@@ -51,7 +109,7 @@ async function renderStrategyCardToDataUrl(
   topCross?: CrossZoneGoldenInterval
 ): Promise<string> {
   const W = 1080;
-  const H = 1560;
+  const H = 1590;
   const canvas = document.createElement('canvas');
   canvas.width = W;
   canvas.height = H;
@@ -84,29 +142,50 @@ async function renderStrategyCardToDataUrl(
   ctx.stroke();
 
   // 2. Top Badge & Match Info
-  drawRoundedRect(ctx, 64, 62, 430, 44, 22);
+  drawRoundedRect(ctx, 64, 58, 430, 44, 22);
   ctx.fillStyle = '#5BAE84';
   ctx.fill();
   ctx.fillStyle = '#FFFFFF';
-  ctx.font = `800 20px ${fontMono}`;
   ctx.textBaseline = 'middle';
-  ctx.fillText('ACE VIVA · 主推全場換位拍攝攻略卡', 88, 84);
+  ctx.textAlign = 'center';
+  fillTextFit(
+    ctx,
+    'ACE VIVA · 主推全場換位拍攝攻略卡',
+    64 + 215,
+    80,
+    396,
+    800,
+    20,
+    fontMono
+  );
+  ctx.textAlign = 'left';
 
   // Match Date Pill on Right
   const matchBadgeText = `${schedule.dateLabel} vs ${schedule.opponent}`;
-  ctx.font = `800 22px ${fontMono}`;
-  const mTextW = ctx.measureText(matchBadgeText).width;
-  drawRoundedRect(ctx, W - 64 - mTextW - 44, 62, mTextW + 44, 44, 22);
+  ctx.font = `800 21px ${fontMono}`;
+  const mTextW = Math.min(ctx.measureText(matchBadgeText).width, 440);
+  drawRoundedRect(ctx, W - 64 - mTextW - 44, 58, mTextW + 44, 44, 22);
   ctx.fillStyle = 'rgba(255,255,255,0.1)';
   ctx.fill();
   ctx.strokeStyle = 'rgba(122, 218, 208, 0.45)';
   ctx.lineWidth = 1.5;
   ctx.stroke();
   ctx.fillStyle = '#7ADAD0';
-  ctx.fillText(matchBadgeText, W - 64 - mTextW - 22, 84);
+  fillTextFit(
+    ctx,
+    matchBadgeText,
+    W - 64 - mTextW - 22,
+    80,
+    mTextW,
+    800,
+    21,
+    fontMono
+  );
 
   // 3. Hero Profile Banner
-  drawRoundedRect(ctx, 64, 130, W - 128, 230, 32);
+  const heroY = 122;
+  const heroH = 252;
+  drawRoundedRect(ctx, 64, heroY, W - 128, heroH, 32);
   ctx.fillStyle = 'rgba(255, 255, 255, 0.07)';
   ctx.fill();
   ctx.strokeStyle = 'rgba(94, 203, 192, 0.4)';
@@ -115,9 +194,9 @@ async function renderStrategyCardToDataUrl(
 
   // Load & Draw Member Avatar (Face-centered crop)
   const avatarImg = await loadImage(member.localImagePath);
-  const avatarX = 100;
-  const avatarY = 165;
-  const avatarSize = 160;
+  const avatarX = 96;
+  const avatarY = heroY + 42;
+  const avatarSize = 168;
 
   ctx.save();
   ctx.beginPath();
@@ -167,30 +246,46 @@ async function renderStrategyCardToDataUrl(
   ctx.lineWidth = 5;
   ctx.stroke();
 
-  // Member Name & Metadata
+  // Member Name & Metadata (Well-spaced above recommendation pills)
+  const infoX = 292;
+  const pillW = W - 64 - 28 - infoX; // 696px
+
   ctx.fillStyle = '#7ADAD0';
-  ctx.font = `800 22px ${fontMono}`;
-  ctx.fillText(
+  fillTextFit(
+    ctx,
     `TARGET OSHI · 背號 #${member.number} · @${member.instagramHandle}`,
-    290,
-    182
+    infoX,
+    heroY + 38,
+    pillW,
+    800,
+    21,
+    fontMono
   );
 
   ctx.fillStyle = '#FFFFFF';
-  ctx.font = `900 58px ${fontSans}`;
-  ctx.fillText(member.name, 290, 245);
+  ctx.font = `900 50px ${fontSans}`;
+  ctx.fillText(member.name, infoX, heroY + 92);
 
   const nameW = ctx.measureText(member.name).width;
   if (member.realOrAltName) {
-    ctx.fillStyle = 'rgba(255,255,255,0.65)';
-    ctx.font = `600 26px ${fontSans}`;
-    ctx.fillText(`（${member.realOrAltName}）`, 290 + nameW + 12, 248);
+    ctx.fillStyle = 'rgba(255,255,255,0.68)';
+    fillTextFit(
+      ctx,
+      `（${member.realOrAltName}）`,
+      infoX + nameW + 10,
+      heroY + 95,
+      pillW - nameW - 16,
+      600,
+      24,
+      fontSans
+    );
   }
 
-  // Primary Ticket & Cross-Zone Golden Interval Pills
+  // Primary Ticket & Cross-Zone Golden Interval Pills (Guaranteed Fit within pillW)
   const topRec = recs[0];
   if (topRec) {
-    drawRoundedRect(ctx, 290, 272, 686, 36, 12);
+    const pill1Y = heroY + 134;
+    drawRoundedRect(ctx, infoX, pill1Y, pillW, 44, 14);
     ctx.fillStyle = 'rgba(91, 174, 132, 0.28)';
     ctx.fill();
     ctx.strokeStyle = '#5ECBC0';
@@ -198,34 +293,45 @@ async function renderStrategyCardToDataUrl(
     ctx.stroke();
 
     ctx.fillStyle = '#5ECBC0';
-    ctx.font = `800 19px ${fontSans}`;
-    ctx.fillText(
-      `★ 單區首選：2F 集氣 ${topRec.zone} 區 ｜ 黃金帶：${topRec.sweetSpotLabel}`,
-      308,
-      290
+    const topRecShortText = `★ 單區首選：2F 集氣 ${topRec.zone} 區 ${topRec.sweetSpotRange[0]}–${topRec.sweetSpotRange[1]} 號（破 10 分 C 位：${topRec.after10CoreSeats}）`;
+    fillTextFit(
+      ctx,
+      topRecShortText,
+      infoX + 18,
+      pill1Y + 22,
+      pillW - 36,
+      800,
+      20,
+      fontSans
     );
   }
 
   if (topCross) {
-    drawRoundedRect(ctx, 290, 314, 686, 36, 12);
-    ctx.fillStyle = 'rgba(25, 24, 56, 0.85)';
+    const pill2Y = heroY + 188;
+    drawRoundedRect(ctx, infoX, pill2Y, pillW, 44, 14);
+    ctx.fillStyle = 'rgba(25, 24, 56, 0.9)';
     ctx.fill();
     ctx.strokeStyle = '#7ADAD0';
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = `800 18px ${fontSans}`;
-    ctx.fillText(
-      `↔ 跨區免換位黃金帶：${topCross.combinedRangeLabel}（兼顧 ${topCross.coveredSetsLabel}）`,
-      308,
-      332
+    const crossText = `↔ 跨區免換位黃金帶：${topCross.combinedRangeLabel}（兼顧 ${topCross.coveredSetsLabel}）`;
+    fillTextFit(
+      ctx,
+      crossText,
+      infoX + 18,
+      pill2Y + 22,
+      pillW - 36,
+      800,
+      19,
+      fontSans
     );
   }
 
   // 4. Mini Top-Down Arena Orientation Strip (IG Direction Aligned)
-  const mapY = 384;
-  drawRoundedRect(ctx, 64, mapY, W - 128, 128, 24);
+  const mapY = 394;
+  drawRoundedRect(ctx, 64, mapY, W - 128, 126, 24);
   ctx.fillStyle = '#14132D';
   ctx.fill();
   ctx.strokeStyle = 'rgba(255,255,255,0.15)';
@@ -233,11 +339,15 @@ async function renderStrategyCardToDataUrl(
   ctx.stroke();
 
   ctx.fillStyle = '#7ADAD0';
-  ctx.font = `800 20px ${fontSans}`;
-  ctx.fillText(
+  fillTextFit(
+    ctx,
     '▼ 場館方位速查（同官方 IG 圖：觀眾在上方往下看球賽 ▼ · 啦啦隊站前緣往上應援 ▲）',
     90,
-    mapY + 30
+    mapY + 29,
+    W - 180,
+    800,
+    20,
+    fontSans
   );
 
   const zones: ('A' | 'B' | 'C')[] = ['A', 'B', 'C'];
@@ -247,7 +357,7 @@ async function renderStrategyCardToDataUrl(
     const zy = mapY + 52;
     const recForZone = recs.find((r) => r.zone === zId);
 
-    drawRoundedRect(ctx, zx, zy, zoneBoxW, 56, 14);
+    drawRoundedRect(ctx, zx, zy, zoneBoxW, 54, 14);
     ctx.fillStyle =
       recForZone?.setKey === 'set1_4'
         ? 'rgba(91, 174, 132, 0.35)'
@@ -260,22 +370,28 @@ async function renderStrategyCardToDataUrl(
 
     ctx.fillStyle = '#FFFFFF';
     ctx.font = `800 21px ${fontSans}`;
-    ctx.fillText(`2F 集氣 ${zId} 區`, zx + 18, zy + 28);
+    ctx.fillText(`2F 集氣 ${zId} 區`, zx + 18, zy + 27);
 
     if (recForZone) {
       ctx.fillStyle = '#7ADAD0';
-      ctx.font = `700 18px ${fontMono}`;
-      ctx.fillText(
+      ctx.textAlign = 'right';
+      fillTextFit(
+        ctx,
         `(${recForZone.setShortLabel})`,
-        zx + zoneBoxW - 125,
-        zy + 28
+        zx + zoneBoxW - 16,
+        zy + 27,
+        140,
+        700,
+        18,
+        fontMono
       );
+      ctx.textAlign = 'left';
     }
   });
 
   // 5. Three Set Cards (Set 1&4, Set 2&5, Set 3)
-  let currentY = 536;
-  const cardH = 290;
+  let currentY = 542;
+  const cardH = 294;
 
   recs.forEach((rec, index) => {
     const isPrimary = index === 0;
@@ -286,33 +402,66 @@ async function renderStrategyCardToDataUrl(
     ctx.lineWidth = isPrimary ? 4 : 2;
     ctx.stroke();
 
-    // Set Badge
-    drawRoundedRect(ctx, 92, currentY + 24, 240, 44, 22);
+    // Set Badge (Centered text)
+    const setBadgeX = 92;
+    const setBadgeW = 236;
+    drawRoundedRect(ctx, setBadgeX, currentY + 22, setBadgeW, 44, 22);
     ctx.fillStyle = isPrimary ? '#212047' : '#3F8E67';
     ctx.fill();
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = `900 22px ${fontSans}`;
-    ctx.fillText(rec.setLabel, 118, currentY + 46);
+    ctx.textAlign = 'center';
+    fillTextFit(
+      ctx,
+      rec.setLabel,
+      setBadgeX + setBadgeW / 2,
+      currentY + 44,
+      setBadgeW - 24,
+      900,
+      22,
+      fontSans
+    );
+    ctx.textAlign = 'left';
 
-    // Priority Label
+    // Priority Label (Constrained width so it never collides with right pill)
     ctx.fillStyle = '#3F8E67';
-    ctx.font = `800 22px ${fontSans}`;
-    ctx.fillText(rec.priorityBadge, 350, currentY + 46);
+    fillTextFit(
+      ctx,
+      rec.priorityBadge,
+      344,
+      currentY + 44,
+      380,
+      800,
+      21,
+      fontSans
+    );
 
-    // Zone Pill on Right
-    drawRoundedRect(ctx, W - 64 - 280, currentY + 22, 252, 48, 24);
+    // Zone Pill on Right (Centered text)
+    const zonePillW = 246;
+    const zonePillX = W - 64 - 28 - zonePillW;
+    drawRoundedRect(ctx, zonePillX, currentY + 20, zonePillW, 48, 24);
     ctx.fillStyle = '#212047';
     ctx.fill();
     ctx.fillStyle = '#5ECBC0';
-    ctx.font = `900 24px ${fontSans}`;
-    ctx.fillText(`應援區：2F ${rec.zone} 區`, W - 64 - 254, currentY + 46);
+    ctx.textAlign = 'center';
+    fillTextFit(
+      ctx,
+      `應援區：2F ${rec.zone} 區`,
+      zonePillX + zonePillW / 2,
+      currentY + 44,
+      zonePillW - 24,
+      900,
+      23,
+      fontSans
+    );
+    ctx.textAlign = 'left';
 
-    // 3 Columns: 0-10 pts | >10 pts | Sweet Spot
-    const colY = currentY + 86;
-    const colW = (W - 128 - 56 - 28) / 3;
+    // 3 Columns: 0-10 pts | >10 pts | Sweet Spot & Cross-Zone
+    const colY = currentY + 84;
+    const colW = (W - 128 - 56 - 28) / 3; // 289.3px
+    const colInnerW = colW - 32;
 
     // Col 1: 0-10 pts
-    drawRoundedRect(ctx, 92, colY, colW, 102, 18);
+    drawRoundedRect(ctx, 92, colY, colW, 106, 18);
     ctx.fillStyle = '#FFFFFF';
     ctx.fill();
     ctx.strokeStyle = 'rgba(91,174,132,0.45)';
@@ -320,68 +469,126 @@ async function renderStrategyCardToDataUrl(
     ctx.stroke();
 
     ctx.fillStyle = '#3F8E67';
-    ctx.font = `800 18px ${fontMono}`;
-    ctx.fillText(
+    fillTextFit(
+      ctx,
       `開局 0–10 分（${rec.initialSlotLabel.slice(0, 2)}）`,
-      112,
-      colY + 28
+      108,
+      colY + 26,
+      colInnerW,
+      800,
+      18,
+      fontMono
     );
     ctx.fillStyle = '#212047';
-    ctx.font = `900 28px ${fontSans}`;
-    ctx.fillText(
+    fillTextFit(
+      ctx,
       `${rec.zone} 區 ${rec.initialSeatRange[0]}–${rec.initialSeatRange[1]} 號`,
-      112,
-      colY + 62
+      108,
+      colY + 60,
+      colInnerW,
+      900,
+      28,
+      fontSans
     );
     ctx.fillStyle = '#5BAE84';
-    ctx.font = `700 17px ${fontSans}`;
-    ctx.fillText(`正對 C 位：${rec.initialCoreSeats}`, 112, colY + 88);
+    fillTextFit(
+      ctx,
+      `正對 C 位：${rec.initialCoreSeats}`,
+      108,
+      colY + 88,
+      colInnerW,
+      700,
+      17,
+      fontSans
+    );
 
     // Col 2: After 10 pts (Main Segment)
     const col2X = 92 + colW + 14;
-    drawRoundedRect(ctx, col2X, colY, colW, 102, 18);
+    drawRoundedRect(ctx, col2X, colY, colW, 106, 18);
     ctx.fillStyle = '#212047';
     ctx.fill();
 
     ctx.fillStyle = '#7ADAD0';
-    ctx.font = `800 18px ${fontMono}`;
-    ctx.fillText(
+    fillTextFit(
+      ctx,
       `破 10 分換位後（${rec.after10SlotLabel.slice(0, 2)}）`,
-      col2X + 20,
-      colY + 28
+      col2X + 16,
+      colY + 26,
+      colInnerW,
+      800,
+      18,
+      fontMono
     );
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = `900 28px ${fontSans}`;
-    ctx.fillText(
+    fillTextFit(
+      ctx,
       `${rec.zone} 區 ${rec.after10SeatRange[0]}–${rec.after10SeatRange[1]} 號`,
-      col2X + 20,
-      colY + 62
+      col2X + 16,
+      colY + 60,
+      colInnerW,
+      900,
+      28,
+      fontSans
     );
     ctx.fillStyle = '#5ECBC0';
-    ctx.font = `700 17px ${fontSans}`;
-    ctx.fillText(`主力 C 位：${rec.after10CoreSeats}`, col2X + 20, colY + 88);
+    fillTextFit(
+      ctx,
+      `主力 C 位：${rec.after10CoreSeats}`,
+      col2X + 16,
+      colY + 88,
+      colInnerW,
+      700,
+      17,
+      fontSans
+    );
 
-    // Col 3: Full Set Sweet Spot
+    // Col 3: Full Set Sweet Spot & Cross-Zone Adjacent Option (Clean 3-line structure, never overflows)
     const col3X = col2X + colW + 14;
-    drawRoundedRect(ctx, col3X, colY, colW, 102, 18);
+    drawRoundedRect(ctx, col3X, colY, colW, 106, 18);
     ctx.fillStyle = '#D5EFE9';
     ctx.fill();
     ctx.strokeStyle = '#5BAE84';
     ctx.lineWidth = 2;
     ctx.stroke();
 
+    const sweetNote = getShortSweetSpotNote(rec);
+
     ctx.fillStyle = '#212047';
-    ctx.font = `800 18px ${fontMono}`;
-    ctx.fillText('整局免換位黃金帶', col3X + 20, colY + 28);
+    fillTextFit(
+      ctx,
+      rec.crossZoneOption ? '整局黃金帶 ＆ 跨區鄰接' : '整局免換位黃金帶',
+      col3X + 16,
+      colY + 26,
+      colInnerW,
+      800,
+      18,
+      fontMono
+    );
     ctx.fillStyle = '#212047';
-    ctx.font = `900 25px ${fontSans}`;
-    ctx.fillText(rec.sweetSpotLabel, col3X + 20, colY + 62);
+    fillTextFit(
+      ctx,
+      sweetNote.mainRangeText,
+      col3X + 16,
+      colY + 60,
+      colInnerW,
+      900,
+      28,
+      fontSans
+    );
     ctx.fillStyle = '#3F8E67';
-    ctx.font = `700 17px ${fontSans}`;
-    ctx.fillText('兼顧開局與破 10 分視角', col3X + 20, colY + 88);
+    fillTextFit(
+      ctx,
+      sweetNote.subNoteText,
+      col3X + 16,
+      colY + 88,
+      colInnerW,
+      700,
+      17,
+      fontSans
+    );
 
     // 1-23 Single-Line Seat Ruler Bar
-    const rulerY = currentY + 208;
+    const rulerY = currentY + 210;
     const totalRulerW = W - 128 - 56;
     const seatBoxW = (totalRulerW - 22 * 4) / 23;
 
@@ -414,28 +621,36 @@ async function renderStrategyCardToDataUrl(
           : 'rgba(33,32,71,0.4)';
       ctx.font = `800 18px ${fontMono}`;
       ctx.textAlign = 'center';
-      ctx.fillText(String(sNum), sx + seatBoxW / 2, rulerY + 29);
+      ctx.fillText(String(sNum), sx + seatBoxW / 2, rulerY + 28);
       ctx.textAlign = 'left';
     }
 
-    currentY += cardH + 22;
+    currentY += cardH + 20;
   });
 
   // 6. Footer Legend & Disclaimer
   ctx.fillStyle = '#7ADAD0';
-  ctx.font = `700 19px ${fontSans}`;
-  ctx.fillText(
+  fillTextFit(
+    ctx,
     '■ 深藍格：破 10 分主力正對席（佔單局 60% 時間）   ■ 綠格：開局 0–10 分正對席',
     64,
-    H - 78
+    H - 78,
+    W - 128,
+    700,
+    19,
+    fontSans
   );
 
   ctx.fillStyle = 'rgba(255,255,255,0.6)';
-  ctx.font = `600 17px ${fontSans}`;
-  ctx.fillText(
+  fillTextFit(
+    ctx,
     '※ 粉絲自製非官方應援攻略圖（依官方 IG 站位表推算），現場實際站位與座椅編號請以官方公告為準。',
     64,
-    H - 48
+    H - 48,
+    W - 128,
+    600,
+    17,
+    fontSans
   );
 
   return canvas.toDataURL('image/png');
