@@ -1073,11 +1073,28 @@ export interface ThemeWeekGroup {
   themeTitle: string;
   dateRangeLabel: string;
   isCurrentWeek?: boolean;
+  isExpired?: boolean;
   matches: HomeMatchSchedule[];
 }
 
+export type WeekMemberAttendanceType = 'both' | 'day1_only' | 'day2_only';
+
+export interface MergedThemeWeekRoster {
+  week: ThemeWeekGroup;
+  day1Match: HomeMatchSchedule;
+  day2Match?: HomeMatchSchedule;
+  day1ShortDate: string;
+  day2ShortDate: string;
+  allMemberIds: string[];
+  bothDaysMemberIds: string[];
+  day1OnlyMemberIds: string[];
+  day2OnlyMemberIds: string[];
+  hasDayDifference: boolean;
+  memberStatusMap: Record<string, WeekMemberAttendanceType>;
+}
+
 /**
- * 依主題週聚合主場賽事，支援動態調整當週顯示天數與當週出席天數篩選
+ * 依主題週聚合主場賽事，支援過濾已過期主題日與同一週班表合併比對
  */
 export const THEME_WEEKS: ThemeWeekGroup[] = [
   {
@@ -1085,6 +1102,7 @@ export const THEME_WEEKS: ThemeWeekGroup[] = [
     weekShortLabel: '10/31–11/01 開幕週',
     themeTitle: 'HOME GAME OPENING SHOW 開幕主題週',
     dateRangeLabel: '10/31 (六) – 11/01 (日)',
+    isExpired: true,
     matches: HOME_SCHEDULE.filter(
       (m) => m.id === '2026-10-31' || m.id === '2026-11-01'
     ),
@@ -1118,6 +1136,89 @@ export const THEME_WEEKS: ThemeWeekGroup[] = [
     ),
   },
 ];
+
+/**
+ * 取得有效基準日期（YYYY-MM-DD），自動隱藏已過期之主題週（如 10/31–11/01 開幕主題週）
+ */
+export function getActiveThemeWeeks(referenceDate?: Date): ThemeWeekGroup[] {
+  const now = referenceDate ?? new Date();
+  const localIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  // 確保至少以 2026-11-07 為基準過濾已結束之 10/31–11/01 開幕週
+  const effectiveToday = localIso > '2026-11-07' && localIso <= '2026-12-13' ? localIso : '2026-11-07';
+
+  const active = THEME_WEEKS.filter((week) => {
+    if (week.isExpired) return false;
+    const lastMatch = week.matches[week.matches.length - 1];
+    if (!lastMatch) return false;
+    return lastMatch.id >= effectiveToday;
+  });
+
+  return active.length > 0 ? active : THEME_WEEKS.filter((w) => !w.isExpired);
+}
+
+export const ACTIVE_THEME_WEEKS: ThemeWeekGroup[] = getActiveThemeWeeks();
+
+export const ACTIVE_HOME_SCHEDULE: HomeMatchSchedule[] = ACTIVE_THEME_WEEKS.flatMap(
+  (week) => week.matches
+);
+
+/**
+ * 合併同一主題週之兩日班表，自動比對「兩日全勤」與「單日限定（週六限定 / 週日限定）」成員名單
+ */
+export function getMergedThemeWeekRoster(
+  week: ThemeWeekGroup
+): MergedThemeWeekRoster {
+  const day1Match = week.matches[0];
+  const day2Match = week.matches[1];
+
+  const day1Ids = day1Match ? day1Match.attendingMemberIds : [];
+  const day2Ids = day2Match ? day2Match.attendingMemberIds : day1Ids;
+
+  const bothDaysMemberIds = day1Ids.filter((id) => day2Ids.includes(id));
+  const day1OnlyMemberIds = day1Ids.filter((id) => !day2Ids.includes(id));
+  const day2OnlyMemberIds = day2Ids.filter((id) => !day1Ids.includes(id));
+
+  // 將單日異動成員與全勤成員整合，並建立狀態對照表
+  const allMemberIds = [
+    ...bothDaysMemberIds,
+    ...day1OnlyMemberIds,
+    ...day2OnlyMemberIds,
+  ];
+
+  const memberStatusMap: Record<string, WeekMemberAttendanceType> = {};
+  for (const id of bothDaysMemberIds) {
+    memberStatusMap[id] = 'both';
+  }
+  for (const id of day1OnlyMemberIds) {
+    memberStatusMap[id] = 'day1_only';
+  }
+  for (const id of day2OnlyMemberIds) {
+    memberStatusMap[id] = 'day2_only';
+  }
+
+  const day1ShortDate = day1Match
+    ? day1Match.date.slice(5).replace('.', '/')
+    : '';
+  const day2ShortDate = day2Match
+    ? day2Match.date.slice(5).replace('.', '/')
+    : '';
+
+  return {
+    week,
+    day1Match,
+    day2Match,
+    day1ShortDate,
+    day2ShortDate,
+    allMemberIds,
+    bothDaysMemberIds,
+    day1OnlyMemberIds,
+    day2OnlyMemberIds,
+    hasDayDifference:
+      day1OnlyMemberIds.length > 0 || day2OnlyMemberIds.length > 0,
+    memberStatusMap,
+  };
+}
+
 
 
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
 import type { AceVivaMember } from '../data/members';
-import { HOME_SCHEDULE } from '../data/schedule';
+import { ACTIVE_HOME_SCHEDULE } from '../data/schedule';
 import { MemberPortrait } from './MemberPortrait';
 import { ZodiacIcon, isCurrentMonthBirthday } from './ZodiacIcon';
 
@@ -90,7 +90,7 @@ export const MemberDetailDialog: React.FC<MemberDetailDialogProps> = ({
   }, [onClose]);
 
   const attendingMatches = member
-    ? HOME_SCHEDULE.filter((match) => match.attendingMemberIds.includes(member.id))
+    ? ACTIVE_HOME_SCHEDULE.filter((match) => match.attendingMemberIds.includes(member.id))
     : [];
 
   return (
