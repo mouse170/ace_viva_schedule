@@ -104,22 +104,22 @@ export const GirlSeatRecommendationSection: React.FC<
   return (
     <section
       id="girl-seat-guide-section"
-      className="relative mx-auto max-w-7xl px-3.5 py-16 sm:px-6 sm:py-24 lg:px-8"
+      className="relative mx-auto max-w-[1440px] px-3 py-16 sm:px-6 sm:py-24 lg:px-10"
     >
       {/* Section Header */}
       <div className="flex flex-col justify-between gap-5 border-b border-[#212047]/10 pb-8 lg:flex-row lg:items-end">
         <div>
-          <div className="inline-flex items-center gap-2 rounded-full bg-[#212047] px-3 py-1 font-mono-num text-[10px] font-bold tracking-[0.16em] text-[#7ADAD0] uppercase">
+          <div className="inline-flex items-center gap-2 rounded-full bg-[#212047] px-3 py-1 font-mono-num text-[10px] font-bold tracking-[0.16em] text-[#7ADAD0] uppercase lg:px-4 lg:py-1.5 lg:text-xs">
             <span className="h-2 w-2 shrink-0 rounded-full bg-[#5BAE84]" />
             <span>GIRL-CENTRIC SEAT GUIDE · 女孩專屬選位推薦</span>
           </div>
-          <h2 className="mt-3 text-2xl font-black tracking-tight text-[#212047] sm:text-5xl">
+          <h2 className="mt-3 text-2xl font-black tracking-tight text-[#212047] sm:text-5xl lg:text-6xl">
             以女孩為主的黃金座位推薦區間
           </h2>
-          <p className="mt-2.5 max-w-3xl text-xs leading-relaxed text-[#212047]/75 sm:text-base">
+          <p className="mt-2.5 max-w-4xl text-xs leading-relaxed text-[#212047]/75 sm:text-base lg:text-lg">
             點選你想鎖定的連莊女孩，系統將自動追蹤她在「第 1、4 局」、「第 2、5 局」與「第 3 局」的跨區路線，以及單局得分破 10 分前後的區內移位，計算出「雙享黃金席」與「破 10 分主力 C 位席」推薦號碼區間。
           </p>
-          <p className="mt-2 max-w-3xl text-[11px] font-semibold text-[#3F8E67]">
+          <p className="mt-2 max-w-4xl text-[11px] font-semibold text-[#3F8E67] lg:text-sm">
             ※ 粉絲自製免責說明：本選位區間為依據官方公告站位表推算之輔助參考，現場實際座椅編號與臨時人員異動，請以球團與 ACE VIVA 官方最新實際公告為準。
           </p>
         </div>
@@ -133,7 +133,7 @@ export const GirlSeatRecommendationSection: React.FC<
                 key={sched.matchId}
                 type="button"
                 onClick={() => setSelectedMatchId(sched.matchId)}
-                className={`rounded-xl px-3 py-2.5 text-center text-xs font-extrabold whitespace-nowrap transition-all duration-300 sm:rounded-full sm:px-5 ${
+                className={`rounded-xl px-2.5 py-2.5 text-center text-xs font-extrabold transition-all duration-300 sm:rounded-full sm:px-5 sm:whitespace-nowrap lg:px-6 lg:py-3 lg:text-sm ${
                   isActive
                     ? 'bg-[#212047] text-white shadow-sm'
                     : 'text-[#212047]/75 hover:bg-white/60 hover:text-[#212047]'
@@ -148,12 +148,12 @@ export const GirlSeatRecommendationSection: React.FC<
 
       {/* Girl Selector Pill Strip (Face-Focused Avatars) */}
       <div className="mt-6 rounded-[1.75rem] bg-[#D5EFE9] p-1.5 ring-1 ring-[#5BAE84]/35 sm:mt-8 sm:rounded-[2rem] sm:p-2">
-        <div className="rounded-[calc(1.75rem-0.375rem)] bg-white p-4 shadow-[inset_0_1px_1px_rgba(255,255,255,0.95)] sm:rounded-[calc(2rem-0.375rem)] sm:p-6">
+        <div className="rounded-[calc(1.75rem-0.375rem)] bg-white p-3.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.95)] sm:rounded-[calc(2rem-0.375rem)] sm:p-6 lg:p-7">
           <div className="flex flex-wrap items-center justify-between gap-2 pb-3.5">
-            <span className="font-mono-num text-[11px] font-extrabold tracking-[0.14em] text-[#212047] uppercase sm:text-xs">
+            <span className="font-mono-num text-[11px] font-extrabold tracking-[0.14em] text-[#212047] uppercase sm:text-xs lg:text-sm">
               點選當日出席女孩檢視專屬推薦席位（{rotatingMembers.length} 位集氣區輪換女孩）
             </span>
-            <span className="text-[11px] font-medium text-[#4FA87D]">
+            <span className="text-[11px] font-medium text-[#4FA87D] lg:text-xs">
               ★ 為已加入「我的主推」成員
             </span>
           </div>
@@ -172,7 +172,7 @@ export const GirlSeatRecommendationSection: React.FC<
                   key={m.id}
                   type="button"
                   onClick={() => setSelectedGirlId(m.id)}
-                  className={`group relative flex flex-col items-center rounded-2xl p-2.5 text-center transition-all duration-300 active:scale-95 ${
+                  className={`group relative flex min-w-0 flex-col items-center rounded-2xl p-2 text-center transition-all duration-300 active:scale-95 sm:p-2.5 lg:p-3 ${
                     isSelected
                       ? 'bg-[#212047] text-white shadow-[0_14px_30px_-8px_rgba(33,32,71,0.45)] ring-2 ring-[#5BAE84]'
                       : 'bg-[#F4FAF8] text-[#212047] ring-1 ring-[#212047]/10 hover:bg-[#E6F5F1]'
@@ -180,7 +180,7 @@ export const GirlSeatRecommendationSection: React.FC<
                 >
                   {isFav && (
                     <span
-                      className={`absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-bold ${
+                      className={`absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-bold lg:h-5 lg:w-5 lg:text-[10px] ${
                         isSelected
                           ? 'bg-[#5BAE84] text-white'
                           : 'bg-[#212047] text-[#7ADAD0]'
@@ -192,21 +192,21 @@ export const GirlSeatRecommendationSection: React.FC<
                   <MemberPortrait
                     member={m}
                     variant="avatar"
-                    className={`h-14 w-14 rounded-full transition-transform duration-500 group-hover:scale-105 sm:h-16 sm:w-16 ${
+                    className={`h-13 w-13 rounded-full transition-transform duration-500 group-hover:scale-105 sm:h-16 sm:w-16 lg:h-18 lg:w-18 ${
                       isSelected
                         ? 'ring-2 ring-[#5ECBC0]'
                         : 'ring-1 ring-[#5BAE84]/35'
                     }`}
                   />
-                  <div className="mt-1.5 font-mono-num text-[10px] font-bold text-[#4FA87D] group-hover:text-[#5ECBC0]">
+                  <div className="mt-1.5 font-mono-num text-[10px] font-bold text-[#4FA87D] group-hover:text-[#5ECBC0] lg:text-xs">
                     #{m.number}
                   </div>
-                  <div className="text-xs font-black whitespace-nowrap sm:text-sm">
+                  <div className="w-full truncate text-xs font-black sm:text-sm lg:text-base">
                     {m.name}
                   </div>
                   {rec1 && (
                     <div
-                      className={`mt-1 rounded-full px-2 py-0.5 font-mono-num text-[9px] font-bold whitespace-nowrap ${
+                      className={`mt-1 rounded-full px-2 py-0.5 font-mono-num text-[9px] font-bold whitespace-nowrap lg:px-2.5 lg:text-[11px] ${
                         isSelected
                           ? 'bg-[#5BAE84] text-white'
                           : 'bg-[#D5EFE9] text-[#212047]'
@@ -224,16 +224,16 @@ export const GirlSeatRecommendationSection: React.FC<
 
       {/* Spotlight Dashboard for the Selected Girl */}
       <div className="mt-6 rounded-[1.75rem] bg-[#D5EFE9] p-1.5 ring-1 ring-[#5BAE84]/35 sm:mt-8 sm:rounded-[2rem] sm:p-2">
-        <div className="rounded-[calc(1.75rem-0.375rem)] bg-white p-4 shadow-[inset_0_1px_1px_rgba(255,255,255,0.95)] sm:rounded-[calc(2rem-0.375rem)] sm:p-8">
+        <div className="rounded-[calc(1.75rem-0.375rem)] bg-white p-3.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.95)] sm:rounded-[calc(2rem-0.375rem)] sm:p-8">
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-8">
             {/* Left 4 Cols: Selected Girl Dossier & #1 Ticket Recommendation */}
-            <div className="flex flex-col justify-between rounded-3xl bg-[#212047] p-5 text-white sm:p-6 lg:col-span-4">
+            <div className="flex flex-col justify-between rounded-3xl bg-[#212047] p-4 text-white sm:p-6 lg:col-span-4 lg:p-7">
               <div>
-                <div className="flex items-center justify-between gap-2">
-                  <span className="rounded-full bg-[#5BAE84] px-3 py-0.5 font-mono-num text-[10px] font-extrabold tracking-wider text-white uppercase whitespace-nowrap">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="rounded-full bg-[#5BAE84] px-3 py-0.5 font-mono-num text-[10px] font-extrabold tracking-wider text-white uppercase lg:text-xs">
                     TARGET LOCK · 專屬選位攻略
                   </span>
-                  <span className="font-editorial text-3xl font-bold text-[#7ADAD0] italic">
+                  <span className="font-editorial text-3xl font-bold text-[#7ADAD0] italic lg:text-4xl">
                     #{activeGirl.number}
                   </span>
                 </div>
@@ -247,22 +247,22 @@ export const GirlSeatRecommendationSection: React.FC<
                     <MemberPortrait
                       member={activeGirl}
                       variant="avatar"
-                      className="h-20 w-20"
+                      className="h-20 w-20 lg:h-24 lg:w-24"
                     />
                   </button>
-                  <div>
-                    <h3 className="text-2xl font-black text-white sm:text-3xl">
+                  <div className="min-w-0">
+                    <h3 className="text-2xl font-black text-white sm:text-3xl lg:text-4xl">
                       {activeGirl.name}
                     </h3>
                     {activeGirl.realOrAltName && (
-                      <div className="text-xs text-white/65">
+                      <div className="text-xs text-white/65 lg:text-sm">
                         {activeGirl.realOrAltName} · MBTI {activeGirl.mbti}
                       </div>
                     )}
                     <button
                       type="button"
                       onClick={() => onOpenMemberDetail(activeGirl)}
-                      className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-[#7ADAD0] hover:underline"
+                      className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-[#7ADAD0] hover:underline lg:text-sm"
                     >
                       <span>開啟完整個人檔案</span>
                       <span>↗</span>
@@ -273,41 +273,41 @@ export const GirlSeatRecommendationSection: React.FC<
                 {/* #1 Best Seat Interval Box */}
                 {primaryRec && (
                   <div className="mt-5 rounded-2xl border border-[#5ECBC0]/35 bg-white/10 p-4 sm:mt-6 sm:p-5">
-                    <div className="font-mono-num text-[10px] font-extrabold tracking-wider text-[#7ADAD0] uppercase">
+                    <div className="font-mono-num text-[10px] font-extrabold tracking-wider text-[#7ADAD0] uppercase lg:text-xs">
                       #1 BEST TICKET ZONE · 本場頭號推薦座位區間
                     </div>
-                    <div className="mt-2 text-2xl font-black text-white">
+                    <div className="mt-2 text-2xl font-black text-white lg:text-3xl">
                       2F ACE 集氣 {primaryRec.zone} 區
                     </div>
-                    <div className="mt-1 font-mono-num text-sm font-extrabold text-[#5ECBC0] sm:text-base">
+                    <div className="mt-1 font-mono-num text-sm font-extrabold text-[#5ECBC0] sm:text-base lg:text-lg">
                       推薦席次：{primaryRec.sweetSpotLabel}
                     </div>
-                    <p className="mt-2 text-xs leading-relaxed text-white/80">
+                    <p className="mt-2 text-xs leading-relaxed text-white/80 lg:text-sm">
                       {primaryRec.priorityReason} {primaryRec.sweetSpotReason}
                     </p>
 
-                    <div className="mt-4 grid grid-cols-2 gap-2 border-t border-white/15 pt-3.5 text-xs">
-                      <div className="rounded-xl bg-white/10 p-2.5">
-                        <div className="font-mono-num text-[10px] text-[#7ADAD0]">
+                    <div className="mt-4 grid grid-cols-2 gap-2 border-t border-white/15 pt-3.5 text-xs lg:text-sm">
+                      <div className="rounded-xl bg-white/10 p-2.5 lg:p-3">
+                        <div className="font-mono-num text-[10px] text-[#7ADAD0] lg:text-xs">
                           開局（0–10 分）正對
                         </div>
                         <div className="mt-0.5 font-extrabold text-white">
                           {primaryRec.zone} 區 {primaryRec.initialSeatRange[0]}–
                           {primaryRec.initialSeatRange[1]} 號
                         </div>
-                        <div className="text-[10px] text-white/65">
+                        <div className="text-[10px] text-white/65 lg:text-xs">
                           C 位核心：{primaryRec.initialCoreSeats}
                         </div>
                       </div>
-                      <div className="rounded-xl bg-[#5BAE84]/30 p-2.5 ring-1 ring-[#5ECBC0]/40">
-                        <div className="font-mono-num text-[10px] text-[#7ADAD0]">
+                      <div className="rounded-xl bg-[#5BAE84]/30 p-2.5 ring-1 ring-[#5ECBC0]/40 lg:p-3">
+                        <div className="font-mono-num text-[10px] text-[#7ADAD0] lg:text-xs">
                           破 10 分後（主力段）
                         </div>
                         <div className="mt-0.5 font-extrabold text-white">
                           {primaryRec.zone} 區 {primaryRec.after10SeatRange[0]}–
                           {primaryRec.after10SeatRange[1]} 號
                         </div>
-                        <div className="text-[10px] text-white/80">
+                        <div className="text-[10px] text-white/80 lg:text-xs">
                           C 位核心：{primaryRec.after10CoreSeats}
                         </div>
                       </div>
@@ -317,7 +317,7 @@ export const GirlSeatRecommendationSection: React.FC<
               </div>
 
               {/* Rotation Logic Tip */}
-              <div className="mt-5 rounded-2xl bg-white/[0.06] p-3.5 text-xs leading-relaxed text-white/75 sm:mt-6 sm:p-4">
+              <div className="mt-5 rounded-2xl bg-white/[0.06] p-3.5 text-xs leading-relaxed text-white/75 sm:mt-6 sm:p-4 lg:text-sm">
                 <strong className="font-bold text-[#7ADAD0]">
                   選位策略解析：
                 </strong>
@@ -331,7 +331,7 @@ export const GirlSeatRecommendationSection: React.FC<
               {activeGirlRecommendations.map((rec) => (
                 <div
                   key={rec.setKey}
-                  className={`rounded-3xl p-4 transition-all sm:p-6 ${
+                  className={`rounded-3xl p-3.5 transition-all sm:p-6 ${
                     rec.setKey === 'set1_4'
                       ? 'bg-[#F4FAF8] ring-2 ring-[#5BAE84]'
                       : 'bg-[#F4FAF8]/70 ring-1 ring-[#212047]/10'
@@ -341,7 +341,7 @@ export const GirlSeatRecommendationSection: React.FC<
                   <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#212047]/10 pb-3">
                     <div className="flex flex-wrap items-center gap-2">
                       <span
-                        className={`rounded-full px-3 py-1 font-mono-num text-xs font-extrabold whitespace-nowrap ${
+                        className={`rounded-full px-3 py-1 font-mono-num text-xs font-extrabold whitespace-nowrap lg:px-3.5 lg:text-sm ${
                           rec.setKey === 'set1_4'
                             ? 'bg-[#212047] text-[#7ADAD0]'
                             : 'bg-[#212047]/10 text-[#212047]'
@@ -349,52 +349,52 @@ export const GirlSeatRecommendationSection: React.FC<
                       >
                         {rec.setLabel}
                       </span>
-                      <span className="text-xs font-bold text-[#3F8E67]">
+                      <span className="text-xs font-bold text-[#3F8E67] lg:text-sm">
                         {rec.priorityBadge}
                       </span>
                     </div>
 
-                    <span className="rounded-full bg-[#5BAE84] px-3 py-1 font-mono-num text-xs font-extrabold text-white whitespace-nowrap">
+                    <span className="rounded-full bg-[#5BAE84] px-3 py-1 font-mono-num text-xs font-extrabold text-white whitespace-nowrap lg:px-4 lg:text-sm">
                       2F ACE 集氣 {rec.zone} 區
                     </span>
                   </div>
 
                   {/* Middle Row: 3 Interval Breakdown Cards */}
                   <div className="mt-3.5 grid grid-cols-2 gap-2.5 sm:mt-4 sm:grid-cols-3 sm:gap-3">
-                    <div className="rounded-2xl bg-white p-3 ring-1 ring-[#212047]/10">
-                      <div className="font-mono-num text-[10px] font-bold text-[#212047]/55 uppercase">
+                    <div className="rounded-2xl bg-white p-3 ring-1 ring-[#212047]/10 lg:p-4">
+                      <div className="font-mono-num text-[10px] font-bold text-[#212047]/55 uppercase lg:text-xs">
                         開局（0–10 分）
                       </div>
-                      <div className="mt-1 text-sm font-black text-[#212047] sm:text-base">
+                      <div className="mt-1 text-sm font-black text-[#212047] sm:text-base lg:text-lg">
                         {rec.zone} 區 {rec.initialSeatRange[0]}–
                         {rec.initialSeatRange[1]} 號
                       </div>
-                      <div className="mt-0.5 text-[11px] font-semibold text-[#4FA87D]">
+                      <div className="mt-0.5 text-[11px] font-semibold text-[#4FA87D] lg:text-xs">
                         核心 {rec.initialCoreSeats}
                       </div>
                     </div>
 
-                    <div className="rounded-2xl bg-[#212047] p-3 text-white">
-                      <div className="font-mono-num text-[10px] font-bold text-[#7ADAD0] uppercase">
+                    <div className="rounded-2xl bg-[#212047] p-3 text-white lg:p-4">
+                      <div className="font-mono-num text-[10px] font-bold text-[#7ADAD0] uppercase lg:text-xs">
                         破 10 分後（主力段）
                       </div>
-                      <div className="mt-1 text-sm font-black text-white sm:text-base">
+                      <div className="mt-1 text-sm font-black text-white sm:text-base lg:text-lg">
                         {rec.zone} 區 {rec.after10SeatRange[0]}–
                         {rec.after10SeatRange[1]} 號
                       </div>
-                      <div className="mt-0.5 text-[11px] font-semibold text-[#7ADAD0]">
+                      <div className="mt-0.5 text-[11px] font-semibold text-[#7ADAD0] lg:text-xs">
                         核心 {rec.after10CoreSeats}
                       </div>
                     </div>
 
-                    <div className="col-span-2 rounded-2xl bg-[#E6F5F1] p-3 ring-1 ring-[#5BAE84]/40 sm:col-span-1">
-                      <div className="font-mono-num text-[10px] font-extrabold text-[#3F8E67] uppercase">
+                    <div className="col-span-2 rounded-2xl bg-[#E6F5F1] p-3 ring-1 ring-[#5BAE84]/40 sm:col-span-1 lg:p-4">
+                      <div className="font-mono-num text-[10px] font-extrabold text-[#3F8E67] uppercase lg:text-xs">
                         SWEET SPOT · 整局推薦區間
                       </div>
-                      <div className="mt-1 text-sm font-black text-[#212047]">
+                      <div className="mt-1 text-sm font-black text-[#212047] lg:text-lg">
                         {rec.sweetSpotLabel}
                       </div>
-                      <div className="mt-0.5 text-[11px] text-[#212047]/70">
+                      <div className="mt-0.5 text-[11px] text-[#212047]/70 lg:text-xs">
                         兼顧開局與破 10 分換位視角
                       </div>
                     </div>
@@ -402,11 +402,11 @@ export const GirlSeatRecommendationSection: React.FC<
 
                   {/* Bottom Row: 1-23 Seat Heatmap Bar (Mobile 3-Station Stacked / Desktop 23-Col Linear) */}
                   <div className="mt-4">
-                    <div className="mb-2 flex flex-wrap items-center justify-between gap-1.5 text-[11px]">
+                    <div className="mb-2 flex flex-wrap items-center justify-between gap-1.5 text-[11px] lg:text-xs">
                       <span className="font-mono-num font-bold text-[#212047]/75">
                         {rec.zone} 區 1–23 號推薦標示（點擊號碼可模擬該座位視角）：
                       </span>
-                      <div className="flex flex-wrap items-center gap-2.5 text-[10px] font-bold">
+                      <div className="flex flex-wrap items-center gap-2.5 text-[10px] font-bold lg:text-xs">
                         <span className="inline-flex items-center gap-1 text-[#212047]">
                           <span className="h-2.5 w-2.5 rounded-xs bg-[#212047]" />
                           破 10 分主力正對席
@@ -423,12 +423,12 @@ export const GirlSeatRecommendationSection: React.FC<
                       {MOBILE_SEAT_GROUPS.map((grp) => (
                         <div
                           key={grp.label}
-                          className="flex items-center gap-2 rounded-xl bg-white/75 p-1.5 ring-1 ring-[#212047]/[0.06]"
+                          className="flex items-center gap-1.5 rounded-xl bg-white/75 p-1.5 ring-1 ring-[#212047]/[0.06]"
                         >
-                          <span className="w-16 shrink-0 font-mono-num text-[10px] font-bold text-[#212047]/70">
+                          <span className="w-15 shrink-0 font-mono-num text-[10px] font-bold text-[#212047]/70">
                             {grp.label}
                           </span>
-                          <div className={`grid flex-1 ${grp.cols} gap-1`}>
+                          <div className={`grid min-w-0 flex-1 ${grp.cols} gap-1`}>
                             {grp.seats.map((seatNum) => {
                               const inInit = isSeatInRange(
                                 seatNum,
@@ -507,7 +507,7 @@ export const GirlSeatRecommendationSection: React.FC<
                               }
                             }}
                             title={`${rec.zone} 區 ${seatNum} 號席`}
-                            className={`flex flex-col items-center justify-center rounded-lg py-1.5 font-mono-num text-[11px] font-extrabold transition-transform hover:scale-105 ${
+                            className={`flex flex-col items-center justify-center rounded-lg py-2 font-mono-num text-xs font-extrabold transition-transform hover:scale-105 ${
                               inAfter10
                                 ? 'bg-[#212047] text-[#7ADAD0] ring-1 ring-[#5BAE84]'
                                 : inInit
@@ -532,13 +532,13 @@ export const GirlSeatRecommendationSection: React.FC<
 
       {/* Complete Matrix: Mobile Card Stack + Desktop Table */}
       <div className="mt-8 rounded-[1.75rem] bg-[#D5EFE9] p-1.5 ring-1 ring-[#5BAE84]/35 sm:mt-10 sm:rounded-[2rem] sm:p-2">
-        <div className="rounded-[calc(1.75rem-0.375rem)] bg-white p-4 shadow-[inset_0_1px_1px_rgba(255,255,255,0.95)] sm:rounded-[calc(2rem-0.375rem)] sm:p-8">
+        <div className="rounded-[calc(1.75rem-0.375rem)] bg-white p-3.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.95)] sm:rounded-[calc(2rem-0.375rem)] sm:p-8">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#212047]/10 pb-4 sm:pb-5">
             <div>
-              <span className="font-mono-num text-[10px] font-bold tracking-[0.16em] text-[#4FA87D] uppercase sm:text-[11px]">
+              <span className="font-mono-num text-[10px] font-bold tracking-[0.16em] text-[#4FA87D] uppercase sm:text-[11px] lg:text-xs">
                 ALL GIRLS SEAT MATRIX · 當日全體女孩推薦座位區間總覽
               </span>
-              <h3 className="mt-1 text-lg font-black text-[#212047] sm:text-2xl">
+              <h3 className="mt-1 text-lg font-black text-[#212047] sm:text-2xl lg:text-3xl">
                 {currentMatchSchedule.dateLabel.split(' ')[0]}（vs{' '}
                 {currentMatchSchedule.opponent}）全體女孩選位速查表
               </h3>
@@ -547,14 +547,14 @@ export const GirlSeatRecommendationSection: React.FC<
             <button
               type="button"
               onClick={() => setOnlyFavoritesInMatrix((prev) => !prev)}
-              className={`flex items-center gap-2 rounded-full px-3.5 py-2 text-xs font-bold transition-all ${
+              className={`flex items-center gap-2 rounded-full px-3.5 py-2 text-xs font-bold transition-all lg:px-4 lg:py-2.5 lg:text-sm ${
                 onlyFavoritesInMatrix
                   ? 'bg-[#5BAE84] text-white shadow-xs'
                   : 'bg-[#F4FAF8] text-[#212047] ring-1 ring-[#5BAE84]/35 hover:bg-[#E6F5F1]'
               }`}
             >
               <span>只看「我的主推」</span>
-              <span className="rounded-full bg-[#212047]/15 px-1.5 py-0.2 font-mono-num text-[10px]">
+              <span className="rounded-full bg-[#212047]/15 px-1.5 py-0.2 font-mono-num text-[10px] lg:text-xs">
                 {favoriteIds.length}
               </span>
             </button>
@@ -562,13 +562,13 @@ export const GirlSeatRecommendationSection: React.FC<
 
           {onlyFavoritesInMatrix && matrixMembers.length === 0 ? (
             <div className="py-10 text-center">
-              <p className="text-sm font-bold text-[#212047]">
+              <p className="text-sm font-bold text-[#212047] lg:text-base">
                 你收藏的「我的主推」成員未在此場次的 2F ACE 集氣區輪換名單中，或尚未加入主推成員。
               </p>
               <button
                 type="button"
                 onClick={() => setOnlyFavoritesInMatrix(false)}
-                className="mt-3 rounded-full bg-[#212047] px-4 py-2 text-xs font-bold text-white"
+                className="mt-3 rounded-full bg-[#212047] px-4 py-2 text-xs font-bold text-white lg:text-sm"
               >
                 顯示當日全部 {rotatingMembers.length} 位輪換女孩
               </button>
@@ -588,29 +588,29 @@ export const GirlSeatRecommendationSection: React.FC<
                     <div
                       key={m.id}
                       onClick={() => setSelectedGirlId(m.id)}
-                      className={`rounded-2xl p-3.5 transition-all ${
+                      className={`rounded-2xl p-3 transition-all ${
                         isSelected
                           ? 'bg-[#E6F5F1] ring-2 ring-[#5BAE84]'
                           : 'bg-[#F4FAF8] ring-1 ring-[#212047]/10'
                       }`}
                     >
-                      <div className="flex items-center justify-between border-b border-[#212047]/10 pb-3">
-                        <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-between gap-2 border-b border-[#212047]/10 pb-3">
+                        <div className="flex min-w-0 items-center gap-2.5">
                           <MemberPortrait
                             member={m}
                             variant="avatar"
                             className="h-12 w-12 shrink-0 rounded-full ring-2 ring-[#5BAE84]/50"
                           />
-                          <div>
+                          <div className="min-w-0">
                             <div className="flex items-center gap-1.5">
                               <span className="font-mono-num text-xs font-extrabold text-[#4FA87D]">
                                 #{m.number}
                               </span>
-                              <span className="text-base font-black text-[#212047]">
+                              <span className="truncate text-base font-black text-[#212047]">
                                 {m.name}
                               </span>
                             </div>
-                            <div className="font-mono-num text-[11px] text-[#212047]/55">
+                            <div className="truncate font-mono-num text-[11px] text-[#212047]/55">
                               @{m.instagramHandle}
                             </div>
                           </div>
@@ -625,7 +625,7 @@ export const GirlSeatRecommendationSection: React.FC<
                               .getElementById('girl-seat-guide-section')
                               ?.scrollIntoView({ behavior: 'smooth' });
                           }}
-                          className={`rounded-full px-3 py-1.5 text-xs font-bold whitespace-nowrap ${
+                          className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold whitespace-nowrap ${
                             isSelected
                               ? 'bg-[#5BAE84] text-white'
                               : 'bg-[#212047] text-white'
@@ -639,28 +639,26 @@ export const GirlSeatRecommendationSection: React.FC<
                         {recs.map((r, idx) => (
                           <div
                             key={r.setKey}
-                            className="flex items-center justify-between gap-2 rounded-xl bg-white px-3 py-2 text-xs ring-1 ring-[#212047]/[0.06]"
+                            className="flex flex-wrap items-center justify-between gap-1.5 rounded-xl bg-white px-2.5 py-2 text-xs ring-1 ring-[#212047]/[0.06]"
                           >
-                            <div className="flex items-center gap-1.5">
-                              <span
-                                className={`rounded-md px-2 py-0.5 font-mono-num text-[10px] font-extrabold whitespace-nowrap ${
-                                  idx === 0
-                                    ? 'bg-[#212047] text-[#7ADAD0]'
-                                    : 'bg-[#D5EFE9] text-[#212047]'
-                                }`}
-                              >
-                                {r.setLabel} · {r.zone} 區
-                              </span>
-                            </div>
-                            <div className="text-right font-mono-num text-[11px]">
+                            <span
+                              className={`rounded-md px-2 py-0.5 font-mono-num text-[10px] font-extrabold whitespace-nowrap ${
+                                idx === 0
+                                  ? 'bg-[#212047] text-[#7ADAD0]'
+                                  : 'bg-[#D5EFE9] text-[#212047]'
+                              }`}
+                            >
+                              {r.setLabel} · {r.zone} 區
+                            </span>
+                            <div className="font-mono-num text-[11px]">
                               <span className="text-[#212047]/65">
-                                0–10分 {r.initialSeatRange[0]}–
-                                {r.initialSeatRange[1]}號
+                                0–10 分 {r.initialSeatRange[0]}–
+                                {r.initialSeatRange[1]} 號
                               </span>
                               <span className="mx-1 text-[#212047]/30">|</span>
                               <strong className="font-extrabold text-[#3F8E67]">
-                                破10分 {r.after10SeatRange[0]}–
-                                {r.after10SeatRange[1]}號
+                                破 10 分 {r.after10SeatRange[0]}–
+                                {r.after10SeatRange[1]} 號
                               </strong>
                             </div>
                           </div>
@@ -675,7 +673,7 @@ export const GirlSeatRecommendationSection: React.FC<
               <div className="mt-6 hidden overflow-x-auto md:block">
                 <table className="w-full min-w-[780px] border-collapse text-left">
                   <thead>
-                    <tr className="border-b border-[#212047]/10 font-mono-num text-[11px] font-extrabold tracking-[0.14em] text-[#212047]/60 uppercase">
+                    <tr className="border-b border-[#212047]/10 font-mono-num text-xs font-extrabold tracking-[0.14em] text-[#212047]/60 uppercase lg:text-sm">
                       <th className="py-3 pr-4">女孩成員</th>
                       <th className="px-4 py-3">
                         ★ 首選主戰區（第 1 &amp; 4 局）
@@ -687,7 +685,7 @@ export const GirlSeatRecommendationSection: React.FC<
                       <th className="py-3 pl-4 text-right">攻略詳情</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-[#212047]/[0.08] text-xs">
+                  <tbody className="divide-y divide-[#212047]/[0.08] text-xs lg:text-sm">
                     {matrixMembers.map((m) => {
                       const recs = getGirlSeatRecommendations(
                         currentMatchSchedule,
@@ -708,23 +706,23 @@ export const GirlSeatRecommendationSection: React.FC<
                               : 'hover:bg-[#F4FAF8]'
                           }`}
                         >
-                          <td className="py-3.5 pr-4">
+                          <td className="py-4 pr-4">
                             <div className="flex items-center gap-3">
                               <MemberPortrait
                                 member={m}
                                 variant="avatar"
-                                className="h-11 w-11 shrink-0 rounded-full ring-1 ring-[#5BAE84]/40"
+                                className="h-12 w-12 shrink-0 rounded-full ring-1 ring-[#5BAE84]/40 lg:h-14 lg:w-14"
                               />
                               <div>
                                 <div className="flex items-center gap-1.5">
-                                  <span className="font-mono-num text-xs font-extrabold text-[#4FA87D]">
+                                  <span className="font-mono-num text-xs font-extrabold text-[#4FA87D] lg:text-sm">
                                     #{m.number}
                                   </span>
-                                  <span className="text-sm font-black text-[#212047]">
+                                  <span className="text-sm font-black text-[#212047] lg:text-base">
                                     {m.name}
                                   </span>
                                 </div>
-                                <div className="text-[11px] text-[#212047]/55">
+                                <div className="text-[11px] text-[#212047]/55 lg:text-xs">
                                   @{m.instagramHandle}
                                 </div>
                               </div>
@@ -732,12 +730,12 @@ export const GirlSeatRecommendationSection: React.FC<
                           </td>
 
                           {[r1, r2, r3].map((r, idx) => (
-                            <td key={idx} className="px-4 py-3.5">
+                            <td key={idx} className="px-4 py-4">
                               {r && (
                                 <div>
                                   <div className="flex items-center gap-1.5">
                                     <span
-                                      className={`rounded-md px-2 py-0.5 font-mono-num text-[11px] font-extrabold ${
+                                      className={`rounded-md px-2 py-0.5 font-mono-num text-[11px] font-extrabold lg:text-xs ${
                                         idx === 0
                                           ? 'bg-[#212047] text-[#7ADAD0]'
                                           : 'bg-[#D5EFE9] text-[#212047]'
@@ -745,17 +743,17 @@ export const GirlSeatRecommendationSection: React.FC<
                                     >
                                       {r.zone} 區
                                     </span>
-                                    <span className="font-bold text-[#212047]">
+                                    <span className="font-bold text-[#212047] lg:text-base">
                                       推薦 {r.sweetSpotRange[0]}–
                                       {r.sweetSpotRange[1]} 號
                                     </span>
                                   </div>
-                                  <div className="mt-1 font-mono-num text-[11px] text-[#212047]/65">
-                                    0–10分：{r.initialSeatRange[0]}–
-                                    {r.initialSeatRange[1]}號 ｜ 破10分：
+                                  <div className="mt-1 font-mono-num text-[11px] text-[#212047]/65 lg:text-xs">
+                                    0–10 分：{r.initialSeatRange[0]}–
+                                    {r.initialSeatRange[1]} 號 ｜ 破 10 分：
                                     <strong className="text-[#3F8E67]">
                                       {r.after10SeatRange[0]}–
-                                      {r.after10SeatRange[1]}號
+                                      {r.after10SeatRange[1]} 號
                                     </strong>
                                   </div>
                                 </div>
@@ -763,7 +761,7 @@ export const GirlSeatRecommendationSection: React.FC<
                             </td>
                           ))}
 
-                          <td className="py-3.5 pl-4 text-right">
+                          <td className="py-4 pl-4 text-right">
                             <button
                               type="button"
                               onClick={(e) => {
@@ -773,7 +771,7 @@ export const GirlSeatRecommendationSection: React.FC<
                                   .getElementById('girl-seat-guide-section')
                                   ?.scrollIntoView({ behavior: 'smooth' });
                               }}
-                              className={`rounded-full px-3.5 py-1.5 font-bold transition-colors ${
+                              className={`rounded-full px-3.5 py-1.5 font-bold transition-colors lg:px-4 lg:py-2 ${
                                 isSelected
                                   ? 'bg-[#5BAE84] text-white'
                                   : 'bg-[#212047]/[0.06] text-[#212047] hover:bg-[#212047] hover:text-white'
@@ -793,15 +791,15 @@ export const GirlSeatRecommendationSection: React.FC<
 
           {/* Special Note for MC (#25 心璇) & Cheer Leader (#41 馬妹) & Court Performances */}
           <div className="mt-6 grid grid-cols-1 gap-4 border-t border-[#212047]/10 pt-6 md:grid-cols-2">
-            <div className="flex flex-col justify-between gap-3 rounded-2xl bg-[#F4FAF8] p-4 ring-1 ring-[#5BAE84]/30 sm:flex-row sm:items-center">
+            <div className="flex flex-col justify-between gap-3 rounded-2xl bg-[#F4FAF8] p-4 ring-1 ring-[#5BAE84]/30 sm:flex-row sm:items-center lg:p-5">
               <div>
-                <div className="font-mono-num text-[10px] font-extrabold tracking-[0.16em] text-[#4FA87D] uppercase">
+                <div className="font-mono-num text-[10px] font-extrabold tracking-[0.16em] text-[#4FA87D] uppercase lg:text-xs">
                   MC &amp; CHEER LEADER · 團長與主持位置
                 </div>
-                <div className="mt-1 text-sm font-black text-[#212047]">
+                <div className="mt-1 text-sm font-black text-[#212047] lg:text-base">
                   應援團長馬妹（#41）&amp; 主場 MC 心璇（#25）
                 </div>
-                <p className="mt-1 text-xs leading-relaxed text-[#212047]/70">
+                <p className="mt-1 text-xs leading-relaxed text-[#212047]/70 lg:text-sm">
                   負責全場口號帶動、局間互動與賽事主持，活躍於 1F 場邊應援舞台與 2F ACE 集氣區中央（B 區）核心視野區。
                 </p>
               </div>
@@ -816,9 +814,9 @@ export const GirlSeatRecommendationSection: React.FC<
                     <MemberPortrait
                       member={m}
                       variant="avatar"
-                      className="h-10 w-10 rounded-full"
+                      className="h-10 w-10 rounded-full lg:h-12 lg:w-12"
                     />
-                    <span className="text-xs font-bold text-[#212047]">
+                    <span className="text-xs font-bold text-[#212047] lg:text-sm">
                       {m.name}
                     </span>
                   </button>
@@ -826,14 +824,14 @@ export const GirlSeatRecommendationSection: React.FC<
               </div>
             </div>
 
-            <div className="rounded-2xl bg-[#212047] p-4 text-white">
-              <div className="font-mono-num text-[10px] font-extrabold tracking-[0.16em] text-[#7ADAD0] uppercase">
+            <div className="rounded-2xl bg-[#212047] p-4 text-white lg:p-5">
+              <div className="font-mono-num text-[10px] font-extrabold tracking-[0.16em] text-[#7ADAD0] uppercase lg:text-xs">
                 OPENING &amp; HALFTIME SHOW · 開場舞與中場演出拍攝推薦區
               </div>
-              <div className="mt-1 text-sm font-black text-white">
+              <div className="mt-1 text-sm font-black text-white lg:text-base">
                 1F 猛虎精武區 / 1F 猛虎力行區 / 2F 拍攝限定區
               </div>
-              <p className="mt-1 text-xs leading-relaxed text-white/75">
+              <p className="mt-1 text-xs leading-relaxed text-white/75 lg:text-sm">
                 依據官方公告：開場舞於「1F 猛虎精武區（右側）」前側場地演出，中場演出於「1F 猛虎力行區（左側）」前側場地進行；演出期間亦限時開放南側「2F 拍攝限定區」供二樓季票球迷拍攝。
               </p>
             </div>

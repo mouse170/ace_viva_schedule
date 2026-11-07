@@ -7,11 +7,14 @@
     --font-mono: 'JetBrains Mono', monospace;
   }
 
+  html,
   body {
     font-family: var(--font-sans);
     background-color: #F4FAF8;
     color: #212047;
+    max-width: 100%;
     overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
   }
 
   .font-editorial {
@@ -64,4 +67,68 @@ dialog::backdrop {
     opacity: 1;
     transform: none;
   }
+}
+
+/* Custom Seat Linear Slider Bar (Touch & Desktop Friendly) */
+.seat-range-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 14px;
+  border-radius: 9999px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.seat-range-slider:focus {
+  outline: none;
+}
+
+.seat-range-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 9999px;
+  background: #212047;
+  border: 3px solid #5ECBC0;
+  box-shadow: 0 4px 14px rgba(33, 32, 71, 0.45);
+  cursor: grab;
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.seat-range-slider::-webkit-slider-thumb:hover,
+.seat-range-slider::-webkit-slider-thumb:active {
+  transform: scale(1.12);
+  background: #5BAE84;
+  border-color: #212047;
+  cursor: grabbing;
+}
+
+.seat-range-slider::-moz-range-thumb {
+  width: 30px;
+  height: 30px;
+  border-radius: 9999px;
+  background: #212047;
+  border: 3px solid #5ECBC0;
+  box-shadow: 0 4px 14px rgba(33, 32, 71, 0.45);
+  cursor: grab;
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.seat-range-slider::-moz-range-thumb:hover,
+.seat-range-slider::-moz-range-thumb:active {
+  transform: scale(1.12);
+  background: #5BAE84;
+  border-color: #212047;
+  cursor: grabbing;
+}
+
+/* Hide scrollbars on horizontal pill strips while keeping swipeability */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

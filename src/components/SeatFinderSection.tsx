@@ -30,55 +30,71 @@ const ZONES: {
 }[] = [
   {
     id: 'A',
-    shortTitle: 'A 區（左側）',
+    shortTitle: 'A 區（左）',
     title: '2F ACE 集氣 A 區',
-    subtitle: '面向球場左側看台 · 1–23 號席位',
+    subtitle: '左側看台 · 1–23 號（23 號接 B1）',
     badge: 'ZONE A',
   },
   {
     id: 'B',
-    shortTitle: 'B 區（中央）',
+    shortTitle: 'B 區（中）',
     title: '2F ACE 集氣 B 區',
-    subtitle: '面向球場正中央看台 · 1–23 號席位',
+    subtitle: '中央看台 · 1–23 號（B1 接 A23 · B23 接 C1）',
     badge: 'ZONE B',
   },
   {
     id: 'C',
-    shortTitle: 'C 區（右側）',
+    shortTitle: 'C 區（右）',
     title: '2F ACE 集氣 C 區',
-    subtitle: '面向球場右側看台 · 1–23 號席位',
+    subtitle: '右側看台 · 1–23 號（C1 接 B23）',
     badge: 'ZONE C',
   },
 ];
 
-const STATION_GROUPS: {
+const STATION_SEGMENTS: {
   slotIndex: 0 | 1 | 2;
+  shortTitle: string;
   title: string;
   rangeLabel: string;
-  seats: number[];
-  gridColsClass: string;
+  coreSeat: number;
+  widthPercent: string;
 }[] = [
   {
     slotIndex: 0,
-    title: '左位視角（站位 1）',
-    rangeLabel: '1–8 號席',
-    seats: [1, 2, 3, 4, 5, 6, 7, 8],
-    gridColsClass: 'grid-cols-8',
+    shortTitle: '左位 1–8號',
+    title: '左位視角（1–8 號）',
+    rangeLabel: '1–8 號',
+    coreSeat: 5,
+    widthPercent: '34.78%',
   },
   {
     slotIndex: 1,
-    title: '中位視角（站位 2）',
-    rangeLabel: '9–15 號席',
-    seats: [9, 10, 11, 12, 13, 14, 15],
-    gridColsClass: 'grid-cols-7',
+    shortTitle: '中位 9–15號',
+    title: '中位視角（9–15 號）',
+    rangeLabel: '9–15 號',
+    coreSeat: 12,
+    widthPercent: '30.44%',
   },
   {
     slotIndex: 2,
-    title: '右位視角（站位 3）',
-    rangeLabel: '16–23 號席',
-    seats: [16, 17, 18, 19, 20, 21, 22, 23],
-    gridColsClass: 'grid-cols-8',
+    shortTitle: '右位 16–23號',
+    title: '右位視角（16–23 號）',
+    rangeLabel: '16–23 號',
+    coreSeat: 19,
+    widthPercent: '34.78%',
   },
+];
+
+const QUICK_TICK_SEATS = [
+  { seat: 1, label: '1號', isCore: false },
+  { seat: 5, label: '5號(左C)', isCore: true },
+  { seat: 8, label: '8號', isCore: false },
+  { seat: 9, label: '9號', isCore: false },
+  { seat: 12, label: '12號(中C)', isCore: true },
+  { seat: 15, label: '15號', isCore: false },
+  { seat: 16, label: '16號', isCore: false },
+  { seat: 19, label: '19號(右C)', isCore: true },
+  { seat: 23, label: '23號', isCore: false },
 ];
 
 export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
@@ -204,69 +220,6 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
         : currentSetOshiDistance.initial
       : undefined;
 
-  // Monitored oshis (activeOshi + any favoriteIds on duty) that are within 12 seats of the selected seat
-  const monitoredOshiDistances = useMemo(() => {
-    const targetIds = Array.from(
-      new Set([
-        activeOshi.id,
-        ...favoriteIds.filter((id) => rotatingMemberIds.includes(id)),
-      ])
-    );
-    return targetIds
-      .map((id) => {
-        const member = memberMap.get(id);
-        if (!member) return null;
-        const summary = getFullMatchGirlDistanceSummary(
-          currentMatchSchedule,
-          selectedZone,
-          selectedSeat,
-          id
-        );
-        const setInfo =
-          summary.find((s) => s.setKey === activeSetKey) ?? summary[0];
-        const phaseInfo =
-          scorePhase === 'initial' ? setInfo.initial : setInfo.after10;
-        const otherPhaseInfo =
-          scorePhase === 'initial' ? setInfo.after10 : setInfo.initial;
-        return { member, phaseInfo, otherPhaseInfo };
-      })
-      .filter(
-        (
-          item
-        ): item is {
-          member: AceVivaMember;
-          phaseInfo: PhaseDistanceDetail;
-          otherPhaseInfo: PhaseDistanceDetail;
-        } => Boolean(item)
-      );
-  }, [
-    activeOshi.id,
-    favoriteIds,
-    rotatingMemberIds,
-    memberMap,
-    currentMatchSchedule,
-    selectedZone,
-    selectedSeat,
-    activeSetKey,
-    scorePhase,
-  ]);
-
-  // Only keep oshis that are within 12 seats in the current phase (or will enter 12 seats after 10 points in the same set)
-  const nearbyActiveOshis = useMemo(
-    () =>
-      monitoredOshiDistances.filter((item) => item.phaseInfo.isWithin12Seats),
-    [monitoredOshiDistances]
-  );
-
-  const nearbyOtherPhaseOshis = useMemo(
-    () =>
-      monitoredOshiDistances.filter(
-        (item) =>
-          !item.phaseInfo.isWithin12Seats && item.otherPhaseInfo.isWithin12Seats
-      ),
-    [monitoredOshiDistances]
-  );
-
   // Compute all unique girls that will visit this exact zone across the entire match (all 5 sets)
   const allMatchZoneVisitors = useMemo(() => {
     const visitedIds = new Set<string>();
@@ -291,22 +244,25 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
     };
   }, [currentMatchSchedule, selectedZone, seatMapping.slotIndex, memberMap]);
 
+  // Progress percentage for the 1..23 range slider background fill
+  const sliderFillPercent = ((selectedSeat - 1) / 22) * 100;
+
   return (
     <section
       id="seat-finder-section"
-      className="relative mx-auto max-w-7xl px-3.5 py-16 sm:px-6 sm:py-24 lg:px-8"
+      className="relative mx-auto max-w-[1440px] px-3 py-14 sm:px-6 sm:py-24 lg:px-10"
     >
       {/* Section Heading */}
-      <div className="flex flex-col justify-between gap-5 border-b border-[#212047]/10 pb-8 lg:flex-row lg:items-end">
-        <div>
-          <div className="inline-flex items-center gap-2 rounded-full bg-[#5BAE84]/15 px-3 py-1 font-mono-num text-[10px] font-bold tracking-[0.16em] text-[#212047] uppercase ring-1 ring-[#5BAE84]/35">
+      <div className="flex flex-col justify-between gap-5 border-b border-[#212047]/10 pb-7 lg:flex-row lg:items-end lg:pb-10">
+        <div className="min-w-0">
+          <div className="inline-flex flex-wrap items-center gap-2 rounded-full bg-[#5BAE84]/15 px-3 py-1 font-mono-num text-[10px] font-bold tracking-[0.14em] text-[#212047] uppercase ring-1 ring-[#5BAE84]/35 sm:text-xs lg:text-sm">
             <span className="h-2 w-2 shrink-0 rounded-full bg-[#5BAE84]" />
-            <span>2F ACE 集氣區 · 23 席視角與主推接近通知（12 席內）</span>
+            <span>2F ACE 集氣區 · 23 席直線拉桿與俯瞰座位雷達</span>
           </div>
-          <h2 className="mt-3 text-2xl font-black tracking-tight text-[#212047] sm:text-5xl">
-            選擇你的區域與 1–23 號座位，查看面前女孩
+          <h2 className="mt-3 text-2xl font-black tracking-tight text-[#212047] sm:text-4xl lg:text-5xl">
+            選擇區域與拉動座位編號，查看面前女孩與主推雷達
           </h2>
-          <p className="mt-2.5 max-w-3xl text-xs leading-relaxed text-[#212047]/75 sm:text-base">
+          <p className="mt-2.5 max-w-4xl text-xs leading-relaxed text-[#212047]/75 sm:text-base lg:text-lg">
             依據官方站位公告（
             <a
               href={currentMatchSchedule.postUrl}
@@ -316,18 +272,14 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
             >
               #OldMyCar 我的 90 年代站位表 ↗
             </a>
-            ），點選你的區域（A / B / C）與座位號碼（1–23 號）即可查看正前方女孩。看台座位為連續相接（
+            ），先點選區域（A / B / C），再拖曳直線拉桿選擇 1–23 號座位。雷達圖方向與官方 IG 座位圖完全一致（
             <strong className="font-bold text-[#212047]">
-              A 區大號接 B 區小號、B 區大號接 C 區小號
+              觀眾席在上方往下看球賽 ▼、啦啦隊站在前緣往上方向應援 ▲
             </strong>
-            ），當所選座位距離你的主推成員在{' '}
-            <strong className="font-bold text-[#3F8E67]">
-              12 個座位席次內
-            </strong>{' '}
-            時，系統才會顯示「主推接近通知」。
+            ），若主推距離超過 12 席亦會標出位置並提示拍攝難度。
           </p>
-          <p className="mt-2 max-w-3xl text-[11px] font-semibold text-[#3F8E67]">
-            ※ 粉絲自製免責說明：23 席視角對應與主推接近通知為粉絲依官方站位表推算之參考工具，現場實際站位、動線與名單異動請以官方實際公告為準。
+          <p className="mt-2 max-w-4xl text-[11px] font-semibold text-[#3F8E67] lg:text-sm">
+            ※ 粉絲自製免責說明：23 席視角對應與座位雷達為粉絲依官方站位表推算之參考工具，現場實際站位、動線與名單異動請以官方實際公告為準。
           </p>
         </div>
 
@@ -340,7 +292,7 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                 key={sched.matchId}
                 type="button"
                 onClick={() => setSelectedMatchId(sched.matchId)}
-                className={`rounded-xl px-3 py-2.5 text-center text-xs font-extrabold whitespace-nowrap transition-all duration-300 sm:rounded-full sm:px-5 ${
+                className={`rounded-xl px-2.5 py-2.5 text-center text-xs font-extrabold transition-all duration-300 sm:rounded-full sm:px-5 lg:px-6 lg:py-3 lg:text-base ${
                   isActive
                     ? 'bg-[#212047] text-white shadow-sm'
                     : 'text-[#212047]/75 hover:bg-white/60 hover:text-[#212047]'
@@ -354,25 +306,25 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
       </div>
 
       {/* Main Console Container */}
-      <div className="mt-6 rounded-[1.75rem] bg-[#D5EFE9] p-1.5 ring-1 ring-[#5BAE84]/35 sm:mt-10 sm:rounded-[2rem] sm:p-2">
-        <div className="rounded-[calc(1.75rem-0.375rem)] bg-white p-4 shadow-[inset_0_1px_1px_rgba(255,255,255,0.95)] sm:rounded-[calc(2rem-0.375rem)] sm:p-8">
-          {/* Compact Oshi Proximity Target Selector (Only notifies when within 12 seats) */}
-          <div className="mb-5 rounded-2xl bg-[#F4FAF8] p-3 ring-1 ring-[#5BAE84]/30 sm:mb-6 sm:p-3.5">
+      <div className="mt-6 rounded-[1.5rem] bg-[#D5EFE9] p-1.5 ring-1 ring-[#5BAE84]/35 sm:mt-10 sm:rounded-[2rem] sm:p-2">
+        <div className="rounded-[calc(1.5rem-0.375rem)] bg-white p-3.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.95)] sm:rounded-[calc(2rem-0.375rem)] sm:p-7 lg:p-10">
+          {/* Oshi Radar Target Selector */}
+          <div className="mb-5 rounded-2xl bg-[#F4FAF8] p-3 ring-1 ring-[#5BAE84]/30 sm:mb-7 sm:p-4">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <span className="rounded-full bg-[#212047] px-2.5 py-0.5 font-mono-num text-[10px] font-bold text-[#7ADAD0]">
-                  12 席內接近提醒
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="rounded-full bg-[#212047] px-2.5 py-0.5 font-mono-num text-[10px] font-bold text-[#7ADAD0] lg:px-3 lg:py-1 lg:text-xs">
+                  RADAR TARGET · 雷達追蹤主推
                 </span>
-                <span className="text-xs font-extrabold text-[#212047]">
-                  點選主推對象（僅在座位距離她 12 席內時顯示接近通知）：
+                <span className="text-xs font-extrabold text-[#212047] lg:text-base">
+                  點選要在座位雷達圖上定位的主推女孩：
                 </span>
               </div>
-              <span className="font-mono-num text-[10px] font-semibold text-[#3F8E67]">
-                看台相連：A23 接 B1 · B23 接 C1
+              <span className="font-mono-num text-[10px] font-semibold text-[#3F8E67] lg:text-sm">
+                看台連續相接：A23 接 B1 · B23 接 C1
               </span>
             </div>
 
-            <div className="-mx-1 mt-2.5 flex gap-1.5 overflow-x-auto px-1 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
+            <div className="no-scrollbar -mx-1 mt-2.5 flex gap-1.5 overflow-x-auto px-1 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0 lg:mt-3 lg:gap-2.5">
               {sortedRotatingMembers.map((m) => {
                 const isTarget = m.id === activeOshi.id;
                 const isFav = favoriteIds.includes(m.id);
@@ -381,7 +333,7 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                     key={m.id}
                     type="button"
                     onClick={() => setTargetOshiId(m.id)}
-                    className={`flex shrink-0 items-center gap-1.5 rounded-full py-1 pr-2.5 pl-1 text-xs font-bold whitespace-nowrap transition-all active:scale-95 ${
+                    className={`flex shrink-0 items-center gap-1.5 rounded-full py-1 pr-3 pl-1 text-xs font-bold transition-all active:scale-95 lg:py-1.5 lg:pr-4 lg:pl-1.5 lg:text-sm ${
                       isTarget
                         ? 'bg-[#212047] text-white shadow-xs ring-2 ring-[#5BAE84]'
                         : isFav
@@ -392,10 +344,12 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                     <MemberPortrait
                       member={m}
                       variant="avatar"
-                      className="h-6 w-6 shrink-0 rounded-full"
+                      className="h-6 w-6 shrink-0 rounded-full lg:h-8 lg:w-8"
                     />
                     {isFav && (
-                      <span className="text-[10px] text-[#4FA87D]">★</span>
+                      <span className="text-[10px] text-[#4FA87D] lg:text-xs">
+                        ★
+                      </span>
                     )}
                     <span>{m.name}</span>
                   </button>
@@ -404,18 +358,18 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
             </div>
           </div>
 
-          {/* Step 1: Select Zone (A / B / C) */}
+          {/* STEP 01: Select Zone (A / B / C) */}
           <div>
             <div className="flex flex-wrap items-center justify-between gap-1.5">
-              <span className="font-mono-num text-[11px] font-extrabold tracking-[0.14em] text-[#212047] uppercase sm:text-xs">
-                STEP 01 · 選擇「2F ACE 集氣區」區域（A / B / C 區）
+              <span className="font-mono-num text-[11px] font-extrabold tracking-[0.12em] text-[#212047] uppercase sm:text-xs lg:text-base">
+                STEP 01 · 先選擇「2F ACE 集氣區」區域（A / B / C 區）
               </span>
-              <span className="text-[11px] font-medium text-[#212047]/60">
-                A 區大號（23 號）接 B 區小號（1 號）· B 區大號（23 號）接 C 區小號（1 號）
+              <span className="text-[11px] font-medium text-[#212047]/65 lg:text-sm">
+                ★ 代表主推 {activeOshi.name} 本局所在區域
               </span>
             </div>
 
-            <div className="mt-3 grid grid-cols-3 gap-2 sm:gap-3.5">
+            <div className="mt-3 grid grid-cols-3 gap-2 sm:gap-3.5 lg:mt-4 lg:gap-5">
               {ZONES.map((z) => {
                 const isSelected = selectedZone === z.id;
                 const trioIds =
@@ -432,7 +386,7 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                     key={z.id}
                     type="button"
                     onClick={() => setSelectedZone(z.id)}
-                    className={`group relative flex flex-col justify-between rounded-2xl p-2.5 text-left transition-all duration-300 active:scale-[0.98] sm:p-4 ${
+                    className={`group relative flex min-w-0 flex-col justify-between rounded-2xl p-2.5 text-left transition-all duration-300 active:scale-[0.98] sm:p-4 lg:p-5 ${
                       isSelected
                         ? 'bg-[#212047] text-white shadow-[0_14px_30px_-10px_rgba(33,32,71,0.4)] ring-2 ring-[#5BAE84]'
                         : 'bg-[#F4FAF8] text-[#212047] ring-1 ring-[#212047]/10 hover:bg-[#E6F5F1]'
@@ -440,7 +394,7 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                   >
                     <div className="flex flex-wrap items-center justify-between gap-1">
                       <span
-                        className={`rounded-full px-2 py-0.5 font-mono-num text-[9px] font-bold tracking-wider whitespace-nowrap sm:text-[10px] ${
+                        className={`rounded-full px-2 py-0.5 font-mono-num text-[9px] font-bold tracking-wider sm:text-[10px] lg:px-2.5 lg:text-xs ${
                           isSelected
                             ? 'bg-[#5BAE84] text-white'
                             : 'bg-[#212047]/10 text-[#212047]/70'
@@ -448,31 +402,23 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                       >
                         {z.badge}
                       </span>
-                      {isOshiInThisZone ? (
-                        <span className="rounded-full bg-[#5BAE84] px-2 py-0.5 font-mono-num text-[9px] font-extrabold text-white whitespace-nowrap">
+                      {isOshiInThisZone && (
+                        <span className="truncate rounded-full bg-[#5BAE84] px-1.5 py-0.5 font-mono-num text-[9px] font-extrabold text-white sm:px-2 lg:text-xs">
                           ★ {activeOshi.name}
-                        </span>
-                      ) : (
-                        <span
-                          className={`hidden font-mono-num text-xs font-bold sm:inline ${
-                            isSelected ? 'text-[#7ADAD0]' : 'text-[#4FA87D]'
-                          }`}
-                        >
-                          23 席
                         </span>
                       )}
                     </div>
 
                     <div className="mt-2 sm:mt-3">
-                      <div className="text-sm font-black whitespace-nowrap sm:hidden">
+                      <div className="text-xs font-black sm:hidden">
                         {z.shortTitle}
                       </div>
-                      <div className="hidden text-lg font-black sm:block">
+                      <div className="hidden text-lg font-black sm:block lg:text-2xl">
                         {z.title}
                       </div>
                       <div
-                        className={`mt-0.5 hidden text-xs sm:block ${
-                          isSelected ? 'text-white/70' : 'text-[#212047]/60'
+                        className={`mt-0.5 hidden text-xs sm:block lg:text-sm ${
+                          isSelected ? 'text-white/75' : 'text-[#212047]/65'
                         }`}
                       >
                         {z.subtitle}
@@ -490,12 +436,12 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                             key={m.id}
                             member={m}
                             variant="avatar"
-                            className="h-6 w-6 rounded-full ring-1 ring-white sm:h-7 sm:w-7"
+                            className="h-5 w-5 rounded-full ring-1 ring-white sm:h-7 sm:w-7 lg:h-9 lg:w-9"
                           />
                         ))}
                       </div>
                       <div
-                        className={`truncate text-[10px] font-bold sm:text-xs ${
+                        className={`truncate text-[10px] font-bold sm:text-xs lg:text-sm ${
                           isSelected ? 'text-[#7ADAD0]' : 'text-[#3F8E67]'
                         }`}
                       >
@@ -508,185 +454,255 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
             </div>
           </div>
 
-          {/* Step 2: Select Seat Number (1 to 23) Grouped by Station */}
+          {/* STEP 02: Linear Slider Bar (一直線拉 Bar 快速選擇 1–23 號座位) */}
           <div className="mt-6 border-t border-[#212047]/10 pt-6 sm:mt-8 sm:pt-8">
             <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
-              <span className="font-mono-num text-[11px] font-extrabold tracking-[0.14em] text-[#212047] uppercase sm:text-xs">
-                STEP 02 · 點選「ACE 集氣 {selectedZone} 區」座位編號（1–23 號）
+              <span className="font-mono-num text-[11px] font-extrabold tracking-[0.12em] text-[#212047] uppercase sm:text-xs lg:text-base">
+                STEP 02 · 左右拖曳直線拉 Bar 快速選擇「{selectedZone} 區 1–23 號」座位
               </span>
-              <div className="flex flex-wrap items-center gap-2 text-[11px] font-semibold text-[#3F8E67]">
-                {selectedZone === 'A' && (
-                  <span>右端 A 區 23 號緊鄰 B 區 1 號 →</span>
-                )}
-                {selectedZone === 'B' && (
-                  <span>← 左端 B 區 1 號緊鄰 A 區 23 號 · 右端 B 區 23 號緊鄰 C 區 1 號 →</span>
-                )}
-                {selectedZone === 'C' && (
-                  <span>← 左端 C 區 1 號緊鄰 B 區 23 號</span>
-                )}
-              </div>
+              <span className="text-[11px] font-semibold text-[#3F8E67] lg:text-sm">
+                {selectedZone === 'A' && '右端 A23 緊鄰 B1 →'}
+                {selectedZone === 'B' && '← 左端 B1 緊鄰 A23 · 右端 B23 緊鄰 C1 →'}
+                {selectedZone === 'C' && '← 左端 C1 緊鄰 B23'}
+              </span>
             </div>
 
-            <div className="mt-3.5 grid grid-cols-1 gap-3 lg:grid-cols-3">
-              {STATION_GROUPS.map((group) => {
-                const isActiveStation = seatMapping.slotIndex === group.slotIndex;
-                const stationGirlId = currentZoneGirlIds[group.slotIndex];
-                const stationGirl = memberMap.get(stationGirlId);
-                const isOshiAtThisStation =
-                  stationGirl?.id === activeOshi.id;
+            {/* Linear Slider Box */}
+            <div className="mt-3.5 rounded-2xl bg-[#F4FAF8] p-3.5 ring-1 ring-[#5BAE84]/35 sm:p-5 lg:p-6">
+              {/* Top Row: -1 Button / Current Seat Big Pill / +1 Button */}
+              <div className="flex items-center justify-between gap-2 sm:gap-4">
+                <button
+                  type="button"
+                  onClick={() => setSelectedSeat((prev) => Math.max(1, prev - 1))}
+                  disabled={selectedSeat <= 1}
+                  aria-label="往左一號座位"
+                  className="flex shrink-0 items-center gap-1 rounded-xl bg-white px-3 py-2 font-mono-num text-xs font-extrabold text-[#212047] shadow-2xs ring-1 ring-[#212047]/15 transition-all hover:bg-[#E6F5F1] active:scale-95 disabled:opacity-40 sm:px-4 sm:py-2.5 lg:px-5 lg:py-3 lg:text-base"
+                >
+                  <span>←</span>
+                  <span>前一號</span>
+                </button>
 
-                return (
-                  <div
-                    key={group.slotIndex}
-                    className={`rounded-2xl p-3 transition-all ${
-                      isActiveStation
-                        ? 'bg-[#E6F5F1] ring-2 ring-[#5BAE84]'
-                        : isOshiAtThisStation
-                          ? 'bg-[#F4FAF8] ring-2 ring-[#212047]'
-                          : 'bg-[#F4FAF8] ring-1 ring-[#212047]/10'
-                    }`}
-                  >
-                    <div className="mb-2.5 flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-1.5">
-                        <span
-                          className={`rounded-lg px-2 py-0.5 font-mono-num text-[10px] font-extrabold whitespace-nowrap ${
-                            isActiveStation
-                              ? 'bg-[#212047] text-[#7ADAD0]'
-                              : 'bg-[#212047]/10 text-[#212047]'
-                          }`}
-                        >
-                          {group.rangeLabel}
-                        </span>
-                        <span className="text-xs font-extrabold text-[#212047] whitespace-nowrap">
-                          {group.title}
-                        </span>
-                      </div>
-
-                      {stationGirl && (
-                        <button
-                          type="button"
-                          onClick={() => onOpenMemberDetail(stationGirl)}
-                          className={`flex items-center gap-1.5 rounded-full py-0.5 pr-2.5 pl-1 text-[11px] font-extrabold shadow-2xs ${
-                            isOshiAtThisStation
-                              ? 'bg-[#5BAE84] text-white ring-1 ring-[#212047]'
-                              : 'bg-white text-[#212047] ring-1 ring-[#5BAE84]/35'
-                          }`}
-                        >
-                          <MemberPortrait
-                            member={stationGirl}
-                            variant="avatar"
-                            className="h-5 w-5 rounded-full"
-                          />
-                          <span className="whitespace-nowrap">
-                            {isOshiAtThisStation
-                              ? `★ ${stationGirl.name}`
-                              : stationGirl.name}
-                          </span>
-                        </button>
-                      )}
-                    </div>
-
-                    <div className={`grid ${group.gridColsClass} gap-1.5`}>
-                      {group.seats.map((num) => {
-                        const isSelected = selectedSeat === num;
-                        const isOshiCoreSeat =
-                          isOshiAtThisStation &&
-                          activePhaseOshiDistance?.girlCoreSeat === num;
-
-                        return (
-                          <button
-                            key={num}
-                            type="button"
-                            onClick={() => setSelectedSeat(num)}
-                            aria-label={`選擇 ${selectedZone} 區 ${num} 號座位`}
-                            className={`relative flex flex-col items-center justify-center rounded-xl py-2 font-mono-num transition-all duration-200 active:scale-95 ${
-                              isSelected
-                                ? '-translate-y-0.5 bg-[#212047] text-white shadow-md ring-2 ring-[#5BAE84]'
-                                : isOshiCoreSeat
-                                  ? 'bg-[#5BAE84] text-white ring-2 ring-[#212047]'
-                                  : isActiveStation
-                                    ? 'bg-white text-[#212047] ring-1 ring-[#5BAE84]/40 hover:bg-[#5BAE84]/20'
-                                    : 'bg-white/80 text-[#212047]/70 ring-1 ring-[#212047]/[0.08] hover:bg-white'
-                            }`}
-                          >
-                            <span className="text-[9px] leading-none opacity-60">
-                              {selectedZone}
-                            </span>
-                            <span className="mt-0.5 text-xs leading-none font-extrabold sm:text-sm">
-                              {num}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Live Stage & Front Girl Spotlight */}
-          <div className="mt-6 grid grid-cols-1 gap-5 border-t border-[#212047]/10 pt-6 lg:mt-8 lg:grid-cols-12 lg:gap-6 lg:pt-8">
-            {/* Left 5 cols: Your Exact Seat Summary & Direct Front Girl */}
-            <div className="flex flex-col justify-between rounded-3xl bg-[#212047] p-5 text-white sm:p-6 lg:col-span-5">
-              <div>
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="rounded-full bg-[#5BAE84] px-3 py-0.5 font-mono-num text-[10px] font-extrabold tracking-wider text-white uppercase whitespace-nowrap">
-                    YOUR SEAT VIEW · 專屬座位視角
-                  </span>
-                  <span className="font-mono-num text-xs font-bold text-[#7ADAD0] whitespace-nowrap">
-                    {currentMatchSchedule.dateLabel}
-                  </span>
-                </div>
-
-                <div className="mt-3.5 flex flex-wrap items-baseline justify-between gap-2">
-                  <div className="flex items-baseline gap-2.5">
-                    <span className="text-2xl font-black text-white whitespace-nowrap sm:text-3xl">
-                      ACE 集氣 {selectedZone} 區
+                <div className="flex min-w-0 flex-1 flex-col items-center justify-center rounded-2xl bg-[#212047] px-3 py-2 text-center text-white shadow-sm sm:flex-row sm:gap-3 sm:py-2.5 lg:py-3">
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="font-mono-num text-xs font-bold text-[#7ADAD0] sm:text-sm lg:text-base">
+                      {selectedZone} 區
                     </span>
-                    <span className="font-editorial text-3xl font-bold text-[#5ECBC0] italic whitespace-nowrap sm:text-4xl">
+                    <span className="font-editorial text-2xl font-bold text-[#5ECBC0] italic sm:text-3xl lg:text-4xl">
                       第 {selectedSeat} 號席
                     </span>
                   </div>
-                  <span className="rounded-md bg-white/10 px-2 py-0.5 font-mono-num text-[11px] font-bold text-[#7ADAD0]">
+                  <span className="mt-0.5 rounded-full bg-[#5BAE84] px-2.5 py-0.5 text-[10px] font-extrabold text-white sm:mt-0 sm:text-xs lg:px-3 lg:py-1 lg:text-sm">
                     正對：{seatMapping.slotName}
                   </span>
                 </div>
 
-                {/* Graphic Relative Position Map (Facing Stage · Only shown when Oshi is within ±12 seats) */}
-                {(nearbyActiveOshis.length > 0 ||
-                  nearbyOtherPhaseOshis.length > 0) && (() => {
+                <button
+                  type="button"
+                  onClick={() => setSelectedSeat((prev) => Math.min(23, prev + 1))}
+                  disabled={selectedSeat >= 23}
+                  aria-label="往右一號座位"
+                  className="flex shrink-0 items-center gap-1 rounded-xl bg-white px-3 py-2 font-mono-num text-xs font-extrabold text-[#212047] shadow-2xs ring-1 ring-[#212047]/15 transition-all hover:bg-[#E6F5F1] active:scale-95 disabled:opacity-40 sm:px-4 sm:py-2.5 lg:px-5 lg:py-3 lg:text-base"
+                >
+                  <span>後一號</span>
+                  <span>→</span>
+                </button>
+              </div>
+
+              {/* 3 Proportional Station Segments Above the Slider Bar */}
+              <div className="mt-4 flex w-full gap-1 sm:gap-1.5">
+                {STATION_SEGMENTS.map((seg) => {
+                  const isActiveSeg = seatMapping.slotIndex === seg.slotIndex;
+                  const segGirlId = currentZoneGirlIds[seg.slotIndex];
+                  const segGirl = memberMap.get(segGirlId);
+                  const isOshiHere = segGirl?.id === activeOshi.id;
+
+                  return (
+                    <button
+                      key={seg.slotIndex}
+                      type="button"
+                      onClick={() => setSelectedSeat(seg.coreSeat)}
+                      style={{ width: seg.widthPercent }}
+                      className={`flex min-w-0 flex-col items-center justify-between rounded-xl p-1.5 text-center transition-all sm:flex-row sm:px-3 sm:py-2 lg:px-4 lg:py-2.5 ${
+                        isActiveSeg
+                          ? 'bg-[#212047] text-white shadow-xs ring-2 ring-[#5BAE84]'
+                          : isOshiHere
+                            ? 'bg-[#E6F5F1] text-[#212047] ring-2 ring-[#212047]'
+                            : 'bg-white text-[#212047]/80 ring-1 ring-[#212047]/10 hover:bg-[#E6F5F1]'
+                      }`}
+                    >
+                      <div className="min-w-0 text-center sm:text-left">
+                        <div className="truncate font-mono-num text-[10px] font-extrabold sm:text-xs lg:text-sm">
+                          {seg.shortTitle}
+                        </div>
+                        <div
+                          className={`hidden text-[10px] sm:block lg:text-xs ${
+                            isActiveSeg ? 'text-[#7ADAD0]' : 'text-[#3F8E67]'
+                          }`}
+                        >
+                          點擊跳至 C 位 ({seg.coreSeat} 號)
+                        </div>
+                      </div>
+
+                      {segGirl && (
+                        <div className="mt-1 flex items-center gap-1 sm:mt-0">
+                          <MemberPortrait
+                            member={segGirl}
+                            variant="avatar"
+                            className="h-5 w-5 shrink-0 rounded-full ring-1 ring-white sm:h-6 sm:w-6 lg:h-7 lg:w-7"
+                          />
+                          <span className="truncate text-[11px] font-black lg:text-sm">
+                            {isOshiHere ? `★${segGirl.name}` : segGirl.name}
+                          </span>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Continuous Linear Range Slider Input (1..23) */}
+              <div className="relative mt-4 px-1">
+                <div
+                  className="pointer-events-none absolute top-1/2 right-1 left-1 h-3.5 -translate-y-1/2 rounded-full ring-1 ring-[#212047]/15"
+                  style={{
+                    background: `linear-gradient(to right, #5BAE84 0%, #5ECBC0 ${sliderFillPercent}%, #E2F2EE ${sliderFillPercent}%, #E2F2EE 100%)`,
+                  }}
+                />
+                {/* Vertical dividers at 8.5 (34.8%) and 15.5 (65.2%) */}
+                <div
+                  style={{ left: '34.78%' }}
+                  className="pointer-events-none absolute top-1/2 h-5 w-0.5 -translate-y-1/2 bg-[#212047]/35"
+                />
+                <div
+                  style={{ left: '65.22%' }}
+                  className="pointer-events-none absolute top-1/2 h-5 w-0.5 -translate-y-1/2 bg-[#212047]/35"
+                />
+
+                <input
+                  type="range"
+                  min={1}
+                  max={23}
+                  step={1}
+                  value={selectedSeat}
+                  onChange={(e) => setSelectedSeat(Number(e.target.value))}
+                  aria-label={`拉動選擇 ${selectedZone} 區 1 至 23 號座位`}
+                  className="seat-range-slider relative z-10"
+                />
+              </div>
+
+              {/* Quick Tick Marks Under the Slider Bar */}
+              <div className="mt-2.5 flex flex-wrap items-center justify-between gap-1">
+                {QUICK_TICK_SEATS.map((tick) => {
+                  const isCurrent = selectedSeat === tick.seat;
+                  return (
+                    <button
+                      key={tick.seat}
+                      type="button"
+                      onClick={() => setSelectedSeat(tick.seat)}
+                      className={`rounded-lg px-1.5 py-1 font-mono-num text-[10px] font-bold transition-all sm:px-2 lg:px-2.5 lg:py-1 lg:text-xs ${
+                        isCurrent
+                          ? 'bg-[#212047] font-extrabold text-[#5ECBC0] shadow-2xs ring-1 ring-[#5BAE84]'
+                          : tick.isCore
+                            ? 'bg-[#E6F5F1] text-[#3F8E67] ring-1 ring-[#5BAE84]/35 hover:bg-[#5BAE84] hover:text-white'
+                            : 'text-[#212047]/65 hover:bg-white hover:text-[#212047]'
+                      }`}
+                    >
+                      {tick.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Live Stage & Seat Radar Section */}
+          <div className="mt-6 grid grid-cols-1 gap-5 border-t border-[#212047]/10 pt-6 lg:mt-8 lg:grid-cols-12 lg:gap-7 lg:pt-8">
+            {/* Left 6 cols: Your Seat View + IG-Oriented Top-Down Seat Radar (Always Visible) */}
+            <div className="flex min-w-0 flex-col justify-between rounded-3xl bg-[#212047] p-4 text-white sm:p-6 lg:col-span-6 lg:p-7">
+              <div>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="rounded-full bg-[#5BAE84] px-3 py-0.5 font-mono-num text-[10px] font-extrabold tracking-wider text-white uppercase lg:text-xs">
+                    YOUR SEAT &amp; RADAR · 專屬座位視角與雷達
+                  </span>
+                  <span className="font-mono-num text-xs font-bold text-[#7ADAD0] lg:text-sm">
+                    {currentMatchSchedule.dateLabel}
+                  </span>
+                </div>
+
+                {/* Top-Down Seat Radar Aligned with Official IG Station Map */}
+                {activePhaseOshiDistance && otherPhaseOshiDistance && (() => {
+                  const isNear = activePhaseOshiDistance.isWithin12Seats;
+                  const offset = activePhaseOshiDistance.signedSeatOffset;
+                  const seatsDiff = activePhaseOshiDistance.seatsToCoreCenter;
+
+                  // Global seat coordinate (1..69 across A1..A23, B1..B23, C1..C23)
                   const userGlobal =
                     (selectedZone === 'A' ? 0 : selectedZone === 'B' ? 1 : 2) *
                       23 +
                     selectedSeat;
-                  const boundaryABOffset = 23.5 - userGlobal;
-                  const boundaryBCOffset = 46.5 - userGlobal;
-                  const toXPercent = (offset: number) =>
-                    Math.max(9, Math.min(91, 50 + (offset / 12) * 40));
+                  const oshiGlobal =
+                    (activePhaseOshiDistance.girlZone === 'A'
+                      ? 0
+                      : activePhaseOshiDistance.girlZone === 'B'
+                        ? 1
+                        : 2) *
+                      23 +
+                    activePhaseOshiDistance.girlCoreSeat;
+
+                  // Map global seat 1..69 -> 8%..92% across the A | B | C map
+                  const toGlobalX = (gSeat: number) =>
+                    Math.max(8, Math.min(92, 6 + ((gSeat - 1) / 68) * 88));
+
+                  const userX = toGlobalX(userGlobal);
+                  const oshiX = toGlobalX(oshiGlobal);
+                  const fovLeftX = toGlobalX(Math.max(1, userGlobal - 12));
+                  const fovRightX = toGlobalX(Math.min(69, userGlobal + 12));
+
+                  const dirDescription =
+                    offset === 0
+                      ? '正下方直視'
+                      : offset < 0
+                        ? `左下方約 ${Math.abs(offset)} 席`
+                        : `右下方約 ${offset} 席`;
 
                   return (
-                    <div className="mt-4 rounded-2xl border border-[#5ECBC0]/45 bg-[#181736] p-3 shadow-inner">
-                      {/* Diagram Header */}
-                      <div className="flex items-center justify-between text-[10px] font-bold text-[#7ADAD0]">
-                        <span>▲ 面對應援舞台視角（±12 席接近雷達圖）</span>
-                        <span className="font-mono-num text-white/60">
-                          {scorePhase === 'initial' ? '0–10 分' : '破 10 分後'}
+                    <div className="mt-4 rounded-2xl border border-[#5ECBC0]/40 bg-[#181736] p-3 shadow-inner sm:p-4">
+                      {/* Radar Header */}
+                      <div className="flex flex-wrap items-center justify-between gap-1.5 text-[11px] font-bold text-[#7ADAD0] lg:text-sm">
+                        <span>
+                          ▼ 座位雷達圖（同 IG 官方圖：觀眾在上往下看 · 啦啦隊在下往上應援 ▲）
+                        </span>
+                        <span
+                          className={`rounded-full px-2 py-0.5 font-mono-num text-[10px] font-extrabold lg:text-xs ${
+                            isNear
+                              ? 'bg-[#5BAE84] text-white'
+                              : 'bg-amber-500/25 text-amber-300 ring-1 ring-amber-400/50'
+                          }`}
+                        >
+                          {isNear
+                            ? `★ 12 席內最佳範圍（差 ${seatsDiff} 席）`
+                            : `距離較遠（差 ${seatsDiff} 席 · 超過 12 席）`}
                         </span>
                       </div>
 
-                      {/* Scale Bar: Left (-12) — Center (0) — Right (+12) */}
-                      <div className="mt-2 flex items-center justify-between rounded-lg bg-white/[0.06] px-2.5 py-1 font-mono-num text-[10px] text-white/70">
-                        <span>← 左方 -12 席</span>
-                        <span className="font-extrabold text-[#5ECBC0]">
-                          ▲ 正前方 (0 席)
-                        </span>
-                        <span>右方 +12 席 →</span>
+                      {/* Zone Bar Header (A 區 | B 區 | C 區) */}
+                      <div className="mt-2.5 grid grid-cols-3 gap-1 text-center font-mono-num text-[10px] font-bold lg:text-xs">
+                        {(['A', 'B', 'C'] as AceZoneId[]).map((zId) => (
+                          <div
+                            key={zId}
+                            className={`rounded-md py-1 ${
+                              selectedZone === zId
+                                ? 'bg-[#5BAE84]/30 text-[#7ADAD0] ring-1 ring-[#5ECBC0]/50'
+                                : 'bg-white/[0.05] text-white/60'
+                            }`}
+                          >
+                            2F 集氣 {zId} 區 (1–23)
+                          </div>
+                        ))}
                       </div>
 
-                      {/* Visual Radar Canvas */}
-                      <div className="relative mt-2 h-36 w-full overflow-hidden rounded-xl bg-[#212047]/90 ring-1 ring-white/10">
-                        {/* SVG Field-of-View Cone & Sightline Vectors */}
+                      {/* Top-Down Radar Canvas (Audience at Top looking DOWN ▼ -> Cheerleaders at Bottom facing UP ▲) */}
+                      <div className="relative mt-1.5 h-44 w-full overflow-hidden rounded-xl bg-[#212047]/95 ring-1 ring-white/15 sm:h-48">
                         <svg
                           viewBox="0 0 100 100"
                           preserveAspectRatio="none"
@@ -694,239 +710,227 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                         >
                           <defs>
                             <linearGradient
-                              id="fovGrad"
+                              id="topDownFov"
                               x1="0"
-                              y1="1"
+                              y1="0"
                               x2="0"
-                              y2="0"
+                              y2="1"
                             >
                               <stop
                                 offset="0%"
                                 stopColor="#5ECBC0"
-                                stopOpacity="0.22"
+                                stopOpacity="0.28"
                               />
                               <stop
                                 offset="100%"
                                 stopColor="#5ECBC0"
-                                stopOpacity="0.03"
+                                stopOpacity="0.05"
                               />
                             </linearGradient>
                           </defs>
 
-                          {/* Stage Top Bar Line */}
+                          {/* Zone Dividers: A|B at 33.3%, B|C at 66.7% */}
                           <line
-                            x1="6"
-                            y1="22"
-                            x2="94"
-                            y2="22"
-                            stroke="rgba(255,255,255,0.18)"
-                            strokeWidth="1"
+                            x1="33.33"
+                            y1="0"
+                            x2="33.33"
+                            y2="78"
+                            stroke="rgba(255,255,255,0.14)"
+                            strokeWidth="0.6"
+                            strokeDasharray="2 2"
                           />
-
-                          {/* FOV Cone from User (50, 86) to Stage (10..90, 22) */}
-                          <polygon
-                            points="50,86 10,22 90,22"
-                            fill="url(#fovGrad)"
-                          />
-
-                          {/* Straight-Ahead Center Axis */}
                           <line
-                            x1="50"
-                            y1="86"
-                            x2="50"
-                            y2="22"
-                            stroke="rgba(255,255,255,0.2)"
+                            x1="66.67"
+                            y1="0"
+                            x2="66.67"
+                            y2="78"
+                            stroke="rgba(255,255,255,0.14)"
                             strokeWidth="0.6"
                             strokeDasharray="2 2"
                           />
 
-                          {/* Connected Zone Boundary Lines (A23|B1 or B23|C1) if within ±12 seats */}
-                          {Math.abs(boundaryABOffset) <= 12 && (
-                            <line
-                              x1={toXPercent(boundaryABOffset)}
-                              y1="14"
-                              x2={toXPercent(boundaryABOffset)}
-                              y2="88"
-                              stroke="rgba(122,218,208,0.45)"
-                              strokeWidth="0.8"
-                              strokeDasharray="2 2"
-                            />
-                          )}
-                          {Math.abs(boundaryBCOffset) <= 12 && (
-                            <line
-                              x1={toXPercent(boundaryBCOffset)}
-                              y1="14"
-                              x2={toXPercent(boundaryBCOffset)}
-                              y2="88"
-                              stroke="rgba(122,218,208,0.45)"
-                              strokeWidth="0.8"
-                              strokeDasharray="2 2"
-                            />
-                          )}
+                          {/* Top Audience Row Line (y=22) */}
+                          <line
+                            x1="4"
+                            y1="22"
+                            x2="96"
+                            y2="22"
+                            stroke="rgba(255,255,255,0.2)"
+                            strokeWidth="0.8"
+                          />
 
-                          {/* Dashed Sightline for Other Phase Oshi (if entering ±12 seats after rotation) */}
-                          {nearbyOtherPhaseOshis.map(
-                            ({ member, otherPhaseInfo }) => {
-                              const x = toXPercent(
-                                otherPhaseInfo.signedSeatOffset
-                              );
-                              return (
-                                <line
-                                  key={`vec-other-${member.id}`}
-                                  x1="50"
-                                  y1="84"
-                                  x2={x}
-                                  y2="28"
-                                  stroke="rgba(122,218,208,0.5)"
-                                  strokeWidth="1"
-                                  strokeDasharray="2.5 2.5"
-                                />
-                              );
-                            }
-                          )}
+                          {/* Cheerleader Stage Rail Line (y=68) */}
+                          <line
+                            x1="4"
+                            y1="68"
+                            x2="96"
+                            y2="68"
+                            stroke="rgba(94,203,192,0.35)"
+                            strokeWidth="1"
+                          />
 
-                          {/* Solid Glowing Sightline Vector from User Seat (50, 84) to Active Oshi */}
-                          {nearbyActiveOshis.map(({ member, phaseInfo }) => {
-                            const x = toXPercent(phaseInfo.signedSeatOffset);
-                            return (
-                              <line
-                                key={`vec-${member.id}`}
-                                x1="50"
-                                y1="84"
-                                x2={x}
-                                y2="28"
-                                stroke="#5ECBC0"
-                                strokeWidth="1.6"
-                              />
-                            );
-                          })}
+                          {/* ±12 Seat Camera Viewing Cone from User Seat (userX, 22) DOWNWARD to Stage (fovLeftX..fovRightX, 68) */}
+                          <polygon
+                            points={`${userX},22 ${fovLeftX},68 ${fovRightX},68`}
+                            fill="url(#topDownFov)"
+                          />
+
+                          {/* Sightline from User Seat (Top) to Oshi (Bottom Stage) */}
+                          <line
+                            x1={userX}
+                            y1="22"
+                            x2={oshiX}
+                            y2="64"
+                            stroke={isNear ? '#5ECBC0' : '#FBBF24'}
+                            strokeWidth={isNear ? '1.8' : '1.3'}
+                            strokeDasharray={isNear ? undefined : '3 2.5'}
+                          />
                         </svg>
 
-                        {/* Zone Boundary Pill Labels on Stage Rail */}
-                        {Math.abs(boundaryABOffset) <= 12 && (
-                          <div
-                            style={{
-                              left: `${toXPercent(boundaryABOffset)}%`,
-                            }}
-                            className="pointer-events-none absolute bottom-8 -translate-x-1/2 rounded bg-[#212047]/90 px-1.5 py-0.5 font-mono-num text-[8px] font-bold text-[#7ADAD0] whitespace-nowrap ring-1 ring-[#5ECBC0]/40"
-                          >
-                            A23│B1 相連
+                        {/* TOP LAYER: Your Seat in 2F Audience Stand (Looking DOWN ▼) */}
+                        <div
+                          style={{
+                            left: `${Math.max(16, Math.min(84, userX))}%`,
+                          }}
+                          className="absolute top-1.5 z-10 -translate-x-1/2 flex flex-col items-center transition-all duration-300"
+                        >
+                          <div className="rounded-full bg-white px-2.5 py-0.5 font-mono-num text-[10px] font-black text-[#212047] whitespace-nowrap shadow-md ring-2 ring-[#5ECBC0] lg:text-xs">
+                            你的座位：{selectedZone} 區 {selectedSeat} 號
                           </div>
-                        )}
-                        {Math.abs(boundaryBCOffset) <= 12 && (
-                          <div
-                            style={{
-                              left: `${toXPercent(boundaryBCOffset)}%`,
-                            }}
-                            className="pointer-events-none absolute bottom-8 -translate-x-1/2 rounded bg-[#212047]/90 px-1.5 py-0.5 font-mono-num text-[8px] font-bold text-[#7ADAD0] whitespace-nowrap ring-1 ring-[#5ECBC0]/40"
-                          >
-                            B23│C1 相連
-                          </div>
-                        )}
-
-                        {/* Other Phase Ghost Pin (when Oshi enters ±12 seats in the other half of the set) */}
-                        {nearbyOtherPhaseOshis.map(
-                          ({ member, otherPhaseInfo }) => {
-                            const x = toXPercent(
-                              otherPhaseInfo.signedSeatOffset
-                            );
-                            const offset = otherPhaseInfo.signedSeatOffset;
-                            const dirLabel =
-                              offset === 0
-                                ? '正前'
-                                : offset < 0
-                                  ? `左 ${Math.abs(offset)}席`
-                                  : `右 ${offset}席`;
-                            return (
-                              <button
-                                key={`pin-other-${member.id}`}
-                                type="button"
-                                onClick={() =>
-                                  setScorePhase(
-                                    scorePhase === 'initial'
-                                      ? 'after10'
-                                      : 'initial'
-                                  )
-                                }
-                                style={{ left: `${x}%` }}
-                                className="absolute top-2 -translate-x-1/2 flex flex-col items-center opacity-75 transition-all duration-500 hover:opacity-100"
-                              >
-                                <div className="relative">
-                                  <MemberPortrait
-                                    member={member}
-                                    variant="avatar"
-                                    className="h-8 w-8 rounded-full ring-1 ring-dashed ring-[#7ADAD0]"
-                                  />
-                                </div>
-                                <span className="mt-0.5 rounded bg-[#212047]/95 px-1.5 py-0.2 font-mono-num text-[9px] font-bold text-[#7ADAD0] whitespace-nowrap ring-1 ring-white/20">
-                                  {scorePhase === 'initial' ? '破10分' : '開局'}{' '}
-                                  · {dirLabel}
-                                </span>
-                              </button>
-                            );
-                          }
-                        )}
-
-                        {/* Active Phase Oshi Pin(s) on Stage Track */}
-                        {nearbyActiveOshis.map(({ member, phaseInfo }) => {
-                          const x = toXPercent(phaseInfo.signedSeatOffset);
-                          const offset = phaseInfo.signedSeatOffset;
-                          const posBadge =
-                            offset === 0
-                              ? '▲ 正前方 0 席'
-                              : offset < 0
-                                ? `↖ 左前方 ${Math.abs(offset)} 席`
-                                : `↗ 右前方 ${offset} 席`;
-
-                          return (
-                            <button
-                              key={`pin-${member.id}`}
-                              type="button"
-                              onClick={() => onOpenMemberDetail(member)}
-                              style={{ left: `${x}%` }}
-                              className="absolute top-1.5 z-10 -translate-x-1/2 flex flex-col items-center transition-all duration-500"
-                            >
-                              <div className="relative">
-                                <MemberPortrait
-                                  member={member}
-                                  variant="avatar"
-                                  className="h-10 w-10 rounded-full ring-2 ring-[#5ECBC0] shadow-[0_0_16px_rgba(94,203,192,0.6)]"
-                                />
-                                <span className="absolute -top-1 -right-2 rounded-full bg-[#5BAE84] px-1 font-mono-num text-[8px] font-black text-white ring-1 ring-[#212047]">
-                                  {phaseInfo.girlZone}
-                                  {phaseInfo.girlSlotLabel.slice(0, 1)}
-                                </span>
-                              </div>
-                              <span className="mt-1 rounded-full bg-[#5BAE84] px-2 py-0.5 font-mono-num text-[9px] font-extrabold text-white whitespace-nowrap shadow-xs">
-                                ★ {member.name} · {posBadge}
-                              </span>
-                            </button>
-                          );
-                        })}
-
-                        {/* Bottom Center: User's Seat Facing Stage */}
-                        <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 flex flex-col items-center">
-                          <span className="text-[10px] leading-none text-[#5ECBC0]">
-                            ▲
+                          <span className="mt-0.5 text-[10px] font-bold leading-none text-[#5ECBC0]">
+                            ▼ 往下看球賽
                           </span>
-                          <div className="mt-0.5 flex items-center gap-1.5 rounded-full bg-white px-3 py-0.5 font-mono-num text-[10px] font-black text-[#212047] whitespace-nowrap shadow-sm ring-2 ring-[#5ECBC0]">
-                            <span>
-                              你的座位：{selectedZone} 區 {selectedSeat} 號
+                        </div>
+
+                        {/* MIDDLE LAYER: Cheerleader Stage (Facing UPWARD ▲ toward 2F Audience) */}
+                        <button
+                          type="button"
+                          onClick={() => onOpenMemberDetail(activeOshi)}
+                          style={{
+                            left: `${Math.max(18, Math.min(82, oshiX))}%`,
+                          }}
+                          className="absolute top-[42%] z-10 -translate-x-1/2 flex flex-col items-center transition-all duration-300"
+                        >
+                          <span
+                            className={`mb-0.5 font-mono-num text-[9px] font-extrabold leading-none whitespace-nowrap lg:text-[11px] ${
+                              isNear ? 'text-[#5ECBC0]' : 'text-amber-300'
+                            }`}
+                          >
+                            ▲ 往上應援（{dirDescription}）
+                          </span>
+                          <div className="relative">
+                            <MemberPortrait
+                              member={activeOshi}
+                              variant="avatar"
+                              className={`h-9 w-9 rounded-full ring-2 sm:h-10 sm:w-10 ${
+                                isNear
+                                  ? 'ring-[#5ECBC0] shadow-[0_0_14px_rgba(94,203,192,0.6)]'
+                                  : 'ring-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.45)]'
+                              }`}
+                            />
+                            <span className="absolute -top-1 -right-2 rounded-full bg-[#212047] px-1 font-mono-num text-[8px] font-black text-[#7ADAD0] ring-1 ring-[#5ECBC0]">
+                              {activePhaseOshiDistance.girlZone}
+                              {activePhaseOshiDistance.girlSlotLabel.slice(0, 1)}
                             </span>
                           </div>
+                          <span
+                            className={`mt-0.5 rounded-full px-2 py-0.2 font-mono-num text-[9px] font-extrabold whitespace-nowrap lg:text-[11px] ${
+                              isNear
+                                ? 'bg-[#5BAE84] text-white'
+                                : 'bg-amber-500/90 text-[#212047]'
+                            }`}
+                          >
+                            ★ {activeOshi.name}
+                          </span>
+                        </button>
+
+                        {/* BOTTOM LAYER: Players Bench & 1F Court (Matching Official IG Map Bottom) */}
+                        <div className="absolute inset-x-2 bottom-1.5 flex items-center justify-center rounded-lg bg-[#5BAE84]/25 py-1 text-center font-mono-num text-[10px] font-bold text-[#7ADAD0] ring-1 ring-[#5BAE84]/40 lg:text-xs">
+                          ⬇ 下方為 1F 球員席 ＆ 中央比賽球場（觀眾視線往下） ⬇
                         </div>
                       </div>
+
+                      {/* Proximity / Too Far Camera Warning Notice Below Radar */}
+                      {isNear ? (
+                        <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-[#5BAE84]/20 px-3 py-2 text-xs text-white ring-1 ring-[#5ECBC0]/40 lg:text-sm">
+                          <span>
+                            <strong className="font-extrabold text-[#5ECBC0]">
+                              ★ 接近通知（12 席內）：
+                            </strong>
+                            主推 {activeOshi.name} 位於你面對球場時的
+                            <strong className="font-extrabold text-white">
+                              「{dirDescription}」
+                            </strong>
+                            （{activePhaseOshiDistance.girlZone} 區
+                            {activePhaseOshiDistance.girlSlotLabel.slice(0, 2)}
+                            ），在最佳拍攝與應援互動範圍內！
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="mt-2.5 flex flex-col gap-2 rounded-xl bg-amber-500/15 px-3 py-2.5 text-xs text-amber-100 ring-1 ring-amber-400/45 sm:flex-row sm:items-center sm:justify-between lg:text-sm">
+                          <div className="min-w-0">
+                            <strong className="font-extrabold text-amber-300">
+                              距離過遠提示（相距 {seatsDiff} 席 · 超過 12 席）：
+                            </strong>
+                            <span>
+                              主推 {activeOshi.name} 本階段位於{' '}
+                              {activePhaseOshiDistance.girlZone} 區
+                              {activePhaseOshiDistance.girlSlotLabel.slice(0, 2)}
+                              （你的{dirDescription}
+                              ），視角偏斜較大且易受沿途觀眾遮擋，
+                              <strong className="font-extrabold text-white underline decoration-amber-400 underline-offset-2">
+                                可能拍不到清楚正面畫面
+                              </strong>
+                              。
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedZone(activePhaseOshiDistance.girlZone);
+                              setSelectedSeat(
+                                activePhaseOshiDistance.girlCoreSeat
+                              );
+                            }}
+                            className="shrink-0 self-start rounded-full bg-amber-400 px-3 py-1 font-mono-num text-[11px] font-black text-[#212047] transition-transform hover:bg-amber-300 active:scale-95 sm:self-center lg:text-xs"
+                          >
+                            移至她面前 ({activePhaseOshiDistance.girlZone}
+                            {activePhaseOshiDistance.girlCoreSeat}號) →
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Same-Set After-10-Points Rotation Notice */}
+                      {otherPhaseOshiDistance.isWithin12Seats !== isNear && (
+                        <div className="mt-2 rounded-lg bg-white/[0.07] px-3 py-1.5 text-[11px] text-white/85 lg:text-xs">
+                          <span className="font-bold text-[#7ADAD0]">
+                            同局換位提示：
+                          </span>
+                          {scorePhase === 'initial'
+                            ? '連莊得分破 10 分換位後，'
+                            : '開局 0–10 分階段，'}
+                          {activeOshi.name} 距離你為{' '}
+                          <strong className="font-mono-num text-[#5ECBC0]">
+                            {otherPhaseOshiDistance.seatsToCoreCenter} 席
+                          </strong>
+                          （
+                          {otherPhaseOshiDistance.isWithin12Seats
+                            ? '將進入 12 席內好拍範圍！'
+                            : '將移出 12 席外'}
+                          ）
+                        </div>
+                      )}
                     </div>
                   );
                 })()}
 
                 {/* Highlighted Direct Front Member Card (Face-Focused Avatar) */}
                 {directFrontMember && (
-                  <div className="mt-4 rounded-2xl border border-[#5ECBC0]/30 bg-white/10 p-3.5 sm:mt-5 sm:p-4">
-                    <div className="font-mono-num text-[10px] font-bold tracking-[0.14em] text-[#7ADAD0] uppercase">
-                      DIRECTLY IN FRONT · 當前局數正前方女孩
+                  <div className="mt-4 rounded-2xl border border-[#5ECBC0]/30 bg-white/10 p-3.5 sm:p-4">
+                    <div className="font-mono-num text-[10px] font-bold tracking-[0.14em] text-[#7ADAD0] uppercase lg:text-xs">
+                      DIRECTLY IN FRONT · 當前座位正前方女孩（往上應援 ▲）
                     </div>
-                    <div className="mt-3 flex items-center gap-3.5">
+                    <div className="mt-2.5 flex items-center gap-3.5">
                       <button
                         type="button"
                         onClick={() => onOpenMemberDetail(directFrontMember)}
@@ -935,26 +939,26 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                         <MemberPortrait
                           member={directFrontMember}
                           variant="avatar"
-                          className="h-20 w-20"
+                          className="h-16 w-16 sm:h-20 sm:w-20"
                         />
                       </button>
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="rounded-md bg-[#5BAE84] px-2 py-0.5 font-mono-num text-xs font-extrabold text-white">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="rounded-md bg-[#5BAE84] px-2 py-0.5 font-mono-num text-xs font-extrabold text-white lg:text-sm">
                             #{directFrontMember.number}
                           </span>
-                          <span className="text-xl font-black text-white whitespace-nowrap">
+                          <span className="text-lg font-black text-white sm:text-xl lg:text-2xl">
                             {directFrontMember.name}
                           </span>
                         </div>
-                        <p className="mt-1 line-clamp-2 text-xs text-white/75">
+                        <p className="mt-1 line-clamp-2 text-xs text-white/75 lg:text-sm">
                           {directFrontMember.tagline}
                         </p>
-                        <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                        <div className="mt-2 flex flex-wrap items-center gap-2">
                           <button
                             type="button"
                             onClick={() => onOpenMemberDetail(directFrontMember)}
-                            className="rounded-full bg-white px-3 py-1 text-[11px] font-bold text-[#212047] whitespace-nowrap hover:bg-[#7ADAD0]"
+                            className="rounded-full bg-white px-3 py-1 text-[11px] font-bold text-[#212047] hover:bg-[#7ADAD0] lg:px-4 lg:py-1.5 lg:text-xs"
                           >
                             個人檔案 →
                           </button>
@@ -962,7 +966,7 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                             href={directFrontMember.instagramUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="font-mono-num text-[11px] text-[#7ADAD0] hover:underline"
+                            className="truncate font-mono-num text-[11px] text-[#7ADAD0] hover:underline lg:text-xs"
                           >
                             @{directFrontMember.instagramHandle} ↗
                           </a>
@@ -974,22 +978,22 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
               </div>
 
               {/* Summary of All Girls Visiting This Seat Across All 5 Sets */}
-              <div className="mt-5 border-t border-white/15 pt-4">
-                <div className="font-mono-num text-[10px] font-bold tracking-[0.12em] text-[#7ADAD0] uppercase">
+              <div className="mt-4 border-t border-white/15 pt-3.5">
+                <div className="font-mono-num text-[10px] font-bold tracking-[0.12em] text-[#7ADAD0] uppercase lg:text-xs">
                   整場 5 局會輪流站到你「正前方（{seatMapping.slotName}）」的 6 位女孩：
                 </div>
-                <div className="mt-2.5 grid grid-cols-3 gap-1.5 sm:flex sm:flex-wrap">
+                <div className="mt-2 grid grid-cols-3 gap-1.5 sm:flex sm:flex-wrap lg:gap-2">
                   {allMatchZoneVisitors.directSeatMembers.map((m) => (
                     <button
                       key={m.id}
                       type="button"
                       onClick={() => onOpenMemberDetail(m)}
-                      className="flex items-center gap-1.5 rounded-full bg-white/10 py-1 pr-2.5 pl-1 text-xs font-bold text-white ring-1 ring-white/20 transition-colors hover:bg-[#5BAE84]"
+                      className="flex min-w-0 items-center gap-1.5 rounded-full bg-white/10 py-1 pr-2.5 pl-1 text-xs font-bold text-white ring-1 ring-white/20 transition-colors hover:bg-[#5BAE84] lg:py-1.5 lg:pr-3.5 lg:pl-1.5 lg:text-sm"
                     >
                       <MemberPortrait
                         member={m}
                         variant="avatar"
-                        className="h-6 w-6 shrink-0 rounded-full"
+                        className="h-6 w-6 shrink-0 rounded-full lg:h-7 lg:w-7"
                       />
                       <span className="truncate">{m.name}</span>
                     </button>
@@ -998,8 +1002,8 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
               </div>
             </div>
 
-            {/* Right 7 cols: Interactive Set & 10-Point Score Switcher + 3 Girl Station Stage */}
-            <div className="flex flex-col justify-between rounded-3xl bg-[#F4FAF8] p-4 ring-1 ring-[#5BAE84]/30 sm:p-6 lg:col-span-7">
+            {/* Right 6 cols: Interactive Set & 10-Point Score Switcher + 3 Girl Station Stage */}
+            <div className="flex min-w-0 flex-col justify-between rounded-3xl bg-[#F4FAF8] p-4 ring-1 ring-[#5BAE84]/30 sm:p-6 lg:col-span-6 lg:p-7">
               <div>
                 {/* Set & Score Phase Controls */}
                 <div className="flex flex-col gap-2.5 border-b border-[#212047]/10 pb-4 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
@@ -1011,7 +1015,7 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                           key={s.setKey}
                           type="button"
                           onClick={() => setActiveSetKey(s.setKey)}
-                          className={`rounded-xl px-2.5 py-2 text-center text-xs font-extrabold whitespace-nowrap transition-all sm:rounded-full sm:px-4 sm:py-1.5 ${
+                          className={`rounded-xl px-2 py-2 text-center text-xs font-extrabold transition-all sm:rounded-full sm:px-4 sm:py-1.5 lg:px-5 lg:py-2 lg:text-sm ${
                             isActive
                               ? 'bg-[#212047] text-white shadow-xs'
                               : 'bg-white text-[#212047]/75 ring-1 ring-[#212047]/10 hover:bg-[#E6F5F1]'
@@ -1028,7 +1032,7 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                     <button
                       type="button"
                       onClick={() => setScorePhase('initial')}
-                      className={`rounded-full px-3 py-1.5 text-center text-[11px] font-bold whitespace-nowrap transition-all ${
+                      className={`rounded-full px-3 py-1.5 text-center text-[11px] font-bold transition-all lg:px-4 lg:py-2 lg:text-sm ${
                         scorePhase === 'initial'
                           ? 'bg-[#5BAE84] text-white shadow-xs'
                           : 'text-[#212047]/75 hover:text-[#212047]'
@@ -1039,7 +1043,7 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                     <button
                       type="button"
                       onClick={() => setScorePhase('after10')}
-                      className={`rounded-full px-3 py-1.5 text-center text-[11px] font-bold whitespace-nowrap transition-all ${
+                      className={`rounded-full px-3 py-1.5 text-center text-[11px] font-bold transition-all lg:px-4 lg:py-2 lg:text-sm ${
                         scorePhase === 'after10'
                           ? 'bg-[#212047] text-[#7ADAD0] shadow-xs'
                           : 'text-[#212047]/75 hover:text-[#212047]'
@@ -1050,17 +1054,24 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                   </div>
                 </div>
 
-                {/* 3 Station Positions in Current Zone (Face-Focused on Mobile) */}
-                <div className="mt-4 sm:mt-5">
-                  <div className="font-mono-num text-[11px] font-bold tracking-[0.12em] text-[#212047]/70 uppercase">
-                    ACE 集氣 {selectedZone} 區 · {currentSetArrangement.setLabel}（
-                    {scorePhase === 'initial'
-                      ? '開局 0–10 分'
-                      : '連莊得分破 10 分換位'}
-                    ）面前 3 位女孩站位
+                {/* Top Audience Orientation Bar (Matching IG Map) */}
+                <div className="mt-4 rounded-xl bg-[#212047] px-3 py-2 text-center text-[11px] font-bold text-[#7ADAD0] sm:text-xs lg:py-2.5 lg:text-sm">
+                  ▼ 上方為 2F ACE 集氣 {selectedZone} 區觀眾席（你的座位：第 {selectedSeat} 號席，視角往下看） ▼
+                </div>
+
+                {/* 3 Station Positions in Current Zone (Facing UP toward Audience ▲) */}
+                <div className="mt-3 sm:mt-4">
+                  <div className="flex flex-wrap items-center justify-between gap-1 font-mono-num text-[11px] font-bold tracking-[0.08em] text-[#212047]/75 uppercase lg:text-sm">
+                    <span>
+                      ▲ 2F 前緣應援舞台（啦啦隊面向觀眾席往上方向應援 ▲）
+                    </span>
+                    <span className="text-[#3F8E67]">
+                      {currentSetArrangement.setLabel} ·{' '}
+                      {scorePhase === 'initial' ? '0–10 分' : '破 10 分換位'}
+                    </span>
                   </div>
 
-                  <div className="mt-3 grid grid-cols-3 gap-2 sm:gap-4">
+                  <div className="mt-2.5 grid grid-cols-3 gap-2 sm:gap-4">
                     {([0, 1, 2] as const).map((slotIdx) => {
                       const memberId = currentZoneGirlIds[slotIdx];
                       const m = memberMap.get(memberId);
@@ -1091,7 +1102,7 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                       return (
                         <div
                           key={`${slotIdx}-${m.id}`}
-                          className={`group relative flex flex-col justify-between overflow-hidden rounded-2xl p-2 transition-all duration-500 sm:p-2.5 ${
+                          className={`group relative flex min-w-0 flex-col justify-between overflow-hidden rounded-2xl p-2 transition-all duration-500 sm:p-3 ${
                             isDirectFront
                               ? 'bg-[#212047] text-white shadow-[0_18px_38px_-12px_rgba(33,32,71,0.45)] ring-2 ring-[#5BAE84]'
                               : isAdjacent
@@ -1102,19 +1113,19 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                           <div>
                             <div className="mb-1.5 flex items-center justify-between gap-1">
                               <span
-                                className={`truncate rounded-full px-1.5 py-0.5 font-mono-num text-[9px] font-extrabold sm:px-2 ${
+                                className={`truncate rounded-full px-1.5 py-0.5 font-mono-num text-[9px] font-extrabold sm:px-2 lg:text-xs ${
                                   isDirectFront
                                     ? 'bg-[#5BAE84] text-white'
                                     : 'bg-[#E6F5F1] text-[#3F8E67]'
                                 }`}
                               >
                                 {isDirectFront
-                                  ? `★ 正對 (${selectedSeat}號)`
+                                  ? `▲ 正對 (${selectedSeat}號)`
                                   : isAdjacent
-                                    ? '鄰近視角'
-                                    : slotMeta.seats}
+                                    ? '▲ 鄰近視角'
+                                    : `▲ ${slotMeta.seats}`}
                               </span>
-                              <span className="hidden font-mono-num text-[10px] font-bold opacity-70 sm:inline">
+                              <span className="hidden font-mono-num text-[10px] font-bold opacity-70 sm:inline lg:text-xs">
                                 #{m.number}
                               </span>
                             </div>
@@ -1138,11 +1149,11 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                           </div>
 
                           <div className="mt-2 text-center">
-                            <div className="text-xs font-black whitespace-nowrap sm:text-base">
+                            <div className="truncate text-xs font-black sm:text-base lg:text-lg">
                               {m.name}
                             </div>
                             <div
-                              className={`mt-0.5 text-[10px] font-medium whitespace-nowrap ${
+                              className={`mt-0.5 truncate text-[10px] font-medium lg:text-xs ${
                                 isDirectFront
                                   ? 'text-[#7ADAD0]'
                                   : 'text-[#212047]/60'
@@ -1163,9 +1174,9 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                 </div>
               </div>
 
-              {/* Court & Player Bench Orientation Bar */}
-              <div className="mt-4 rounded-xl bg-[#5BAE84]/15 px-3 py-2 text-center text-[11px] font-bold text-[#212047] ring-1 ring-[#5BAE84]/30 sm:mt-5 sm:px-4 sm:py-2.5 sm:text-xs">
-                ⬇ 前方為 1F 球員席與中央球場（開場舞於右側精武區前、中場演出於左側力行區前） ⬇
+              {/* Court & Player Bench Orientation Bar (At Bottom, Matching Official IG Map) */}
+              <div className="mt-4 rounded-xl bg-[#5BAE84]/15 px-3 py-2 text-center text-[11px] font-bold text-[#212047] ring-1 ring-[#5BAE84]/30 sm:mt-5 sm:px-4 sm:py-2.5 sm:text-xs lg:text-sm">
+                ⬇ 最下方為 1F 球員席與中央比賽球場（觀眾由上往下看球賽） ⬇
               </div>
             </div>
           </div>
@@ -1173,16 +1184,16 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
           {/* Complete 5-Set Timeline Matrix for the Selected Zone & Seat */}
           <div className="mt-6 border-t border-[#212047]/10 pt-6 sm:mt-8 sm:pt-8">
             <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-              <span className="font-mono-num text-xs font-extrabold tracking-[0.14em] text-[#212047] uppercase">
+              <span className="font-mono-num text-xs font-extrabold tracking-[0.12em] text-[#212047] uppercase lg:text-base">
                 ALL 5 SETS TIMELINE · 「ACE 集氣 {selectedZone} 區 — 第{' '}
                 {selectedSeat} 號席」整場五局完整輪換班表
               </span>
-              <span className="text-[11px] font-semibold text-[#4FA87D]">
+              <span className="text-[11px] font-semibold text-[#4FA87D] lg:text-sm">
                 綠底／深藍底星號（★）為該局正對你第 {selectedSeat} 號座位的女孩
               </span>
             </div>
 
-            <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-3 lg:gap-6">
               {currentMatchSchedule.sets.map((s) => {
                 const initGirls = s.initial[selectedZone].map(
                   (id) => memberMap.get(id)!
@@ -1194,23 +1205,23 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                 return (
                   <div
                     key={s.setKey}
-                    className="rounded-2xl bg-[#F4FAF8] p-3.5 ring-1 ring-[#5BAE84]/30 sm:p-4"
+                    className="rounded-2xl bg-[#F4FAF8] p-3.5 ring-1 ring-[#5BAE84]/30 sm:p-4 lg:p-5"
                   >
                     <div className="flex items-center justify-between border-b border-[#212047]/10 pb-2.5">
-                      <span className="text-sm font-black text-[#212047]">
+                      <span className="text-sm font-black text-[#212047] lg:text-lg">
                         {s.setLabel}
                       </span>
-                      <span className="rounded-full bg-[#212047] px-2.5 py-0.5 font-mono-num text-[10px] font-bold text-[#7ADAD0]">
+                      <span className="rounded-full bg-[#212047] px-2.5 py-0.5 font-mono-num text-[10px] font-bold text-[#7ADAD0] lg:text-xs">
                         {selectedZone} 區班表
                       </span>
                     </div>
 
                     {/* Phase 1: 0-10 points */}
                     <div className="mt-3">
-                      <div className="font-mono-num text-[10px] font-bold text-[#212047]/65">
+                      <div className="font-mono-num text-[10px] font-bold text-[#212047]/65 lg:text-xs">
                         【開局 0–10 分】左位 → 中位 → 右位
                       </div>
-                      <div className="mt-1.5 grid grid-cols-3 gap-1.5">
+                      <div className="mt-1.5 grid grid-cols-3 gap-1.5 lg:gap-2">
                         {initGirls.map((g, idx) => {
                           const isMine = idx === seatMapping.slotIndex;
                           return (
@@ -1218,13 +1229,13 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                               key={`init-${g.id}`}
                               type="button"
                               onClick={() => onOpenMemberDetail(g)}
-                              className={`flex flex-col items-center rounded-xl p-2 text-center transition-colors ${
+                              className={`flex min-w-0 flex-col items-center rounded-xl p-2 text-center transition-colors lg:p-2.5 ${
                                 isMine
                                   ? 'bg-[#5BAE84] text-white shadow-xs ring-2 ring-[#212047]'
                                   : 'bg-white text-[#212047] ring-1 ring-[#212047]/10 hover:bg-[#E6F5F1]'
                               }`}
                             >
-                              <span className="font-mono-num text-[9px] whitespace-nowrap opacity-75">
+                              <span className="truncate font-mono-num text-[9px] opacity-75 lg:text-xs">
                                 {idx === 0
                                   ? '左 1–8號'
                                   : idx === 1
@@ -1234,9 +1245,9 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                               <MemberPortrait
                                 member={g}
                                 variant="avatar"
-                                className="mt-1.5 h-10 w-10 rounded-full ring-1 ring-white/50"
+                                className="mt-1.5 h-10 w-10 rounded-full ring-1 ring-white/50 lg:h-12 lg:w-12"
                               />
-                              <span className="mt-1 text-xs font-extrabold whitespace-nowrap">
+                              <span className="mt-1 truncate text-xs font-extrabold lg:text-sm">
                                 {isMine ? `★ ${g.name}` : g.name}
                               </span>
                             </button>
@@ -1247,10 +1258,10 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
 
                     {/* Phase 2: >10 points */}
                     <div className="mt-3">
-                      <div className="font-mono-num text-[10px] font-bold text-[#3F8E67]">
+                      <div className="font-mono-num text-[10px] font-bold text-[#3F8E67] lg:text-xs">
                         【連莊破 10 分換位後】左位 → 中位 → 右位
                       </div>
-                      <div className="mt-1.5 grid grid-cols-3 gap-1.5">
+                      <div className="mt-1.5 grid grid-cols-3 gap-1.5 lg:gap-2">
                         {after10Girls.map((g, idx) => {
                           const isMine = idx === seatMapping.slotIndex;
                           return (
@@ -1258,13 +1269,13 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                               key={`after10-${g.id}`}
                               type="button"
                               onClick={() => onOpenMemberDetail(g)}
-                              className={`flex flex-col items-center rounded-xl p-2 text-center transition-colors ${
+                              className={`flex min-w-0 flex-col items-center rounded-xl p-2 text-center transition-colors lg:p-2.5 ${
                                 isMine
                                   ? 'bg-[#212047] text-[#7ADAD0] shadow-xs ring-2 ring-[#5BAE84]'
                                   : 'bg-white text-[#212047] ring-1 ring-[#212047]/10 hover:bg-[#E6F5F1]'
                               }`}
                             >
-                              <span className="font-mono-num text-[9px] whitespace-nowrap opacity-75">
+                              <span className="truncate font-mono-num text-[9px] opacity-75 lg:text-xs">
                                 {idx === 0
                                   ? '左 1–8號'
                                   : idx === 1
@@ -1274,9 +1285,9 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                               <MemberPortrait
                                 member={g}
                                 variant="avatar"
-                                className="mt-1.5 h-10 w-10 rounded-full ring-1 ring-white/40"
+                                className="mt-1.5 h-10 w-10 rounded-full ring-1 ring-white/40 lg:h-12 lg:w-12"
                               />
-                              <span className="mt-1 text-xs font-extrabold whitespace-nowrap">
+                              <span className="mt-1 truncate text-xs font-extrabold lg:text-sm">
                                 {isMine ? `★ ${g.name}` : g.name}
                               </span>
                             </button>
