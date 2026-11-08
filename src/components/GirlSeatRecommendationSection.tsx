@@ -139,21 +139,20 @@ export const GirlSeatRecommendationSection: React.FC<
       className="relative mx-auto max-w-[1440px] px-3 py-16 sm:px-6 sm:py-24 lg:px-10"
     >
       {/* Section Header */}
-      <div className="flex flex-col justify-between gap-5 border-b border-[#212047]/10 pb-8 lg:flex-row lg:items-end">
+      <div className="flex flex-col justify-between gap-4 border-b border-[#212047]/10 pb-6 lg:flex-row lg:items-end">
         <div>
-          <div className="inline-flex items-center gap-2 rounded-full bg-[#212047] px-3 py-1 font-mono-num text-[10px] font-bold tracking-[0.14em] text-[#7ADAD0] lg:px-4 lg:py-1.5 lg:text-xs">
-            <span className="h-2 w-2 shrink-0 rounded-full bg-[#5BAE84]" />
-            <span>女孩專屬黃金選位推薦</span>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-2 rounded-full bg-[#212047] px-3 py-1 font-mono-num text-[10px] font-bold tracking-[0.14em] text-[#7ADAD0] lg:px-4 lg:py-1.5 lg:text-xs">
+              <span className="h-2 w-2 shrink-0 rounded-full bg-[#5BAE84]" />
+              <span>女孩專屬黃金選位推薦</span>
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-full bg-[#E6F5F1] px-2.5 py-1 font-mono-num text-[10px] font-extrabold text-[#3F8E67] ring-1 ring-[#5BAE84]/35 lg:text-xs">
+              <span>◀ 左 C 區 (23–16號) ↔ ▲ 中 B 區 (15–9號) ↔ 右 A 區 (8–1號) ▶</span>
+            </span>
           </div>
-          <h2 className="mt-3 text-2xl font-black tracking-tight text-[#212047] sm:text-5xl lg:text-6xl">
+          <h2 className="mt-2.5 text-2xl font-black tracking-tight text-[#212047] sm:text-4xl lg:text-5xl">
             以女孩為主的黃金座位推薦區間
           </h2>
-          <p className="mt-2.5 max-w-4xl text-xs leading-relaxed text-[#212047]/75 sm:text-base lg:text-lg">
-            點選你想鎖定的連莊女孩，系統將以「觀眾坐在看台面向球場」的真實左右手方向（◀ 左手邊為 C 區與 23–16 號大號側、正中央為 B 區與 15–9 號、右手邊為 A 區與 8–1 號小號側 ▶），自動推算「跨區免換位黃金區間」、「單局雙享黃金席」與「破 10 分主力 C 位席」。
-          </p>
-          <p className="mt-2 max-w-4xl text-[11px] font-semibold text-[#3F8E67] lg:text-sm">
-            ※ 粉絲自製免責說明：本選位區間為依據官方公告站位表推算之輔助參考，現場實際座椅編號與臨時人員異動，請以球團與連莊女孩官方最新實際公告為準。
-          </p>
         </div>
 
         {/* Dynamic Match Day Switcher + 1-Click Strategy Card Generator */}
@@ -368,17 +367,14 @@ export const GirlSeatRecommendationSection: React.FC<
                     <div className="font-mono-num text-[10px] font-extrabold tracking-wider text-[#7ADAD0] lg:text-xs">
                       本場頭號推薦座位區間
                     </div>
-                    <div className="mt-2 text-2xl font-black text-white lg:text-3xl">
+                    <div className="mt-1.5 text-2xl font-black text-white lg:text-3xl">
                       2F 集氣 {primaryRec.zone} 區
                     </div>
                     <div className="mt-1 font-mono-num text-sm font-extrabold text-[#5ECBC0] sm:text-base lg:text-lg">
                       推薦席次：{primaryRec.sweetSpotLabel}
                     </div>
-                    <p className="mt-2 text-xs leading-relaxed text-white/80 lg:text-sm">
-                      {primaryRec.priorityReason} {primaryRec.sweetSpotReason}
-                    </p>
 
-                    <div className="mt-4 grid grid-cols-2 gap-2 border-t border-white/15 pt-3.5 text-xs lg:text-sm">
+                    <div className="mt-3.5 grid grid-cols-2 gap-2 border-t border-white/15 pt-3 text-xs lg:text-sm">
                       <div className="rounded-xl bg-white/10 p-2.5 lg:p-3">
                         <div className="font-mono-num text-[10px] text-[#7ADAD0] lg:text-xs">
                           開局 0–10 分 · {primaryRec.initialSlotLabel.slice(0, 4)}
@@ -419,7 +415,7 @@ export const GirlSeatRecommendationSection: React.FC<
                       </span>
                     </div>
 
-                    <div className="mt-2.5 text-lg font-black text-white sm:text-xl lg:text-2xl">
+                    <div className="mt-2 text-lg font-black text-white sm:text-xl lg:text-2xl">
                       {topCrossZone.combinedRangeLabel}
                     </div>
                     <div className="mt-1 flex flex-wrap items-center gap-1.5 font-mono-num text-xs font-extrabold text-[#5ECBC0] lg:text-sm">
@@ -428,12 +424,8 @@ export const GirlSeatRecommendationSection: React.FC<
                       <span>首選核心：{topCrossZone.bestSingleSeatLabel}</span>
                     </div>
 
-                    <p className="mt-2 text-xs leading-relaxed text-white/85 lg:text-sm">
-                      {topCrossZone.summaryReason}
-                    </p>
-
                     {/* Quick Jump Buttons Ordered by Audience Left-Hand (rightZone 1-7) to Right-Hand (leftZone 17-23) */}
-                    <div className="mt-3.5 grid grid-cols-2 gap-2">
+                    <div className="mt-3 grid grid-cols-2 gap-2">
                       <button
                         type="button"
                         onClick={() => {
@@ -449,7 +441,7 @@ export const GirlSeatRecommendationSection: React.FC<
                         className="flex flex-col items-start rounded-xl bg-white/10 px-3 py-2 text-left ring-1 ring-white/20 transition-all hover:bg-[#5BAE84] hover:text-white active:scale-95"
                       >
                         <span className="font-mono-num text-[10px] font-bold text-[#7ADAD0]">
-                          ◀ 觀眾左手邊（{topCrossZone.rightZone} 區 {topCrossZone.rightSeatRange[0]}–{topCrossZone.rightSeatRange[1]} 號）
+                          ◀ 左手邊（{topCrossZone.rightZone} 區 {topCrossZone.rightSeatRange[0]}–{topCrossZone.rightSeatRange[1]} 號）
                         </span>
                         <span className="mt-0.5 text-xs font-black text-white lg:text-sm">
                           模擬 {topCrossZone.rightZone} 區 {topCrossZone.rightBestSeat} 號席 →
@@ -471,7 +463,7 @@ export const GirlSeatRecommendationSection: React.FC<
                         className="flex flex-col items-start rounded-xl bg-white/10 px-3 py-2 text-left ring-1 ring-white/20 transition-all hover:bg-[#5BAE84] hover:text-white active:scale-95"
                       >
                         <span className="font-mono-num text-[10px] font-bold text-[#7ADAD0]">
-                          觀眾右手邊（{topCrossZone.leftZone} 區 {topCrossZone.leftSeatRange[0]}–{topCrossZone.leftSeatRange[1]} 號） ▶
+                          右手邊（{topCrossZone.leftZone} 區 {topCrossZone.leftSeatRange[0]}–{topCrossZone.leftSeatRange[1]} 號） ▶
                         </span>
                         <span className="mt-0.5 text-xs font-black text-white lg:text-sm">
                           模擬 {topCrossZone.leftZone} 區 {topCrossZone.leftBestSeat} 號席 →
@@ -484,13 +476,13 @@ export const GirlSeatRecommendationSection: React.FC<
                       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-white/15 pt-2.5 text-[11px] text-white/75 lg:text-xs">
                         <div>
                           <span className="font-bold text-[#7ADAD0]">
-                            次選跨區交界（{secondaryCrossZone.boundaryTag}）：
+                            次選跨區（{secondaryCrossZone.boundaryTag}）：
                           </span>
                           <span className="font-mono-num font-bold text-white">
                             {secondaryCrossZone.combinedRangeLabel}
                           </span>
                           <span className="ml-1 text-white/60">
-                            （兼顧 {secondaryCrossZone.coveredSetsLabel}）
+                            （{secondaryCrossZone.coveredSetsLabel}）
                           </span>
                         </div>
                         <button
@@ -516,13 +508,12 @@ export const GirlSeatRecommendationSection: React.FC<
                 )}
               </div>
 
-              {/* Rotation Logic Tip */}
-              <div className="mt-5 rounded-2xl bg-white/[0.06] p-3.5 text-xs leading-relaxed text-white/75 sm:mt-6 sm:p-4 lg:text-sm">
-                <strong className="font-bold text-[#7ADAD0]">
-                  選位策略解析：
-                </strong>
-                排球每局打至 25 分，連莊得分「超過 10 分後（11–25 分）」佔單局約 60%
-                時間且包含局末關鍵高潮，建議優先鎖定「破 10 分後正對區間」或「兩段交界黃金帶」。
+              {/* Compact Visual Strategy Legend */}
+              <div className="mt-4 flex flex-wrap items-center gap-1.5 rounded-2xl bg-white/[0.06] px-3 py-2.5 text-[11px] font-bold text-white/85 lg:text-xs">
+                <span className="rounded-md bg-[#5BAE84] px-2 py-0.5 font-mono-num text-[10px] font-black text-white">
+                  破 10 分主力
+                </span>
+                <span>11–25 分佔單局 60% 時長，優先鎖定破 10 分正對區間</span>
               </div>
             </div>
 
@@ -595,26 +586,21 @@ export const GirlSeatRecommendationSection: React.FC<
                         {rec.sweetSpotLabel}
                       </div>
                       <div className="mt-0.5 text-[11px] text-[#212047]/70 lg:text-xs">
-                        兼顧開局與破 10 分換位視角
+                        兼顧開局與破 10 分視角
                       </div>
                     </div>
                   </div>
 
                   {/* Cross-Zone Adjacent Seat Recommendation Banner (when standing near zone boundary) */}
                   {rec.crossZoneOption && (
-                    <div className="mt-3 flex flex-col justify-between gap-2 rounded-2xl border border-[#5BAE84]/50 bg-[#D5EFE9]/75 px-3.5 py-2.5 sm:flex-row sm:items-center lg:px-4 lg:py-3">
-                      <div className="min-w-0">
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          <span className="rounded-md bg-[#212047] px-2 py-0.5 font-mono-num text-[10px] font-extrabold text-[#7ADAD0] lg:text-xs">
-                            ↔ 跨區鄰接推薦（{rec.crossZoneOption.boundaryName}）
-                          </span>
-                          <span className="font-mono-num text-xs font-black text-[#212047] lg:text-sm">
-                            {rec.crossZoneOption.label}
-                          </span>
-                        </div>
-                        <p className="mt-1 text-[11px] leading-snug text-[#212047]/80 lg:text-xs">
-                          {rec.crossZoneOption.reason}
-                        </p>
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[#5BAE84]/50 bg-[#D5EFE9]/75 px-3 py-2 lg:px-4 lg:py-2.5">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="rounded-md bg-[#212047] px-2 py-0.5 font-mono-num text-[10px] font-extrabold text-[#7ADAD0] lg:text-xs">
+                          ↔ 跨區鄰接（{rec.crossZoneOption.boundaryName}）
+                        </span>
+                        <span className="font-mono-num text-xs font-black text-[#212047] lg:text-sm">
+                          {rec.crossZoneOption.label}
+                        </span>
                       </div>
                       <button
                         type="button"
@@ -628,7 +614,7 @@ export const GirlSeatRecommendationSection: React.FC<
                             );
                           }
                         }}
-                        className="shrink-0 self-start rounded-full bg-[#212047] px-3 py-1.5 font-mono-num text-[11px] font-extrabold text-[#7ADAD0] transition-all hover:bg-[#5BAE84] hover:text-white active:scale-95 sm:self-center lg:text-xs"
+                        className="shrink-0 rounded-full bg-[#212047] px-3 py-1 font-mono-num text-[11px] font-extrabold text-[#7ADAD0] transition-all hover:bg-[#5BAE84] hover:text-white active:scale-95 lg:text-xs"
                       >
                         模擬跨區 {rec.crossZoneOption.adjacentZone} 區{' '}
                         {rec.crossZoneOption.adjacentCoreSeat} 號席 →
@@ -1080,34 +1066,34 @@ export const GirlSeatRecommendationSection: React.FC<
             </>
           )}
 
-          {/* Special Note for MC (#25 心璇) & Cheer Leader (#41 馬妹) & Court Performances */}
-          <div className="mt-6 grid grid-cols-1 gap-4 border-t border-[#212047]/10 pt-6 md:grid-cols-2">
-            <div className="flex flex-col justify-between gap-3 rounded-2xl bg-[#F4FAF8] p-4 ring-1 ring-[#5BAE84]/30 sm:flex-row sm:items-center lg:p-5">
+          {/* Special Note for MC (#25 心璇) & Cheer Leader (#41 馬妹) & Court Performances (Compact Visual Pills) */}
+          <div className="mt-6 grid grid-cols-1 gap-3 border-t border-[#212047]/10 pt-5 md:grid-cols-2">
+            <div className="flex flex-wrap items-center justify-between gap-2.5 rounded-2xl bg-[#F4FAF8] p-3 ring-1 ring-[#5BAE84]/30 sm:px-4">
               <div>
-                <div className="font-mono-num text-[10px] font-extrabold tracking-[0.16em] text-[#4FA87D] lg:text-xs">
-                  團長與主持位置說明
+                <div className="font-mono-num text-[10px] font-extrabold tracking-[0.14em] text-[#4FA87D] lg:text-xs">
+                  團長與主持核心視野
                 </div>
-                <div className="mt-1 text-sm font-black text-[#212047] lg:text-base">
-                  應援團長馬妹（#41）與主場主持人 心璇（#25）
+                <div className="mt-0.5 text-xs font-black text-[#212047] sm:text-sm">
+                  1F 場邊舞台 ＆ 2F 中央 B 區
                 </div>
-                <p className="mt-1 text-xs leading-relaxed text-[#212047]/70 lg:text-sm">
-                  負責全場口號帶動、局間互動與賽事主持，活躍於 1F 場邊應援舞台與 2F 集氣區中央（B 區）核心視野區。
-                </p>
               </div>
-              <div className="flex shrink-0 gap-2">
+              <div className="flex flex-wrap gap-1.5">
                 {mcAndLeaderMembers.map((m) => (
                   <button
                     key={m.id}
                     type="button"
                     onClick={() => onOpenMemberDetail(m)}
-                    className="flex items-center gap-2 rounded-xl bg-white px-3 py-2 ring-1 ring-[#212047]/10 hover:ring-[#5BAE84] sm:flex-col"
+                    className="flex items-center gap-1.5 rounded-full bg-white py-1 pr-2.5 pl-1 ring-1 ring-[#212047]/10 transition-colors hover:ring-[#5BAE84]"
                   >
                     <MemberPortrait
                       member={m}
                       variant="avatar"
-                      className="h-10 w-10 rounded-full lg:h-12 lg:w-12"
+                      className="h-7 w-7 rounded-full"
                     />
-                    <span className="text-xs font-bold text-[#212047] lg:text-sm">
+                    <span className="font-mono-num text-[10px] font-bold text-[#4FA87D]">
+                      #{m.number}
+                    </span>
+                    <span className="text-xs font-extrabold text-[#212047]">
                       {m.name}
                     </span>
                   </button>
@@ -1115,16 +1101,26 @@ export const GirlSeatRecommendationSection: React.FC<
               </div>
             </div>
 
-            <div className="rounded-2xl bg-[#212047] p-4 text-white lg:p-5">
-              <div className="font-mono-num text-[10px] font-extrabold tracking-[0.16em] text-[#7ADAD0] lg:text-xs">
-                開場舞與中場演出拍攝推薦區
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-[#212047] p-3 text-white sm:px-4">
+              <div>
+                <div className="font-mono-num text-[10px] font-extrabold tracking-[0.14em] text-[#7ADAD0] lg:text-xs">
+                  場中央演出拍攝方位
+                </div>
+                <div className="mt-0.5 text-xs font-black text-white sm:text-sm">
+                  開場舞 · 中場演出 · 2F 拍攝區
+                </div>
               </div>
-              <div className="mt-1 text-sm font-black text-white lg:text-base">
-                1F 猛虎精武區 / 1F 猛虎力行區 / 2F 拍攝限定區
+              <div className="flex flex-wrap gap-1.5 font-mono-num text-[10px] font-bold">
+                <span className="rounded-full bg-white/12 px-2.5 py-1 text-[#7ADAD0]">
+                  開場舞：1F 精武區 ▶
+                </span>
+                <span className="rounded-full bg-white/12 px-2.5 py-1 text-[#7ADAD0]">
+                  ◀ 中場：1F 力行區
+                </span>
+                <span className="rounded-full bg-[#5BAE84] px-2.5 py-1 text-white">
+                  ▲ 南側 2F 拍攝限定區
+                </span>
               </div>
-              <p className="mt-1 text-xs leading-relaxed text-white/75 lg:text-sm">
-                依據官方公告：開場舞於「1F 猛虎精武區（右側）」前側場地演出，中場演出於「1F 猛虎力行區（左側）」前側場地進行；演出期間亦限時開放南側「2F 拍攝限定區」供二樓季票球迷拍攝。
-              </p>
             </div>
           </div>
         </div>

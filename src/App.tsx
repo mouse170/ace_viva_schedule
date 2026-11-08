@@ -465,50 +465,82 @@ export const App: React.FC = () => {
         </nav>
       </header>
 
-      {/* Mobile Fixed Bottom Quick-Navigation Bar (Thumb-Friendly 4 Core Sections - Pure Chinese) */}
-      <nav
-        aria-label="手機版底部快速導覽列"
-        className="fixed inset-x-0 bottom-0 z-30 border-t border-[#5ECBC0]/25 bg-[#212047]/95 px-2 py-2 text-white shadow-[0_-10px_30px_rgba(33,32,71,0.28)] backdrop-blur-xl lg:hidden"
-      >
-        <div className="mx-auto grid max-w-md grid-cols-4 gap-1.5">
+      {/* Mobile Fixed Bottom Quick-Navigation Bar (Compact Single-Row Floating Pill Matching Top Bar Size + Icons) */}
+      <div className="fixed inset-x-0 bottom-0 z-30 flex justify-center px-2 pb-2 pointer-events-none lg:hidden">
+        <nav
+          aria-label="手機版底部快速導覽列"
+          className="pointer-events-auto flex w-full max-w-[calc(100vw-1rem)] items-center justify-between gap-1 rounded-full bg-[#212047]/95 p-1.5 text-white shadow-[0_12px_32px_rgba(33,32,71,0.35)] ring-1 ring-[#5ECBC0]/30 backdrop-blur-2xl sm:max-w-fit sm:gap-1.5"
+        >
           <a
             href="#roster-section"
-            className="flex flex-col items-center justify-center rounded-xl bg-white/10 py-1.5 text-center text-[11px] font-extrabold text-white whitespace-nowrap active:bg-[#5BAE84]"
+            className="flex flex-1 items-center justify-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-extrabold text-white whitespace-nowrap transition-colors hover:bg-white/20 active:bg-[#5BAE84] sm:flex-initial sm:px-3 sm:py-1.5 sm:text-xs"
           >
-            <span className="font-mono-num text-[9px] text-[#7ADAD0]">
-              18 位成員
-            </span>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              className="h-3.5 w-3.5 shrink-0 text-[#7ADAD0]"
+              aria-hidden="true"
+            >
+              <rect x="3" y="3" width="7" height="7" rx="1.5" />
+              <rect x="14" y="3" width="7" height="7" rx="1.5" />
+              <rect x="3" y="14" width="7" height="7" rx="1.5" />
+              <rect x="14" y="14" width="7" height="7" rx="1.5" />
+            </svg>
             <span>成員圖鑑</span>
           </a>
           <a
             href="#girl-seat-guide-section"
-            className="flex flex-col items-center justify-center rounded-xl bg-[#5BAE84] py-1.5 text-center text-[11px] font-extrabold text-white whitespace-nowrap shadow-xs active:bg-[#4FA87D]"
+            className="flex flex-1 items-center justify-center gap-1 rounded-full bg-[#5BAE84] px-2.5 py-1 text-[11px] font-extrabold text-white whitespace-nowrap shadow-2xs transition-colors hover:bg-[#4FA87D] active:bg-[#3F8E67] sm:flex-initial sm:px-3 sm:py-1.5 sm:text-xs"
           >
-            <span className="font-mono-num text-[9px] text-white/90">
-              選位攻略
-            </span>
+            <svg
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="h-3.5 w-3.5 shrink-0 text-white"
+              aria-hidden="true"
+            >
+              <path d="M12 2.75l2.76 5.59 6.17.9-4.46 4.35 1.05 6.15L12 16.83l-5.52 2.91 1.05-6.15-4.46-4.35 6.17-.9L12 2.75z" />
+            </svg>
             <span>女孩選位</span>
           </a>
           <a
             href="#seat-finder-section"
-            className="flex flex-col items-center justify-center rounded-xl bg-white/10 py-1.5 text-center text-[11px] font-extrabold text-[#7ADAD0] whitespace-nowrap ring-1 ring-[#5ECBC0]/35 active:bg-[#5BAE84] active:text-white"
+            className="flex flex-1 items-center justify-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-extrabold text-[#7ADAD0] whitespace-nowrap ring-1 ring-[#5ECBC0]/35 transition-colors hover:bg-white/20 active:bg-[#5BAE84] active:text-white sm:flex-initial sm:px-3 sm:py-1.5 sm:text-xs"
           >
-            <span className="font-mono-num text-[9px] text-white/80">
-              A/B/C 區
-            </span>
-            <span>23 席查詢</span>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              className="h-3.5 w-3.5 shrink-0 text-[#5ECBC0]"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="8" />
+              <circle cx="12" cy="12" r="3" />
+              <path d="M12 2v2M12 20v2M2 12h2M20 12h2" strokeLinecap="round" />
+            </svg>
+            <span>座位雷達</span>
           </a>
           <a
             href="#schedule-section"
-            className="flex flex-col items-center justify-center rounded-xl bg-white/10 py-1.5 text-center text-[11px] font-extrabold text-white whitespace-nowrap active:bg-[#5BAE84]"
+            className="flex flex-1 items-center justify-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-extrabold text-white whitespace-nowrap transition-colors hover:bg-white/20 active:bg-[#5BAE84] sm:flex-initial sm:px-3 sm:py-1.5 sm:text-xs"
           >
-            <span className="font-mono-num text-[9px] text-[#7ADAD0]">
-              主題週
-            </span>
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              className="h-3.5 w-3.5 shrink-0 text-[#7ADAD0]"
+              aria-hidden="true"
+            >
+              <rect x="3" y="5" width="18" height="16" rx="2" />
+              <path d="M16 3v4M8 3v4M3 10h18" strokeLinecap="round" />
+            </svg>
             <span>應援班表</span>
           </a>
-        </div>
-      </nav>
+        </nav>
+      </div>
 
       {/* Main Roster Directory Section (Page Starts Directly with Member Directory!) */}
       <section
@@ -516,28 +548,25 @@ export const App: React.FC = () => {
         className="mx-auto max-w-[1440px] px-2.5 pt-20 pb-12 sm:px-6 sm:pt-26 sm:pb-20 lg:px-10 lg:pt-28"
       >
         {/* Section Heading */}
-        <div className="flex flex-col justify-between gap-4 border-b border-[#212047]/10 pb-5 sm:gap-5 sm:pb-8 lg:flex-row lg:items-end">
+        <div className="flex flex-col justify-between gap-3 border-b border-[#212047]/10 pb-4 sm:gap-5 sm:pb-6 lg:flex-row lg:items-end">
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-2 rounded-full bg-[#5BAE84]/15 px-3 py-1 font-mono-num text-[11px] font-bold tracking-[0.08em] text-[#212047] ring-1 ring-[#5BAE84]/30 lg:text-sm">
                 <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#5BAE84]" />
-                <span>2026–2027 粉絲整理成員圖鑑 · 連莊女孩全體 18 人陣容</span>
+                <span>2026–2027 連莊女孩 · 全體 18 人陣容</span>
               </span>
               <button
                 type="button"
                 onClick={() => setIsTeamIntroOpen(true)}
                 className="inline-flex items-center gap-1 rounded-full bg-[#212047] px-3 py-1 text-[11px] font-extrabold text-[#7ADAD0] shadow-2xs ring-1 ring-[#5ECBC0]/40 transition-colors hover:bg-[#5BAE84] hover:text-white lg:text-xs"
               >
-                <span>點此查看啦啦隊介紹與成軍誌要</span>
+                <span>啦啦隊介紹與成軍誌要</span>
                 <span>↗</span>
               </button>
             </div>
-            <h1 className="mt-2.5 text-2xl font-black tracking-tight text-[#212047] sm:mt-3 sm:text-5xl">
+            <h1 className="mt-2 text-2xl font-black tracking-tight text-[#212047] sm:mt-2.5 sm:text-5xl">
               連莊女孩全體成員應援圖鑑
             </h1>
-            <p className="mt-1.5 max-w-3xl text-xs leading-relaxed text-[#212047]/70 sm:mt-2.5 sm:text-base lg:text-lg">
-              自動依「<strong className="font-extrabold text-[#3F8E67]">1. 我的主推成員</strong> → <strong className="font-extrabold text-[#212047]">2. 你的座位（{currentUserSeat.zone} 區 {currentUserSeat.seat} 號）正前方女孩</strong> → 3. 其餘成員」優先排列；點擊卡片上方的 IG 按鈕即可一鍵開啟成員官方 Instagram。
-            </p>
           </div>
 
           {/* Search & Sort Controls */}
@@ -576,26 +605,27 @@ export const App: React.FC = () => {
           </div>
         </div>
 
-        {/* Priority Order & Current Seat Quick-Sync Strip */}
-        <div className="mt-3.5 flex flex-col gap-2 rounded-2xl bg-[#212047] px-3 py-2.5 text-white shadow-xs ring-1 ring-[#5ECBC0]/35 sm:mt-5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between sm:px-4 sm:py-3">
-          <div className="flex flex-wrap items-center gap-1.5 text-[11px] sm:gap-2 sm:text-xs">
+        {/* Priority Order & Current Seat Quick-Sync Strip (Compact Visual Badges) */}
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-[#212047] px-3 py-2 text-white shadow-xs ring-1 ring-[#5ECBC0]/35 sm:mt-4 sm:px-4 sm:py-2.5">
+          <div className="flex flex-wrap items-center gap-1.5 text-[11px] sm:text-xs">
             <span className="font-mono-num font-bold text-[#7ADAD0]">
-              優先顯示順序：
+              排序：
             </span>
             <span className="inline-flex items-center gap-1 rounded-full bg-[#5BAE84] px-2.5 py-0.5 font-extrabold text-white">
-              <span>1. ★ 我的主推 ({favoriteIds.length})</span>
+              <span>★ 主推 ({favoriteIds.length})</span>
             </span>
-            <span className="text-white/50">→</span>
+            <span className="text-white/40">→</span>
             <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-0.5 font-extrabold text-[#5ECBC0] ring-1 ring-[#5ECBC0]/50">
               <span>
-                2. ▲ 座位（{currentUserSeat.zone} 區 {currentUserSeat.seat} 號）正前＋隔壁緊鄰區女孩 ({frontSeatMemberMap.size})
+                ▲ {currentUserSeat.zone}
+                {currentUserSeat.seat} 面前＋↔ 鄰區 ({frontSeatMemberMap.size})
               </span>
             </span>
           </div>
 
           {/* Inline Quick Seat Switcher so User Can Immediately Adjust "My Seat" in Roster */}
           <div className="flex flex-wrap items-center gap-1.5 text-[11px] sm:text-xs">
-            <span className="font-mono-num text-white/75">設定你的座位：</span>
+            <span className="font-mono-num text-white/75">座位：</span>
             <select
               value={currentUserSeat.matchId}
               onChange={(e) => {

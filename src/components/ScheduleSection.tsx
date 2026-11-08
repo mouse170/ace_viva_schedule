@@ -92,34 +92,20 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
       className="relative mx-auto max-w-[1440px] px-3 py-16 sm:px-6 sm:py-24 lg:px-10"
     >
       {/* Section Header */}
-      <div className="flex flex-col justify-between gap-5 border-b border-[#212047]/10 pb-8 lg:flex-row lg:items-end">
+      <div className="flex flex-col justify-between gap-4 border-b border-[#212047]/10 pb-6 lg:flex-row lg:items-end">
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-2 rounded-full bg-[#5BAE84]/15 px-3 py-1 font-mono-num text-[10px] font-bold tracking-[0.16em] text-[#212047] ring-1 ring-[#5BAE84]/30 lg:px-4 lg:py-1.5 lg:text-xs">
               <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#5BAE84]" />
               <span>主題週合併班表</span>
             </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#212047] px-3 py-1 font-mono-num text-[10px] font-bold text-[#7ADAD0] lg:text-xs">
-              <span>已隱藏過期主題日 · 同週班表合併顯示</span>
+            <span className="inline-flex items-center gap-1 rounded-full bg-[#212047] px-3 py-1 font-mono-num text-[10px] font-bold text-[#7ADAD0] lg:text-xs">
+              <span>已隱藏過期日 · 同週合併顯示</span>
             </span>
           </div>
-          <h2 className="mt-3 text-2xl font-black tracking-tight text-[#212047] sm:text-5xl lg:text-6xl">
+          <h2 className="mt-2.5 text-2xl font-black tracking-tight text-[#212047] sm:text-4xl lg:text-5xl">
             臺中連莊主場主題週與女孩應援班表
           </h2>
-          <p className="mt-2.5 max-w-3xl text-xs leading-relaxed text-[#212047]/70 sm:text-base lg:text-lg">
-            已自動隱藏過期主題日，並將同一主題週（週六、週日）相同班表合併呈現；若當週兩日出席成員有異動，將以
-            <strong className="mx-1 rounded-md bg-amber-500/20 px-1.5 py-0.5 font-extrabold text-amber-900">
-              琥珀橘（週六限定）
-            </strong>
-            與
-            <strong className="mx-1 rounded-md bg-rose-500/20 px-1.5 py-0.5 font-extrabold text-rose-900">
-              玫瑰粉（週日限定）
-            </strong>
-            雙色高亮提醒。
-          </p>
-          <p className="mt-2 max-w-3xl text-[11px] font-semibold text-[#3F8E67] lg:text-sm">
-            ※ 粉絲自製免責說明：本班表整理自官方 Instagram 公開貼文，若有臨時排班異動或賽程調整，請一律以臺中連莊球團與連莊女孩官方實際公告為準。
-          </p>
         </div>
 
         <div className="flex items-center gap-3 self-start lg:self-end">
