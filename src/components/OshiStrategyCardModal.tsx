@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { MEMBERS, type AceVivaMember } from '../data/members';
 import {
-  STATION_ROTATION_SCHEDULES,
+  ACTIVE_STATION_ROTATION_SCHEDULES,
+  CLOSEST_STATION_SCHEDULE,
   getGirlSeatRecommendations,
   getCrossZoneGoldenIntervals,
   getFullMatchGirlDistanceSummary,
@@ -1353,8 +1354,9 @@ export const OshiStrategyCardModal: React.FC<OshiStrategyCardModalProps> = ({
 
   const currentSchedule = useMemo(
     () =>
-      STATION_ROTATION_SCHEDULES.find((s) => s.matchId === selectedMatchId) ??
-      STATION_ROTATION_SCHEDULES[0],
+      ACTIVE_STATION_ROTATION_SCHEDULES.find(
+        (s) => s.matchId === selectedMatchId
+      ) ?? CLOSEST_STATION_SCHEDULE,
     [selectedMatchId]
   );
 
@@ -1615,7 +1617,7 @@ export const OshiStrategyCardModal: React.FC<OshiStrategyCardModalProps> = ({
           <div className="mt-2.5 flex flex-col gap-2.5 rounded-2xl bg-[#F4FAF8] p-3 ring-1 ring-[#5BAE84]/30 sm:flex-row sm:items-center sm:justify-between">
             {/* Match Day Switcher */}
             <div className="flex flex-wrap gap-1.5">
-              {STATION_ROTATION_SCHEDULES.map((sched) => {
+              {ACTIVE_STATION_ROTATION_SCHEDULES.map((sched, idx) => {
                 const isAct = sched.matchId === currentSchedule.matchId;
                 return (
                   <button
@@ -1628,6 +1630,7 @@ export const OshiStrategyCardModal: React.FC<OshiStrategyCardModalProps> = ({
                         : 'bg-white text-[#212047]/75 ring-1 ring-[#212047]/10 hover:bg-[#E6F5F1]'
                     }`}
                   >
+                    {idx === 0 ? '★ 最接近 · ' : ''}
                     {sched.dayLabel}（對戰 {sched.opponent}）
                   </button>
                 );

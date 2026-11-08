@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { MEMBERS, type AceVivaMember } from '../data/members';
 import {
-  STATION_ROTATION_SCHEDULES,
+  ACTIVE_STATION_ROTATION_SCHEDULES,
+  CLOSEST_STATION_SCHEDULE,
   getFullMatchGirlDistanceSummary,
   getSeatPositionMapping,
   type AceZoneId,
@@ -94,7 +95,9 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
   onSeatChange,
   onOpenMemberDetail,
 }) => {
-  const [selectedMatchId, setSelectedMatchId] = useState<string>('2026-11-07');
+  const [selectedMatchId, setSelectedMatchId] = useState<string>(
+    CLOSEST_STATION_SCHEDULE.matchId
+  );
   const [selectedZone, setSelectedZone] = useState<AceZoneId>('B');
   const [selectedSeat, setSelectedSeat] = useState<number>(12);
   const [activeSetKey, setActiveSetKey] = useState<'set1_4' | 'set2_5' | 'set3'>(
@@ -137,8 +140,9 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
 
   const currentMatchSchedule = useMemo(
     () =>
-      STATION_ROTATION_SCHEDULES.find((s) => s.matchId === selectedMatchId) ??
-      STATION_ROTATION_SCHEDULES[0],
+      ACTIVE_STATION_ROTATION_SCHEDULES.find(
+        (s) => s.matchId === selectedMatchId
+      ) ?? CLOSEST_STATION_SCHEDULE,
     [selectedMatchId]
   );
 
@@ -465,8 +469,8 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
         {/* Dynamic Match Day Switcher + 1-Click Strategy Image Button */}
         <div className="flex flex-wrap items-center gap-2 lg:self-end">
           <div className="flex flex-wrap gap-1.5 rounded-2xl bg-[#D5EFE9] p-1.5 ring-1 ring-[#5BAE84]/35 sm:rounded-full">
-            {STATION_ROTATION_SCHEDULES.map((sched, idx) => {
-              const isActive = sched.matchId === selectedMatchId;
+            {ACTIVE_STATION_ROTATION_SCHEDULES.map((sched, idx) => {
+              const isActive = sched.matchId === currentMatchSchedule.matchId;
               return (
                 <button
                   key={sched.matchId}
@@ -478,8 +482,8 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                       : 'text-[#212047]/75 hover:bg-white/60 hover:text-[#212047]'
                   }`}
                 >
-                  第 {idx + 1} 日 · {sched.dateLabel.split(' ')[0]} 對戰{' '}
-                  {sched.opponent}
+                  {idx === 0 ? '★ 最接近班表 · ' : ''}
+                  {sched.dateLabel.split(' ')[0]} 對戰 {sched.opponent}
                 </button>
               );
             })}

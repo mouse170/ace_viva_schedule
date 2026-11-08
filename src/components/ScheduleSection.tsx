@@ -2,7 +2,8 @@ import React, { useMemo, useState } from 'react';
 import { MEMBERS, type AceVivaMember } from '../data/members';
 import {
   ACTIVE_THEME_WEEKS,
-  STATION_ROTATION_SCHEDULES,
+  ACTIVE_STATION_ROTATION_SCHEDULES,
+  CLOSEST_STATION_SCHEDULE,
   getMergedThemeWeekRoster,
   type AceZoneId,
   type WeekMemberAttendanceType,
@@ -24,18 +25,21 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
   onSelectMemberFilter,
   onOpenMemberDetail,
 }) => {
-  // 選擇主題週（預設顯示全部未過期主題週）
-  const [selectedWeekId, setSelectedWeekId] = useState<string>('all');
+  // 選擇主題週（預設以「最接近的未過期班表」為主）
+  const [selectedWeekId, setSelectedWeekId] = useState<string>(
+    () => ACTIVE_THEME_WEEKS[0]?.weekId ?? 'all'
+  );
   // 班表顯示模式：全部合併名單 / 只看兩日差異成員 / 只看週六 Day 1 / 只看週日 Day 2
   const [rosterViewFilter, setRosterViewFilter] =
     useState<WeekRosterViewFilter>('all');
 
-  // 2F 集氣區站位表展開狀態與單日切換（針對有公告站位表的主題週，如 11/07–11/08）
+  // 2F 集氣區站位表展開狀態與單日切換（預設顯示最接近之未過期場次）
   const [expandedStationWeekId, setExpandedStationWeekId] = useState<
     string | null
-  >('week-2026-11-07');
-  const [stationDayMatchId, setStationDayMatchId] =
-    useState<string>('2026-11-07');
+  >(() => ACTIVE_THEME_WEEKS[0]?.weekId ?? 'week-2026-11-07');
+  const [stationDayMatchId, setStationDayMatchId] = useState<string>(
+    () => CLOSEST_STATION_SCHEDULE.matchId
+  );
 
   const memberMap = useMemo(() => {
     const map = new Map<string, AceVivaMember>();
@@ -50,23 +54,31 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
     return ACTIVE_THEME_WEEKS.map((week) => getMergedThemeWeekRoster(week));
   }, []);
 
-  // 依週次與成員篩選後的主題週列表
+  // 依週次與成員篩選後的主題週列表（若篩選特定成員而最接近週次無該成員，自動顯示該成員最接近之未過期週次）
   const filteredMergedWeeks = useMemo(() => {
-    let list =
-      selectedWeekId === 'all'
-        ? mergedThemeWeeks
-        : mergedThemeWeeks.filter((item) => item.week.weekId === selectedWeekId);
+    const matchByMember = (item: (typeof mergedThemeWeeks)[number]) => {
+      if (selectedMemberId === 'all') return true;
+      if (selectedMemberId === 'favorites') {
+        if (favoriteIds.length === 0) return false;
+        return item.allMemberIds.some((id) => favoriteIds.includes(id));
+      }
+      return item.allMemberIds.includes(selectedMemberId);
+    };
 
-    if (selectedMemberId === 'all') return list;
-    if (selectedMemberId === 'favorites') {
-      if (favoriteIds.length === 0) return [];
-      return list.filter((item) =>
-        item.allMemberIds.some((id) => favoriteIds.includes(id))
-      );
+    const memberMatchedWeeks = mergedThemeWeeks.filter(matchByMember);
+
+    if (selectedWeekId === 'all') {
+      return memberMatchedWeeks;
     }
-    return list.filter((item) =>
-      item.allMemberIds.includes(selectedMemberId)
+
+    const weekMatched = memberMatchedWeeks.filter(
+      (item) => item.week.weekId === selectedWeekId
     );
+    // 若使用者點選特定成員篩選，且目前預設週次該成員未出席，自動顯示該成員最接近的未過期班表
+    if (weekMatched.length === 0 && selectedMemberId !== 'all') {
+      return memberMatchedWeeks.slice(0, 1);
+    }
+    return weekMatched;
   }, [mergedThemeWeeks, selectedWeekId, selectedMemberId, favoriteIds]);
 
   const activeFilterMember =
@@ -125,25 +137,14 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
           <div className="flex flex-col gap-2 border-b border-[#212047]/10 pb-3.5 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
             <div className="flex flex-wrap items-center gap-2">
               <span className="font-mono-num text-[10px] font-extrabold tracking-[0.14em] text-[#212047]/70 sm:text-xs">
-                步驟一 · 選擇未過期主題週次
+                步驟一 · 預設顯示最接近班表（可切換其他未過期週次）
               </span>
               <span className="rounded-full bg-[#E6F5F1] px-2.5 py-0.5 font-mono-num text-[10px] font-bold text-[#3F8E67]">
-                10/31–11/01 開幕週已過期不顯示
+                已過期場次自動隱藏不顯示
               </span>
             </div>
             <div className="no-scrollbar flex gap-1.5 overflow-x-auto pb-1 sm:flex-wrap sm:pb-0">
-              <button
-                type="button"
-                onClick={() => setSelectedWeekId('all')}
-                className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-extrabold transition-all lg:px-4 lg:py-2 lg:text-sm ${
-                  selectedWeekId === 'all'
-                    ? 'bg-[#212047] text-white shadow-xs'
-                    : 'bg-[#F4FAF8] text-[#212047]/80 ring-1 ring-[#212047]/10 hover:bg-[#E6F5F1]'
-                }`}
-              >
-                全部近期主題週（{mergedThemeWeeks.length} 週）
-              </button>
-              {mergedThemeWeeks.map(({ week }) => {
+              {mergedThemeWeeks.map(({ week }, idx) => {
                 const isAct = selectedWeekId === week.weekId;
                 return (
                   <button
@@ -153,17 +154,28 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
                     className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-extrabold transition-all lg:px-4 lg:py-2 lg:text-sm ${
                       isAct
                         ? 'bg-[#212047] text-[#7ADAD0] shadow-xs ring-2 ring-[#5BAE84]'
-                        : week.isCurrentWeek
+                        : idx === 0
                           ? 'bg-[#E6F5F1] text-[#212047] ring-1 ring-[#5BAE84]/50 hover:bg-[#D5EFE9]'
                           : 'bg-[#F4FAF8] text-[#212047]/80 ring-1 ring-[#212047]/10 hover:bg-[#E6F5F1]'
                     }`}
                   >
-                    {week.isCurrentWeek
-                      ? `★ ${week.weekShortLabel}`
+                    {idx === 0
+                      ? `★ 最接近班表：${week.weekShortLabel}`
                       : week.weekShortLabel}
                   </button>
                 );
               })}
+              <button
+                type="button"
+                onClick={() => setSelectedWeekId('all')}
+                className={`shrink-0 rounded-full px-3.5 py-1.5 text-xs font-extrabold transition-all lg:px-4 lg:py-2 lg:text-sm ${
+                  selectedWeekId === 'all'
+                    ? 'bg-[#212047] text-white shadow-xs'
+                    : 'bg-[#F4FAF8] text-[#212047]/80 ring-1 ring-[#212047]/10 hover:bg-[#E6F5F1]'
+                }`}
+              >
+                展開全部未過期主題週（{mergedThemeWeeks.length} 週）
+              </button>
             </div>
           </div>
 
@@ -320,6 +332,7 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
             week,
             day1Match,
             day2Match,
+            isSingleRemainingDay,
             day1ShortDate,
             day2ShortDate,
             allMemberIds,
@@ -332,6 +345,7 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
 
           // Filter member IDs according to rosterViewFilter
           const displayedMemberIds = allMemberIds.filter((id) => {
+            if (isSingleRemainingDay) return true;
             const st = memberStatusMap[id];
             if (rosterViewFilter === 'diff_only') {
               return st === 'day1_only' || st === 'day2_only';
@@ -357,9 +371,9 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
             .map((id) => memberMap.get(id))
             .filter((m): m is AceVivaMember => Boolean(m));
 
-          // Check if this week has 2F Station Rotation Schedules
-          const weekStationSchedules = STATION_ROTATION_SCHEDULES.filter((s) =>
-            week.matches.some((m) => m.id === s.matchId)
+          // Check if this week has non-expired 2F Station Rotation Schedules
+          const weekStationSchedules = ACTIVE_STATION_ROTATION_SCHEDULES.filter(
+            (s) => week.matches.some((m) => m.id === s.matchId)
           );
           const isStationExpanded = expandedStationWeekId === week.weekId;
           const activeStationSchedule =
@@ -382,11 +396,13 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
                     <div className="flex flex-wrap items-center gap-2">
                       {week.isCurrentWeek && (
                         <span className="rounded-full bg-[#5BAE84] px-3 py-0.5 font-mono-num text-[11px] font-extrabold text-white shadow-2xs lg:text-xs">
-                          ★ 本週進行中主題日
+                          ★ 最接近場次 · 進行中主題日
                         </span>
                       )}
                       <span className="font-mono-num text-xs font-extrabold tracking-[0.12em] text-[#4FA87D] uppercase lg:text-sm">
-                        {week.weekShortLabel} · 同週兩日合併班表
+                        {isSingleRemainingDay
+                          ? `${week.weekShortLabel} · 當日應援班表（過期場次已隱藏）`
+                          : `${week.weekShortLabel} · 同週兩日合併班表`}
                       </span>
                     </div>
 
@@ -395,10 +411,13 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
                         {week.dateRangeLabel}
                       </span>
                       <span className="rounded-full bg-[#E6F5F1] px-3 py-1 font-mono-num text-xs font-bold text-[#212047] ring-1 ring-[#5BAE84]/35">
-                        兩日全勤 {bothDaysMemberIds.length} 人
-                        {hasDayDifference
-                          ? ` ＋ 單日限定 ${day1OnlyMemberIds.length + day2OnlyMemberIds.length} 人`
-                          : ''}
+                        {isSingleRemainingDay
+                          ? `當日出席 ${bothDaysMemberIds.length} 人`
+                          : `兩日全勤 ${bothDaysMemberIds.length} 人${
+                              hasDayDifference
+                                ? ` ＋ 單日限定 ${day1OnlyMemberIds.length + day2OnlyMemberIds.length} 人`
+                                : ''
+                            }`}
                       </span>
                     </div>
                   </div>
@@ -415,13 +434,31 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
                     </div>
 
                     {/* Combined Day 1 & Day 2 Match Info Cards */}
-                    <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:col-span-7">
+                    <div
+                      className={`grid grid-cols-1 gap-2.5 lg:col-span-7 ${
+                        isSingleRemainingDay ? '' : 'sm:grid-cols-2'
+                      }`}
+                    >
                       {day1Match && (
-                        <div className="flex items-center justify-between gap-2 rounded-2xl bg-amber-500/[0.08] px-3.5 py-2.5 ring-1 ring-amber-500/35">
+                        <div
+                          className={`flex items-center justify-between gap-2 rounded-2xl px-3.5 py-2.5 ring-1 ${
+                            isSingleRemainingDay
+                              ? 'bg-[#E6F5F1] ring-[#5BAE84]/45'
+                              : 'bg-amber-500/[0.08] ring-amber-500/35'
+                          }`}
+                        >
                           <div>
                             <div className="flex items-center gap-1.5">
-                              <span className="rounded-md bg-amber-500 px-2 py-0.5 font-mono-num text-[10px] font-black text-white">
-                                週六場
+                              <span
+                                className={`rounded-md px-2 py-0.5 font-mono-num text-[10px] font-black text-white ${
+                                  isSingleRemainingDay
+                                    ? 'bg-[#212047]'
+                                    : 'bg-amber-500'
+                                }`}
+                              >
+                                {day1Match.dayOfWeek.includes('日')
+                                  ? '週日場'
+                                  : '週六場'}
                               </span>
                               <span className="font-mono-num text-xs font-extrabold text-[#212047] lg:text-sm">
                                 {day1Match.date} ({day1Match.time})
@@ -431,13 +468,20 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
                               臺中連莊 對戰 {day1Match.opponent}
                             </div>
                           </div>
-                          <div className="text-right font-mono-num text-[11px] font-bold text-amber-900">
+                          <div
+                            className={`text-right font-mono-num text-[11px] font-bold ${
+                              isSingleRemainingDay
+                                ? 'text-[#212047]'
+                                : 'text-amber-900'
+                            }`}
+                          >
                             <div>出席 {day1Match.attendingMemberIds.length} 人</div>
-                            {day1OnlyMembers.length > 0 && (
-                              <div className="text-[10px] font-extrabold text-amber-700">
-                                含 {day1OnlyMembers.map((m) => m.name).join('、')}
-                              </div>
-                            )}
+                            {!isSingleRemainingDay &&
+                              day1OnlyMembers.length > 0 && (
+                                <div className="text-[10px] font-extrabold text-amber-700">
+                                  含 {day1OnlyMembers.map((m) => m.name).join('、')}
+                                </div>
+                              )}
                           </div>
                         </div>
                       )}
@@ -471,7 +515,13 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
                   </div>
 
                   {/* Color-Coded Day-Difference Highlight Banner */}
-                  {hasDayDifference ? (
+                  {isSingleRemainingDay ? (
+                    <div className="mt-4 rounded-2xl bg-[#E6F5F1] px-4 py-2.5 text-xs font-bold text-[#3F8E67]">
+                      本週前一場次已結束並自動隱藏，目前顯示最接近之未過期場次（{day1ShortDate}{' '}
+                      {day1Match.dayOfWeek.includes('日') ? '週日場' : '週六場'} 對戰{' '}
+                      {day1Match.opponent}）完整應援名單。
+                    </div>
+                  ) : hasDayDifference ? (
                     <div className="mt-4 rounded-2xl bg-gradient-to-r from-amber-500/12 via-[#F4FAF8] to-rose-500/12 p-3.5 ring-1 ring-[#212047]/15 sm:p-4">
                       <div className="flex flex-col gap-2.5 lg:flex-row lg:items-center lg:justify-between">
                         <div className="flex flex-wrap items-center gap-2">
@@ -528,10 +578,14 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
                   <div className="mt-5">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <span className="font-mono-num text-[10px] font-bold tracking-[0.15em] text-[#212047]/65 lg:text-xs">
-                        當週出席女孩合併名單（顯示 {attendingMembers.length} 人）
+                        {isSingleRemainingDay
+                          ? `當日出席女孩名單（顯示 ${attendingMembers.length} 人）`
+                          : `當週出席女孩合併名單（顯示 ${attendingMembers.length} 人）`}
                       </span>
                       <span className="text-[11px] font-bold text-[#212047]/70 lg:text-xs">
-                        綠標＝兩日全勤 ｜ 琥珀橘框＝週六限定 ｜ 玫瑰粉框＝週日限定
+                        {isSingleRemainingDay
+                          ? `${day1ShortDate} 出席應援陣容`
+                          : '綠標＝兩日全勤 ｜ 琥珀橘框＝週六限定 ｜ 玫瑰粉框＝週日限定'}
                       </span>
                     </div>
 
@@ -550,7 +604,9 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
                         let avatarRingStyle = 'ring-1 ring-[#5BAE84]/45';
                         let badgeStyle =
                           'bg-[#D5EFE9] text-[#212047] group-hover:bg-[#5BAE84] group-hover:text-white';
-                        let badgeText = '兩日全勤';
+                        let badgeText = isSingleRemainingDay
+                          ? `${day1ShortDate}出席`
+                          : '兩日全勤';
 
                         if (status === 'day1_only') {
                           cardStyle =

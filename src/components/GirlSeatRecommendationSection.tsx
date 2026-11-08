@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
 import { MEMBERS, type AceVivaMember } from '../data/members';
 import {
-  STATION_ROTATION_SCHEDULES,
+  ACTIVE_STATION_ROTATION_SCHEDULES,
+  CLOSEST_STATION_SCHEDULE,
   getGirlSeatRecommendations,
   getCrossZoneGoldenIntervals,
   type AceZoneId,
@@ -53,7 +54,9 @@ function isSeatInRange(seat: number, range: [number, number]): boolean {
 export const GirlSeatRecommendationSection: React.FC<
   GirlSeatRecommendationSectionProps
 > = ({ favoriteIds, onOpenMemberDetail, onJumpToSeatSimulator }) => {
-  const [selectedMatchId, setSelectedMatchId] = useState<string>('2026-11-07');
+  const [selectedMatchId, setSelectedMatchId] = useState<string>(
+    CLOSEST_STATION_SCHEDULE.matchId
+  );
   const [selectedGirlId, setSelectedGirlId] = useState<string>('yuri');
   const [onlyFavoritesInMatrix, setOnlyFavoritesInMatrix] =
     useState<boolean>(false);
@@ -72,8 +75,9 @@ export const GirlSeatRecommendationSection: React.FC<
 
   const currentMatchSchedule = useMemo(
     () =>
-      STATION_ROTATION_SCHEDULES.find((s) => s.matchId === selectedMatchId) ??
-      STATION_ROTATION_SCHEDULES[0],
+      ACTIVE_STATION_ROTATION_SCHEDULES.find(
+        (s) => s.matchId === selectedMatchId
+      ) ?? CLOSEST_STATION_SCHEDULE,
     [selectedMatchId]
   );
 
@@ -155,8 +159,8 @@ export const GirlSeatRecommendationSection: React.FC<
         {/* Dynamic Match Day Switcher + 1-Click Strategy Card Generator */}
         <div className="flex flex-wrap items-center gap-2 lg:self-end">
           <div className="flex flex-wrap gap-1.5 rounded-2xl bg-[#D5EFE9] p-1.5 ring-1 ring-[#5BAE84]/35 sm:rounded-full">
-            {STATION_ROTATION_SCHEDULES.map((sched, idx) => {
-              const isActive = sched.matchId === selectedMatchId;
+            {ACTIVE_STATION_ROTATION_SCHEDULES.map((sched, idx) => {
+              const isActive = sched.matchId === currentMatchSchedule.matchId;
               return (
                 <button
                   key={sched.matchId}
@@ -168,8 +172,8 @@ export const GirlSeatRecommendationSection: React.FC<
                       : 'text-[#212047]/75 hover:bg-white/60 hover:text-[#212047]'
                   }`}
                 >
-                  第 {idx + 1} 日 · {sched.dateLabel.split(' ')[0]} 對戰{' '}
-                  {sched.opponent}
+                  {idx === 0 ? '★ 最接近班表 · ' : ''}
+                  {sched.dateLabel.split(' ')[0]} 對戰 {sched.opponent}
                 </button>
               );
             })}

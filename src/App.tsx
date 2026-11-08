@@ -13,7 +13,8 @@ import { SeatFinderSection } from './components/SeatFinderSection';
 import { ScheduleSection } from './components/ScheduleSection';
 import { ZodiacIcon, isCurrentMonthBirthday } from './components/ZodiacIcon';
 import {
-  STATION_ROTATION_SCHEDULES,
+  ACTIVE_STATION_ROTATION_SCHEDULES,
+  CLOSEST_STATION_SCHEDULE,
   getSeatPositionMapping,
   type AceZoneId,
 } from './data/schedule';
@@ -58,8 +59,13 @@ export const App: React.FC = () => {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (parsed && parsed.zone && parsed.seat) {
+          const isValidActiveMatch = ACTIVE_STATION_ROTATION_SCHEDULES.some(
+            (s) => s.matchId === parsed.matchId
+          );
           return {
-            matchId: parsed.matchId || '2026-11-07',
+            matchId: isValidActiveMatch
+              ? parsed.matchId
+              : CLOSEST_STATION_SCHEDULE.matchId,
             zone: parsed.zone as AceZoneId,
             seat: Number(parsed.seat) || 12,
           };
@@ -68,7 +74,11 @@ export const App: React.FC = () => {
     } catch {
       // Ignore storage errors
     }
-    return { matchId: '2026-11-07', zone: 'B', seat: 12 };
+    return {
+      matchId: CLOSEST_STATION_SCHEDULE.matchId,
+      zone: 'B',
+      seat: 12,
+    };
   });
   const [copiedCardKey, setCopiedCardKey] = useState<string | null>(null);
 
@@ -156,9 +166,9 @@ export const App: React.FC = () => {
   // 計算「自己座位正前方與隔壁緊鄰區女孩」映射表（依據使用者目前選擇的場次、區域與座位號 1-23 號）
   const frontSeatMemberMap = useMemo(() => {
     const schedule =
-      STATION_ROTATION_SCHEDULES.find(
+      ACTIVE_STATION_ROTATION_SCHEDULES.find(
         (s) => s.matchId === currentUserSeat.matchId
-      ) ?? STATION_ROTATION_SCHEDULES[0];
+      ) ?? CLOSEST_STATION_SCHEDULE;
     const slotIndex = getSeatPositionMapping(currentUserSeat.seat).slotIndex;
     const map = new Map<
       string,
@@ -596,13 +606,13 @@ export const App: React.FC = () => {
               aria-label="選擇場次日期"
               className="rounded-lg bg-white/12 px-2 py-1 font-mono-num text-[11px] font-bold text-[#7ADAD0] ring-1 ring-white/20 focus:outline-none sm:text-xs"
             >
-              {STATION_ROTATION_SCHEDULES.map((s) => (
+              {ACTIVE_STATION_ROTATION_SCHEDULES.map((s) => (
                 <option
                   key={s.matchId}
                   value={s.matchId}
                   className="bg-[#212047] text-white"
                 >
-                  {s.dayLabel}
+                  {s.dayLabel}（對戰 {s.opponent}）
                 </option>
               ))}
             </select>

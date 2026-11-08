@@ -1083,6 +1083,7 @@ export interface MergedThemeWeekRoster {
   week: ThemeWeekGroup;
   day1Match: HomeMatchSchedule;
   day2Match?: HomeMatchSchedule;
+  isSingleRemainingDay: boolean;
   day1ShortDate: string;
   day2ShortDate: string;
   allMemberIds: string[];
@@ -1138,29 +1139,79 @@ export const THEME_WEEKS: ThemeWeekGroup[] = [
 ];
 
 /**
- * 取得有效基準日期（YYYY-MM-DD），自動隱藏已過期之主題週（如 10/31–11/01 開幕主題週）
+ * 取得有效基準日期（YYYY-MM-DD），用於自動隱藏已過期之場次與主題日
  */
-export function getActiveThemeWeeks(referenceDate?: Date): ThemeWeekGroup[] {
+export function getEffectiveTodayIso(referenceDate?: Date): string {
   const now = referenceDate ?? new Date();
   const localIso = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-  // 確保至少以 2026-11-07 為基準過濾已結束之 10/31–11/01 開幕週
-  const effectiveToday = localIso > '2026-11-07' && localIso <= '2026-12-13' ? localIso : '2026-11-07';
+  return localIso > '2026-11-07' && localIso <= '2026-12-13'
+    ? localIso
+    : '2026-11-07';
+}
 
-  const active = THEME_WEEKS.filter((week) => {
-    if (week.isExpired) return false;
-    const lastMatch = week.matches[week.matches.length - 1];
-    if (!lastMatch) return false;
-    return lastMatch.id >= effectiveToday;
-  });
+/**
+ * 取得未過期之 2F 集氣區站位輪換班表（自動隱藏已過期單日場次，例如 11/08 時自動隱藏 11/07 週六場，並以最接近場次為主）
+ */
+export function getActiveStationRotationSchedules(
+  referenceDate?: Date
+): MatchStationSchedule[] {
+  const effectiveToday = getEffectiveTodayIso(referenceDate);
+  const active = STATION_ROTATION_SCHEDULES.filter(
+    (s) => s.matchId >= effectiveToday
+  );
+  return active.length > 0
+    ? active
+    : [STATION_ROTATION_SCHEDULES[STATION_ROTATION_SCHEDULES.length - 1]];
+}
+
+export const ACTIVE_STATION_ROTATION_SCHEDULES: MatchStationSchedule[] =
+  getActiveStationRotationSchedules();
+
+export const CLOSEST_STATION_SCHEDULE: MatchStationSchedule =
+  ACTIVE_STATION_ROTATION_SCHEDULES[0];
+
+/**
+ * 取得未過期之主題週與場次（若同週第一日已過期，自動過濾掉已過期之單日，並將最接近之班表排在第一順位）
+ */
+export function getActiveThemeWeeks(referenceDate?: Date): ThemeWeekGroup[] {
+  const effectiveToday = getEffectiveTodayIso(referenceDate);
+
+  const active: ThemeWeekGroup[] = [];
+  for (const week of THEME_WEEKS) {
+    if (week.isExpired) continue;
+    const nonExpiredMatches = week.matches.filter(
+      (m) => m.id >= effectiveToday
+    );
+    if (nonExpiredMatches.length === 0) continue;
+
+    // 若同週首日（週六）已過期、僅剩週日未過期，動態更新標籤為最接近之單日資訊
+    if (nonExpiredMatches.length === 1 && week.matches.length > 1) {
+      const onlyMatch = nonExpiredMatches[0];
+      const shortDate = onlyMatch.date.slice(5).replace('.', '/');
+      const dayChar = onlyMatch.dayOfWeek.includes('日') ? '日' : '六';
+      active.push({
+        ...week,
+        isCurrentWeek: active.length === 0,
+        weekShortLabel: `${shortDate} (${dayChar}) 本週主題日`,
+        dateRangeLabel: `${shortDate} (${dayChar}) ${onlyMatch.time}`,
+        matches: nonExpiredMatches,
+      });
+    } else {
+      active.push({
+        ...week,
+        isCurrentWeek: active.length === 0,
+        matches: nonExpiredMatches,
+      });
+    }
+  }
 
   return active.length > 0 ? active : THEME_WEEKS.filter((w) => !w.isExpired);
 }
 
 export const ACTIVE_THEME_WEEKS: ThemeWeekGroup[] = getActiveThemeWeeks();
 
-export const ACTIVE_HOME_SCHEDULE: HomeMatchSchedule[] = ACTIVE_THEME_WEEKS.flatMap(
-  (week) => week.matches
-);
+export const ACTIVE_HOME_SCHEDULE: HomeMatchSchedule[] =
+  ACTIVE_THEME_WEEKS.flatMap((week) => week.matches);
 
 /**
  * 合併同一主題週之兩日班表，自動比對「兩日全勤」與「單日限定（週六限定 / 週日限定）」成員名單
@@ -1170,6 +1221,7 @@ export function getMergedThemeWeekRoster(
 ): MergedThemeWeekRoster {
   const day1Match = week.matches[0];
   const day2Match = week.matches[1];
+  const isSingleRemainingDay = !day2Match;
 
   const day1Ids = day1Match ? day1Match.attendingMemberIds : [];
   const day2Ids = day2Match ? day2Match.attendingMemberIds : day1Ids;
@@ -1207,6 +1259,7 @@ export function getMergedThemeWeekRoster(
     week,
     day1Match,
     day2Match,
+    isSingleRemainingDay,
     day1ShortDate,
     day2ShortDate,
     allMemberIds,
