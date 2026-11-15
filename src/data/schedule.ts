@@ -20,8 +20,8 @@ export interface SetStationArrangement {
   setKey: 'set1_4' | 'set2_5' | 'set3';
   setLabel: string;
   setShortLabel: string;
-  initial: Record<AceZoneId, [string, string, string]>;
-  after10Points: Record<AceZoneId, [string, string, string]>;
+  initial: Record<AceZoneId, string[]>;
+  after10Points: Record<AceZoneId, string[]>;
 }
 
 export interface MatchStationSchedule {
@@ -163,7 +163,7 @@ export const HOME_SCHEDULE: HomeMatchSchedule[] = [
     id: '2026-11-21',
     weekLabel: 'THEME WEEK 03 · 11 月主題週 DAY 1',
     themeTitle: '致青春 創造 WIN',
-    themeSubtitle: 'MC 巫苡萱（#111）與韓籍成員鄭熙靜（#42）領銜 10 人應援陣容',
+    themeSubtitle: '欸辣代班團長、MC 巫苡萱（#111）與韓籍成員鄭熙靜（#42）領銜應援',
     date: '2026.11.21',
     dayOfWeek: '週六 SAT',
     time: '14:30',
@@ -171,6 +171,7 @@ export const HOME_SCHEDULE: HomeMatchSchedule[] = [
     venue: '臺中市國立臺灣體育運動大學體育館',
     attendingMemberIds: [
       'avawu',
+      'ella',
       'jungheejung',
       'yuan',
       'yipei',
@@ -181,14 +182,15 @@ export const HOME_SCHEDULE: HomeMatchSchedule[] = [
       'yixuan',
       'ann',
     ],
-    highlightNote: '開場舞於 1F 猛虎精武區前側、中場演出於 1F 猛虎力行區前側進行',
-    instagramPostUrl: 'https://www.instagram.com/p/DejflnTkvTp/',
+    highlightNote: '已公布 2F ACE 集氣區 A/B/C 區完整站位表；欸辣擔任代班團長，開場舞於 1F 猛虎精武區、中場於 1F 猛虎力行區演出',
+    hasStationMap: true,
+    instagramPostUrl: 'https://www.instagram.com/p/DfwBSIEkoPR/',
   },
   {
     id: '2026-11-22',
     weekLabel: 'THEME WEEK 03 · 11 月主題週 DAY 2',
     themeTitle: '致青春 創造 WIN',
-    themeSubtitle: 'MC 巫苡萱（#111）與韓籍成員鄭熙靜（#42）領銜 10 人應援陣容',
+    themeSubtitle: '欸辣代班團長、MC 巫苡萱（#111）與韓籍成員鄭熙靜（#42）領銜應援',
     date: '2026.11.22',
     dayOfWeek: '週日 SUN',
     time: '14:30',
@@ -196,9 +198,10 @@ export const HOME_SCHEDULE: HomeMatchSchedule[] = [
     venue: '臺中市國立臺灣體育運動大學體育館',
     attendingMemberIds: [
       'avawu',
+      'ella',
       'jungheejung',
       'yuan',
-      'ella',
+      'yipei',
       'mega',
       'sinping',
       'weiwei',
@@ -206,14 +209,15 @@ export const HOME_SCHEDULE: HomeMatchSchedule[] = [
       'yixuan',
       'ann',
     ],
-    highlightNote: '演出期間限時開放 2F 拍攝限定區供二樓季票球迷拍攝',
-    instagramPostUrl: 'https://www.instagram.com/p/DejflnTkvTp/',
+    highlightNote: '已公布 2F ACE 集氣區 A/B/C 區完整站位表；演出期間限時開放 2F 拍攝限定區供季票球迷拍攝',
+    hasStationMap: true,
+    instagramPostUrl: 'https://www.instagram.com/p/DfwBSIEkoPR/',
   },
   {
     id: '2026-12-12',
     weekLabel: 'THEME WEEK 04 · 聖誕主題週 DAY 1',
     themeTitle: 'HOME FOR CHRISTMAS',
-    themeSubtitle: '車榮玹（#21）、應援團長馬妹（#41）與 MC 心璇（#25）聖誕主場派對',
+    themeSubtitle: '車榮玹（#21）、李珠熙（#45）、應援團長馬妹（#41）與 MC 心璇（#25）聖誕派對',
     date: '2026.12.12',
     dayOfWeek: '週六 SAT',
     time: '14:30',
@@ -223,22 +227,24 @@ export const HOME_SCHEDULE: HomeMatchSchedule[] = [
       'shenxuan',
       'mamai',
       'chayounghyun',
+      'leejuhee',
       'yipei',
       'mega',
       'sinping',
       'nicole',
       'peichen',
-      'ella',
+      'xuanxuan',
       'weiwei',
     ],
-    highlightNote: '上半季壓軸聖誕主題週首日，10 位女孩陪伴球迷共度溫馨主場',
-    instagramPostUrl: 'https://www.instagram.com/p/DejflnTkvTp/',
+    highlightNote: '已公布 2F ACE 集氣區 A/B/C 區站位表，車榮玹與李珠熙領銜聖誕主題週首日應援',
+    hasStationMap: true,
+    instagramPostUrl: 'https://www.instagram.com/p/DfwBSIEkoPR/',
   },
   {
     id: '2026-12-13',
     weekLabel: 'THEME WEEK 04 · 聖誕主題週 DAY 2',
     themeTitle: 'HOME FOR CHRISTMAS',
-    themeSubtitle: '隊長 Yuri（#6）與車榮玹（#21）台韓雙隊長合體壓軸應援',
+    themeSubtitle: '班表驚喜加碼依沛與李珠熙！10 位女孩（3/4/3 編制）與 Yuri、車榮玹壓軸合體',
     date: '2026.12.13',
     dayOfWeek: '週日 SUN',
     time: '14:30',
@@ -249,6 +255,8 @@ export const HOME_SCHEDULE: HomeMatchSchedule[] = [
       'mamai',
       'shenxuan',
       'chayounghyun',
+      'leejuhee',
+      'yipei',
       'mega',
       'sinping',
       'nicole',
@@ -256,8 +264,9 @@ export const HOME_SCHEDULE: HomeMatchSchedule[] = [
       'ella',
       'weiwei',
     ],
-    highlightNote: '2026 上半季最終主場日，台韓雙隊長 Yuri 與車榮玹同場應援',
-    instagramPostUrl: 'https://www.instagram.com/p/DejflnTkvTp/',
+    highlightNote: '已公布 2F ACE 集氣區站位表（特別加碼 10 人 3/4/3 輪換編制），2026 上半季最終主場日壓軸應援',
+    hasStationMap: true,
+    instagramPostUrl: 'https://www.instagram.com/p/DfwBSIEkoPR/',
   },
 ];
 
@@ -378,6 +387,230 @@ export const STATION_ROTATION_SCHEDULES: MatchStationSchedule[] = [
       },
     ],
   },
+  {
+    matchId: '2026-11-21',
+    dateLabel: '11/21 (六) 14:30',
+    dayLabel: '11/21 週六場',
+    opponent: '主場例行賽',
+    themeName: '致青春・創造 WIN',
+    postUrl: 'https://www.instagram.com/p/DfwBSIEkoPR/',
+    mcAndLeaderIds: ['avawu', 'ella'],
+    sets: [
+      {
+        setKey: 'set1_4',
+        setLabel: '第一局 & 第四局',
+        setShortLabel: '第 1、4 局',
+        initial: {
+          A: ['xuanxuan', 'mega', 'jungheejung'],
+          B: ['yixuan', 'sinping', 'ann'],
+          C: ['weiwei', 'yuan', 'yipei'],
+        },
+        after10Points: {
+          A: ['jungheejung', 'xuanxuan', 'mega'],
+          B: ['ann', 'yixuan', 'sinping'],
+          C: ['yipei', 'weiwei', 'yuan'],
+        },
+      },
+      {
+        setKey: 'set2_5',
+        setLabel: '第二局 & 第五局',
+        setShortLabel: '第 2、5 局',
+        initial: {
+          A: ['yipei', 'weiwei', 'yuan'],
+          B: ['jungheejung', 'xuanxuan', 'mega'],
+          C: ['ann', 'yixuan', 'sinping'],
+        },
+        after10Points: {
+          A: ['yuan', 'yipei', 'weiwei'],
+          B: ['mega', 'jungheejung', 'xuanxuan'],
+          C: ['sinping', 'ann', 'yixuan'],
+        },
+      },
+      {
+        setKey: 'set3',
+        setLabel: '第三局',
+        setShortLabel: '第 3 局',
+        initial: {
+          A: ['sinping', 'ann', 'yixuan'],
+          B: ['yuan', 'yipei', 'weiwei'],
+          C: ['mega', 'jungheejung', 'xuanxuan'],
+        },
+        after10Points: {
+          A: ['yixuan', 'sinping', 'ann'],
+          B: ['weiwei', 'yuan', 'yipei'],
+          C: ['xuanxuan', 'mega', 'jungheejung'],
+        },
+      },
+    ],
+  },
+  {
+    matchId: '2026-11-22',
+    dateLabel: '11/22 (日) 14:30',
+    dayLabel: '11/22 週日場',
+    opponent: '主場例行賽',
+    themeName: '致青春・創造 WIN',
+    postUrl: 'https://www.instagram.com/p/DfwBSIEkoPR/',
+    mcAndLeaderIds: ['avawu', 'ella'],
+    sets: [
+      {
+        setKey: 'set1_4',
+        setLabel: '第一局 & 第四局',
+        setShortLabel: '第 1、4 局',
+        initial: {
+          A: ['ann', 'yuan', 'mega'],
+          B: ['jungheejung', 'yixuan', 'weiwei'],
+          C: ['sinping', 'xuanxuan', 'yipei'],
+        },
+        after10Points: {
+          A: ['mega', 'ann', 'yuan'],
+          B: ['weiwei', 'jungheejung', 'yixuan'],
+          C: ['yipei', 'sinping', 'xuanxuan'],
+        },
+      },
+      {
+        setKey: 'set2_5',
+        setLabel: '第二局 & 第五局',
+        setShortLabel: '第 2、5 局',
+        initial: {
+          A: ['yipei', 'sinping', 'xuanxuan'],
+          B: ['mega', 'ann', 'yuan'],
+          C: ['weiwei', 'jungheejung', 'yixuan'],
+        },
+        after10Points: {
+          A: ['xuanxuan', 'yipei', 'sinping'],
+          B: ['yuan', 'mega', 'ann'],
+          C: ['yixuan', 'weiwei', 'jungheejung'],
+        },
+      },
+      {
+        setKey: 'set3',
+        setLabel: '第三局',
+        setShortLabel: '第 3 局',
+        initial: {
+          A: ['yixuan', 'weiwei', 'jungheejung'],
+          B: ['xuanxuan', 'yipei', 'sinping'],
+          C: ['yuan', 'mega', 'ann'],
+        },
+        after10Points: {
+          A: ['jungheejung', 'yixuan', 'weiwei'],
+          B: ['sinping', 'xuanxuan', 'yipei'],
+          C: ['ann', 'yuan', 'mega'],
+        },
+      },
+    ],
+  },
+  {
+    matchId: '2026-12-12',
+    dateLabel: '12/12 (六) 14:30',
+    dayLabel: '12/12 週六場',
+    opponent: '主場例行賽',
+    themeName: 'HOME FOR CHRISTMAS',
+    postUrl: 'https://www.instagram.com/p/DfwBSIEkoPR/',
+    mcAndLeaderIds: ['shenxuan', 'mamai'],
+    sets: [
+      {
+        setKey: 'set1_4',
+        setLabel: '第一局 & 第四局',
+        setShortLabel: '第 1、4 局',
+        initial: {
+          A: ['nicole', 'sinping', 'mega'],
+          B: ['xuanxuan', 'leejuhee', 'weiwei'],
+          C: ['chayounghyun', 'yipei', 'peichen'],
+        },
+        after10Points: {
+          A: ['mega', 'nicole', 'sinping'],
+          B: ['weiwei', 'xuanxuan', 'leejuhee'],
+          C: ['peichen', 'chayounghyun', 'yipei'],
+        },
+      },
+      {
+        setKey: 'set2_5',
+        setLabel: '第二局 & 第五局',
+        setShortLabel: '第 2、5 局',
+        initial: {
+          A: ['peichen', 'chayounghyun', 'yipei'],
+          B: ['mega', 'nicole', 'sinping'],
+          C: ['weiwei', 'xuanxuan', 'leejuhee'],
+        },
+        after10Points: {
+          A: ['yipei', 'peichen', 'chayounghyun'],
+          B: ['sinping', 'mega', 'nicole'],
+          C: ['leejuhee', 'weiwei', 'xuanxuan'],
+        },
+      },
+      {
+        setKey: 'set3',
+        setLabel: '第三局',
+        setShortLabel: '第 3 局',
+        initial: {
+          A: ['leejuhee', 'weiwei', 'xuanxuan'],
+          B: ['yipei', 'peichen', 'chayounghyun'],
+          C: ['sinping', 'mega', 'nicole'],
+        },
+        after10Points: {
+          A: ['xuanxuan', 'leejuhee', 'weiwei'],
+          B: ['chayounghyun', 'yipei', 'peichen'],
+          C: ['nicole', 'sinping', 'mega'],
+        },
+      },
+    ],
+  },
+  {
+    matchId: '2026-12-13',
+    dateLabel: '12/13 (日) 14:30',
+    dayLabel: '12/13 週日場（10人加碼）',
+    opponent: '主場例行賽',
+    themeName: 'HOME FOR CHRISTMAS',
+    postUrl: 'https://www.instagram.com/p/DfwBSIEkoPR/',
+    mcAndLeaderIds: ['shenxuan', 'mamai'],
+    sets: [
+      {
+        setKey: 'set1_4',
+        setLabel: '第一局 & 第四局',
+        setShortLabel: '第 1、4 局',
+        initial: {
+          A: ['chayounghyun', 'weiwei', 'mega'],
+          B: ['yuri', 'peichen', 'ella', 'sinping'],
+          C: ['leejuhee', 'yipei', 'nicole'],
+        },
+        after10Points: {
+          A: ['mega', 'chayounghyun', 'weiwei'],
+          B: ['sinping', 'yuri', 'peichen', 'ella'],
+          C: ['nicole', 'leejuhee', 'yipei'],
+        },
+      },
+      {
+        setKey: 'set2_5',
+        setLabel: '第二局 & 第五局',
+        setShortLabel: '第 2、5 局',
+        initial: {
+          A: ['nicole', 'leejuhee', 'yipei'],
+          B: ['mega', 'chayounghyun', 'weiwei'],
+          C: ['sinping', 'yuri', 'peichen', 'ella'],
+        },
+        after10Points: {
+          A: ['yipei', 'nicole', 'leejuhee'],
+          B: ['weiwei', 'mega', 'chayounghyun'],
+          C: ['ella', 'sinping', 'yuri', 'peichen'],
+        },
+      },
+      {
+        setKey: 'set3',
+        setLabel: '第三局',
+        setShortLabel: '第 3 局',
+        initial: {
+          A: ['ella', 'sinping', 'yuri', 'peichen'],
+          B: ['yipei', 'nicole', 'leejuhee'],
+          C: ['weiwei', 'mega', 'chayounghyun'],
+        },
+        after10Points: {
+          A: ['peichen', 'ella', 'sinping', 'yuri'],
+          B: ['leejuhee', 'yipei', 'nicole'],
+          C: ['chayounghyun', 'weiwei', 'mega'],
+        },
+      },
+    ],
+  },
 ];
 
 /**
@@ -450,11 +683,11 @@ export interface GirlSetZoneRecommendation {
   priorityBadge: string;
   priorityReason: string;
   zone: AceZoneId;
-  initialSlotIndex: 0 | 1 | 2;
+  initialSlotIndex: number;
   initialSlotLabel: string;
   initialSeatRange: [number, number];
   initialCoreSeats: string;
-  after10SlotIndex: 0 | 1 | 2;
+  after10SlotIndex: number;
   after10SlotLabel: string;
   after10SeatRange: [number, number];
   after10CoreSeats: string;
@@ -493,10 +726,79 @@ const SLOT_META: Record<
   2: { label: '觀眾左側（IG 右位 16–23 號）', range: [16, 23], core: '19–20 號' },
 };
 
+const SLOT_META_4: Record<
+  0 | 1 | 2 | 3,
+  { label: string; range: [number, number]; core: string }
+> = {
+  0: { label: '觀眾右側（4 人左位 1–6 號）', range: [1, 6], core: '3–4 號' },
+  1: { label: '觀眾中右（4 人中左 7–12 號）', range: [7, 12], core: '9–10 號' },
+  2: { label: '觀眾中左（4 人中右 13–17 號）', range: [13, 17], core: '15 號' },
+  3: { label: '觀眾左側（4 人右位 18–23 號）', range: [18, 23], core: '20–21 號' },
+};
+
+export function getZoneSlotIndexForSeat(
+  seatNumber: number,
+  totalSlots: number
+): number {
+  if (totalSlots === 4) {
+    if (seatNumber <= 6) return 0;
+    if (seatNumber <= 12) return 1;
+    if (seatNumber <= 17) return 2;
+    return 3;
+  }
+  return getSeatPositionMapping(seatNumber).slotIndex;
+}
+
+function getSlotMeta(
+  slotIndex: number,
+  totalSlots: number
+): { label: string; range: [number, number]; core: string } {
+  if (totalSlots === 4) {
+    const idx = Math.max(0, Math.min(3, slotIndex)) as 0 | 1 | 2 | 3;
+    return SLOT_META_4[idx];
+  }
+  const idx = Math.max(0, Math.min(2, slotIndex)) as 0 | 1 | 2;
+  return SLOT_META[idx];
+}
+
 function computeSweetSpot(
-  initSlot: 0 | 1 | 2,
-  after10Slot: 0 | 1 | 2
+  initSlot: number,
+  after10Slot: number,
+  totalSlots = 3
 ): { range: [number, number]; label: string; reason: string } {
+  if (totalSlots === 4) {
+    if (initSlot === 0 && after10Slot === 1) {
+      return {
+        range: [4, 11],
+        label: '4 號 – 11 號（黃金交界 6–9 號）',
+        reason:
+          '觀眾面向球場視角：4 人編制下，開局站 1–6 號，破 10 分後移至 7–12 號；選擇 4–11 號可全程直視。',
+      };
+    }
+    if (initSlot === 1 && after10Slot === 2) {
+      return {
+        range: [9, 16],
+        label: '9 號 – 16 號（黃金交界 11–14 號）',
+        reason:
+          '觀眾面向球場視角：4 人編制下，開局站 7–12 號，破 10 分後移至 13–17 號；選擇 9–16 號兼顧中央兩段。',
+      };
+    }
+    if (initSlot === 2 && after10Slot === 3) {
+      return {
+        range: [14, 21],
+        label: '14 號 – 21 號（黃金交界 16–19 號）',
+        reason:
+          '觀眾面向球場視角：4 人編制下，開局站 13–17 號，破 10 分後移至 18–23 號；選擇 14–21 號兼顧左翼。',
+      };
+    }
+    return {
+      range: [1, 6],
+      label: '1 號 – 6 號（決勝期核心 3–4 號）或 18–23 號',
+      reason:
+        '觀眾面向球場視角：4 人編制下，開局站左側 18–23 號，破 10 分後移至右側 1–6 號；首推 1–6 號鎖定局末決勝時段。',
+    };
+  }
+
   // 1-8 號 (觀眾右手邊) -> 9-15 號 (觀眾正中央)
   if (initSlot === 0 && after10Slot === 1) {
     return {
@@ -526,14 +828,16 @@ function computeSweetSpot(
 
 function computeCrossZoneAdjacentOption(
   zone: AceZoneId,
-  initSlot: 0 | 1 | 2,
-  after10Slot: 0 | 1 | 2
+  initSlot: number,
+  after10Slot: number,
+  totalSlots = 3
 ): CrossZoneAdjacentOption | null {
-  const touchesSmallNumEdge = initSlot === 0 || after10Slot === 0; // 1–8 號（觀眾右手邊）
-  const touchesLargeNumEdge = initSlot === 2 || after10Slot === 2; // 16–23 號（觀眾左手邊）
+  const maxSlot = totalSlots - 1;
+  const touchesSmallNumEdge = initSlot === 0 || after10Slot === 0; // 小號端（觀眾右手邊）
+  const touchesLargeNumEdge = initSlot === maxSlot || after10Slot === maxSlot; // 大號端（觀眾左手邊）
 
   if (zone === 'A' && touchesLargeNumEdge) {
-    const isAfter10Large = after10Slot === 2;
+    const isAfter10Large = after10Slot === maxSlot;
     return {
       adjacentZone: 'B',
       adjacentSeatRange: [1, 7],
@@ -616,29 +920,32 @@ export function getGirlSeatRecommendations(
 
   for (const s of matchSchedule.sets) {
     let foundZone: AceZoneId | null = null;
-    let initSlot: 0 | 1 | 2 = 0;
-    let after10Slot: 0 | 1 | 2 = 0;
+    let initSlot = 0;
+    let after10Slot = 0;
+    let totalSlots = 3;
 
     for (const z of zones) {
       const iIdx = s.initial[z].indexOf(memberId);
       const aIdx = s.after10Points[z].indexOf(memberId);
       if (iIdx !== -1 && aIdx !== -1) {
         foundZone = z;
-        initSlot = iIdx as 0 | 1 | 2;
-        after10Slot = aIdx as 0 | 1 | 2;
+        initSlot = iIdx;
+        after10Slot = aIdx;
+        totalSlots = s.initial[z].length;
         break;
       }
     }
 
     if (!foundZone) continue;
 
-    const initMeta = SLOT_META[initSlot];
-    const afterMeta = SLOT_META[after10Slot];
-    const sweet = computeSweetSpot(initSlot, after10Slot);
+    const initMeta = getSlotMeta(initSlot, totalSlots);
+    const afterMeta = getSlotMeta(after10Slot, totalSlots);
+    const sweet = computeSweetSpot(initSlot, after10Slot, totalSlots);
     const crossZoneOption = computeCrossZoneAdjacentOption(
       foundZone,
       initSlot,
-      after10Slot
+      after10Slot,
+      totalSlots
     );
 
     const priorityBadge =
@@ -684,7 +991,7 @@ export const PROXIMITY_SEAT_THRESHOLD = 12;
 
 export interface PhaseDistanceDetail {
   girlZone: AceZoneId;
-  girlSlotIndex: 0 | 1 | 2;
+  girlSlotIndex: number;
   girlSlotLabel: string;
   girlSeatRange: [number, number];
   girlCoreSeat: number;
@@ -723,19 +1030,36 @@ const SLOT_CORE_SEAT: Record<0 | 1 | 2, { center: number; minCore: number; maxCo
   2: { center: 19, minCore: 19, maxCore: 20, label: '19–20 號' },
 };
 
+const SLOT_CORE_SEAT_4: Record<0 | 1 | 2 | 3, { center: number; minCore: number; maxCore: number; label: string }> = {
+  0: { center: 4, minCore: 3, maxCore: 4, label: '3–4 號' },
+  1: { center: 9, minCore: 9, maxCore: 10, label: '9–10 號' },
+  2: { center: 15, minCore: 14, maxCore: 16, label: '15 號' },
+  3: { center: 20, minCore: 20, maxCore: 21, label: '20–21 號' },
+};
+
+function getSlotCoreMeta(slotIndex: number, totalSlots: number) {
+  if (totalSlots === 4) {
+    const idx = Math.max(0, Math.min(3, slotIndex)) as 0 | 1 | 2 | 3;
+    return SLOT_CORE_SEAT_4[idx];
+  }
+  const idx = Math.max(0, Math.min(2, slotIndex)) as 0 | 1 | 2;
+  return SLOT_CORE_SEAT[idx];
+}
+
 function computePhaseDistance(
   userZone: AceZoneId,
   userSeat: number,
   girlZone: AceZoneId,
-  girlSlotIndex: 0 | 1 | 2
+  girlSlotIndex: number,
+  totalSlots = 3
 ): PhaseDistanceDetail {
   const uZ = ZONE_INDEX[userZone];
   const gZ = ZONE_INDEX[girlZone];
   const zoneDiff = Math.abs(gZ - uZ);
   const isSameZone = zoneDiff === 0;
 
-  const slotMeta = SLOT_META[girlSlotIndex];
-  const coreMeta = SLOT_CORE_SEAT[girlSlotIndex];
+  const slotMeta = getSlotMeta(girlSlotIndex, totalSlots);
+  const coreMeta = getSlotCoreMeta(girlSlotIndex, totalSlots);
   const [rangeStart, rangeEnd] = slotMeta.range;
 
   // 連續座位編號：A 區 1..23、B 區 24..46（A23 接 B1）、C 區 47..69（B23 接 C1）
@@ -878,16 +1202,18 @@ export function getFullMatchGirlDistanceSummary(
 
   for (const s of matchSchedule.sets) {
     let foundZone: AceZoneId | null = null;
-    let initSlot: 0 | 1 | 2 = 0;
-    let after10Slot: 0 | 1 | 2 = 0;
+    let initSlot = 0;
+    let after10Slot = 0;
+    let totalSlots = 3;
 
     for (const z of zones) {
       const iIdx = s.initial[z].indexOf(girlId);
       const aIdx = s.after10Points[z].indexOf(girlId);
       if (iIdx !== -1 && aIdx !== -1) {
         foundZone = z;
-        initSlot = iIdx as 0 | 1 | 2;
-        after10Slot = aIdx as 0 | 1 | 2;
+        initSlot = iIdx;
+        after10Slot = aIdx;
+        totalSlots = s.initial[z].length;
         break;
       }
     }
@@ -898,8 +1224,20 @@ export function getFullMatchGirlDistanceSummary(
       setKey: s.setKey,
       setLabel: s.setLabel,
       setShortLabel: s.setShortLabel,
-      initial: computePhaseDistance(userZone, userSeat, foundZone, initSlot),
-      after10: computePhaseDistance(userZone, userSeat, foundZone, after10Slot),
+      initial: computePhaseDistance(
+        userZone,
+        userSeat,
+        foundZone,
+        initSlot,
+        totalSlots
+      ),
+      after10: computePhaseDistance(
+        userZone,
+        userSeat,
+        foundZone,
+        after10Slot,
+        totalSlots
+      ),
     });
   }
 

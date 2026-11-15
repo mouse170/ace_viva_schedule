@@ -15,7 +15,7 @@ import { ZodiacIcon, isCurrentMonthBirthday } from './components/ZodiacIcon';
 import {
   ACTIVE_STATION_ROTATION_SCHEDULES,
   CLOSEST_STATION_SCHEDULE,
-  getSeatPositionMapping,
+  getZoneSlotIndexForSeat,
   type AceZoneId,
 } from './data/schedule';
 
@@ -169,7 +169,6 @@ export const App: React.FC = () => {
       ACTIVE_STATION_ROTATION_SCHEDULES.find(
         (s) => s.matchId === currentUserSeat.matchId
       ) ?? CLOSEST_STATION_SCHEDULE;
-    const slotIndex = getSeatPositionMapping(currentUserSeat.seat).slotIndex;
     const map = new Map<
       string,
       {
@@ -183,13 +182,16 @@ export const App: React.FC = () => {
       }
     >();
 
-    // 第一層：本區座位正前方女孩（6 位）
+    // 第一層：本區座位正前方女孩
     let orderCounter = 0;
     for (const setObj of schedule.sets) {
       // 破 10 分後佔單局 60% 時間，優先列入同局正前方順序，其次為開局 0-10 分
+      const after10Arr = setObj.after10Points[currentUserSeat.zone];
+      const initArr = setObj.initial[currentUserSeat.zone];
       const after10GirlId =
-        setObj.after10Points[currentUserSeat.zone][slotIndex];
-      const initGirlId = setObj.initial[currentUserSeat.zone][slotIndex];
+        after10Arr[getZoneSlotIndexForSeat(currentUserSeat.seat, after10Arr.length)];
+      const initGirlId =
+        initArr[getZoneSlotIndexForSeat(currentUserSeat.seat, initArr.length)];
 
       for (const gId of [after10GirlId, initGirlId]) {
         if (!gId) continue;
@@ -216,17 +218,17 @@ export const App: React.FC = () => {
     // 第二層：因 A / B / C 區緊連，補充隔壁緊鄰區交界站位女孩（C1 ↔ B23 · B1 ↔ A23）
     const adjSpecs: {
       zone: AceZoneId;
-      slot: 0 | 1 | 2;
+      edge: 'small' | 'large';
       label: string;
       shortLabel: string;
     }[] =
       currentUserSeat.zone === 'A'
-        ? [{ zone: 'B', slot: 0, label: '左鄰 B 區 8–1 號', shortLabel: 'B8-1' }]
+        ? [{ zone: 'B', edge: 'small', label: '左鄰 B 區 8–1 號', shortLabel: 'B8-1' }]
         : currentUserSeat.zone === 'C'
           ? [
               {
                 zone: 'B',
-                slot: 2,
+                edge: 'large',
                 label: '右鄰 B 區 23–16 號',
                 shortLabel: 'B23-16',
               },
@@ -235,13 +237,13 @@ export const App: React.FC = () => {
             ? [
                 {
                   zone: 'C',
-                  slot: 0,
+                  edge: 'small',
                   label: '左鄰 C 區 8–1 號',
                   shortLabel: 'C8-1',
                 },
                 {
                   zone: 'A',
-                  slot: 2,
+                  edge: 'large',
                   label: '右鄰 A 區 23–16 號',
                   shortLabel: 'A23-16',
                 },
@@ -249,13 +251,13 @@ export const App: React.FC = () => {
             : [
                 {
                   zone: 'A',
-                  slot: 2,
+                  edge: 'large',
                   label: '右鄰 A 區 23–16 號',
                   shortLabel: 'A23-16',
                 },
                 {
                   zone: 'C',
-                  slot: 0,
+                  edge: 'small',
                   label: '左鄰 C 區 8–1 號',
                   shortLabel: 'C8-1',
                 },
@@ -263,8 +265,12 @@ export const App: React.FC = () => {
 
     for (const adj of adjSpecs) {
       for (const setObj of schedule.sets) {
-        const after10GirlId = setObj.after10Points[adj.zone][adj.slot];
-        const initGirlId = setObj.initial[adj.zone][adj.slot];
+        const after10Arr = setObj.after10Points[adj.zone];
+        const initArr = setObj.initial[adj.zone];
+        const after10GirlId =
+          after10Arr[adj.edge === 'small' ? 0 : after10Arr.length - 1];
+        const initGirlId =
+          initArr[adj.edge === 'small' ? 0 : initArr.length - 1];
         for (const gId of [after10GirlId, initGirlId]) {
           if (!gId) continue;
           const existing = map.get(gId);

@@ -7,6 +7,7 @@ import {
   getCrossZoneGoldenIntervals,
   getFullMatchGirlDistanceSummary,
   getSeatPositionMapping,
+  getZoneSlotIndexForSeat,
   type AceZoneId,
   type GirlSetZoneRecommendation,
   type CrossZoneGoldenInterval,
@@ -342,8 +343,10 @@ async function renderSeatRadarCardToDataUrl(
 
   const neededMemberIds = new Set<string>([member.id]);
   schedule.sets.forEach((s) => {
-    neededMemberIds.add(s.initial[userZone][seatMapping.slotIndex]);
-    neededMemberIds.add(s.after10Points[userZone][seatMapping.slotIndex]);
+    const initArr = s.initial[userZone];
+    const afterArr = s.after10Points[userZone];
+    neededMemberIds.add(initArr[getZoneSlotIndexForSeat(userSeat, initArr.length)]);
+    neededMemberIds.add(afterArr[getZoneSlotIndexForSeat(userSeat, afterArr.length)]);
   });
 
   const avatarCache = new Map<
@@ -461,9 +464,12 @@ async function renderSeatRadarCardToDataUrl(
 
   distanceComparisons.forEach((comp, index) => {
     const setObj = schedule.sets[index];
-    const initFrontGirlId = setObj.initial[userZone][seatMapping.slotIndex];
+    const initArr = setObj.initial[userZone];
+    const afterArr = setObj.after10Points[userZone];
+    const initFrontGirlId =
+      initArr[getZoneSlotIndexForSeat(userSeat, initArr.length)];
     const after10FrontGirlId =
-      setObj.after10Points[userZone][seatMapping.slotIndex];
+      afterArr[getZoneSlotIndexForSeat(userSeat, afterArr.length)];
     const initFrontGirl = memberMap.get(initFrontGirlId);
     const after10FrontGirl = memberMap.get(after10FrontGirlId);
 
