@@ -4,6 +4,7 @@ import { getPhaseAdjacentBonds } from '../data/memberRelations';
 import {
   ACTIVE_STATION_ROTATION_SCHEDULES,
   CLOSEST_STATION_SCHEDULE,
+  findGirlPhaseDistance,
   getFullMatchGirlDistanceSummary,
   getSeatPositionMapping,
   getZoneSlotIndexForSeat,
@@ -1081,22 +1082,75 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                       ? `◀ 左前 ${Math.abs(offset)} 席`
                       : `右前 ${offset} 席 ▶`;
 
+                // Plot ALL favorites in current phase (plus activeOshi if not in favoriteIds)
+                const activePhaseRecord =
+                  scorePhase === 'initial'
+                    ? currentSetArrangement.initial
+                    : currentSetArrangement.after10Points;
+                const radarIds = Array.from(
+                  new Set([activeOshi.id, ...favoriteIds])
+                );
+                const rawRadarPins = radarIds
+                  .map((id) => {
+                    const m = memberMap.get(id);
+                    const dist = findGirlPhaseDistance(
+                      activePhaseRecord,
+                      selectedZone,
+                      selectedSeat,
+                      id
+                    );
+                    if (!m || !dist) return null;
+                    const gSeat =
+                      (dist.girlZone === 'A'
+                        ? 0
+                        : dist.girlZone === 'B'
+                          ? 1
+                          : 2) *
+                        23 +
+                      dist.girlCoreSeat;
+                    const pinX = toAudienceX(gSeat);
+                    return {
+                      member: m,
+                      dist,
+                      pinX,
+                      isActiveTarget: m.id === activeOshi.id,
+                    };
+                  })
+                  .filter((p): p is NonNullable<typeof p> => Boolean(p))
+                  .sort((a, b) => a.pinX - b.pinX);
+
+                // Stagger vertical tier (0 vs 1) if two favorites sit within 13% horizontally
+                const radarPins = rawRadarPins.map((pin, idx) => {
+                  let rowTier: 0 | 1 = 0;
+                  if (idx > 0 && Math.abs(pin.pinX - rawRadarPins[idx - 1].pinX) < 13) {
+                    rowTier = 1;
+                  }
+                  return { ...pin, rowTier };
+                });
+
+                const nearFavCount = radarPins.filter(
+                  (p) => p.dist.isWithin12Seats
+                ).length;
+
                 return (
                   <div className="mt-4 rounded-2xl border border-[#5ECBC0]/40 bg-[#181736] p-3 shadow-inner sm:p-5">
                     {/* Top Status Strip: Your Seat -> Oshi Target + Relative Direction Pill */}
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="font-mono-num text-xs font-black text-white sm:text-sm lg:text-base">
-                          你（{selectedZone}
-                          {selectedSeat}）→ ★{activeOshi.name}（
-                          {activePhaseOshiDistance.girlZone} 區{' '}
+                          {t('你', '내 좌석')}（{selectedZone}
+                          {selectedSeat}）→ ★{getMemberName(activeOshi)}（
+                          {activePhaseOshiDistance.girlZone}{' '}
+                          {t('區', '구역')}{' '}
                           {activePhaseOshiDistance.girlSeatRange[0]}–
-                          {activePhaseOshiDistance.girlSeatRange[1]} 號 · IG
+                          {activePhaseOshiDistance.girlSeatRange[1]} · IG
                           {slotShort}）
                         </span>
                         <span className="rounded-md bg-white/10 px-2 py-0.5 font-mono-num text-[10px] font-bold text-[#7ADAD0] lg:text-xs">
                           {currentSetArrangement.setLabel} ·{' '}
-                          {scorePhase === 'initial' ? '0–10 分' : '破 10 分後'}
+                          {scorePhase === 'initial'
+                            ? t('0–10 分', '0–10점')
+                            : t('破 10 分後', '10점 이후')}
                         </span>
                       </div>
                       <span
@@ -1109,6 +1163,54 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                         {relativeBadge}
                       </span>
                     </div>
+
+                    {/* All Favorites Distance Strip (sorted nearest first so nearby favorites are never missed) */}
+                    {radarPins.length > 1 && (
+                      <div className="mt-2.5 flex flex-wrap items-center gap-1.5 rounded-xl bg-white/[0.06] px-2.5 py-2 ring-1 ring-white/10">
+                        <span className="font-mono-num text-[10px] font-bold text-[#7ADAD0] lg:text-xs">
+                          {t(
+                            `全主推位置（${nearFavCount}/${radarPins.length} 位在 12 席內）：`,
+                            `전체 최애 위치 (${nearFavCount}/${radarPins.length}명 12석 이내):`
+                          )}
+                        </span>
+                        {[...radarPins]
+                          .sort(
+                            (a, b) =>
+                              a.dist.seatsToCoreCenter - b.dist.seatsToCoreCenter
+                          )
+                          .map((p) => {
+                            const pNear = p.dist.isWithin12Seats;
+                            const diff = p.dist.seatsToCoreCenter;
+                            return (
+                              <button
+                                key={`fav-strip-${p.member.id}`}
+                                type="button"
+                                onClick={() => setTargetOshiId(p.member.id)}
+                                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-mono-num text-[10px] font-extrabold transition-all lg:text-xs ${
+                                  p.isActiveTarget
+                                    ? 'bg-[#5BAE84] text-white ring-1 ring-white'
+                                    : pNear
+                                      ? 'bg-[#5ECBC0]/20 text-[#7ADAD0] ring-1 ring-[#5ECBC0]/60 hover:bg-[#5BAE84] hover:text-white'
+                                      : 'bg-white/10 text-white/75 hover:bg-white/20'
+                                }`}
+                              >
+                                <span>★ {getMemberName(p.member)}</span>
+                                <span>
+                                  {p.dist.girlZone}
+                                  {p.dist.girlCoreSeat}
+                                </span>
+                                <span
+                                  className={
+                                    pNear ? 'text-[#A7F3D0]' : 'text-amber-300'
+                                  }
+                                >
+                                  ({diff === 0 ? t('0席', '0석') : `${diff}${t('席', '석')}`})
+                                </span>
+                              </button>
+                            );
+                          })}
+                      </div>
+                    )}
 
                     {/* Audience Left-to-Right Zone Header: Left = C 區 (23→1) | Center = B 區 (23→1) | Right = A 區 (23→1) */}
                     <div className="mt-3 grid grid-cols-3 gap-1.5 text-center font-mono-num text-[10px] font-bold sm:text-xs">
@@ -1224,16 +1326,33 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                           fill="url(#audienceUpwardFov)"
                         />
 
-                        {/* Sightline from User (y=82) UP to Oshi (y=32) */}
-                        <line
-                          x1={userX}
-                          y1="82"
-                          x2={oshiX}
-                          y2="32"
-                          stroke={isNear ? '#5ECBC0' : '#FBBF24'}
-                          strokeWidth={isNear ? '1.8' : '1.4'}
-                          strokeDasharray={isNear ? undefined : '3 2.5'}
-                        />
+                        {/* Sightlines from User (y=82) UP to ALL Favorites */}
+                        {radarPins.map((pin) => {
+                          const pNear = pin.dist.isWithin12Seats;
+                          const targetY = pin.rowTier === 0 ? '30' : '42';
+                          return (
+                            <line
+                              key={`sight-${pin.member.id}`}
+                              x1={userX}
+                              y1="82"
+                              x2={pin.pinX}
+                              y2={targetY}
+                              stroke={
+                                pNear
+                                  ? pin.isActiveTarget
+                                    ? '#5ECBC0'
+                                    : '#5BAE84'
+                                  : pin.isActiveTarget
+                                    ? '#FBBF24'
+                                    : 'rgba(251,191,36,0.55)'
+                              }
+                              strokeWidth={pin.isActiveTarget ? '1.9' : '1.25'}
+                              strokeDasharray={
+                                pNear && pin.isActiveTarget ? undefined : '3 2.5'
+                              }
+                            />
+                          );
+                        })}
                       </svg>
 
                       {/* Side Orientation Watermarks */}
@@ -1244,40 +1363,61 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                         右手邊 (A1) ▶
                       </div>
 
-                      {/* TOP-MIDDLE PIN: Cheerleader on Front Stage (Facing down toward Audience ▼) */}
-                      <button
-                        type="button"
-                        onClick={() => onOpenMemberDetail(activeOshi)}
-                        style={{
-                          left: `${Math.max(16, Math.min(84, oshiX))}%`,
-                        }}
-                        className="absolute top-[16%] z-20 flex -translate-x-1/2 flex-col items-center transition-all duration-300"
-                      >
-                        <div className="relative">
-                          <MemberPortrait
-                            member={activeOshi}
-                            variant="avatar"
-                            className={`h-9 w-9 rounded-full ring-2 sm:h-11 sm:w-11 ${
-                              isNear
-                                ? 'ring-[#5ECBC0] shadow-[0_0_14px_rgba(94,203,192,0.6)]'
-                                : 'ring-amber-400 shadow-[0_0_12px_rgba(251,191,36,0.45)]'
+                      {/* TOP PINS: All Favorites on Front Stage (Facing down toward Audience ▼) */}
+                      {radarPins.map((pin) => {
+                        const pNear = pin.dist.isWithin12Seats;
+                        const diff = pin.dist.seatsToCoreCenter;
+                        const topClass =
+                          pin.rowTier === 0 ? 'top-[15%]' : 'top-[32%]';
+                        return (
+                          <button
+                            key={`radar-pin-${pin.member.id}`}
+                            type="button"
+                            onClick={() => {
+                              if (pin.isActiveTarget) {
+                                onOpenMemberDetail(pin.member);
+                              } else {
+                                setTargetOshiId(pin.member.id);
+                              }
+                            }}
+                            style={{
+                              left: `${Math.max(12, Math.min(88, pin.pinX))}%`,
+                            }}
+                            className={`absolute ${topClass} flex -translate-x-1/2 flex-col items-center transition-all duration-300 ${
+                              pin.isActiveTarget ? 'z-30 scale-105' : 'z-20 opacity-95 hover:z-30 hover:scale-105'
                             }`}
-                          />
-                          <span className="absolute -top-1 -right-2 rounded-full bg-[#212047] px-1 font-mono-num text-[8px] font-black text-[#7ADAD0] ring-1 ring-[#5ECBC0]">
-                            {activePhaseOshiDistance.girlZone}
-                            {activePhaseOshiDistance.girlCoreSeat}▼
-                          </span>
-                        </div>
-                        <span
-                          className={`mt-0.5 rounded-full px-2 py-0.2 font-mono-num text-[9px] font-extrabold whitespace-nowrap lg:text-[11px] ${
-                            isNear
-                              ? 'bg-[#5BAE84] text-white'
-                              : 'bg-amber-400 text-[#212047]'
-                          }`}
-                        >
-                          ★ {activeOshi.name}
-                        </span>
-                      </button>
+                          >
+                            <div className="relative">
+                              <MemberPortrait
+                                member={pin.member}
+                                variant="avatar"
+                                className={`h-8 w-8 rounded-full ring-2 sm:h-10 sm:w-10 ${
+                                  pNear
+                                    ? 'ring-[#5ECBC0] shadow-[0_0_14px_rgba(94,203,192,0.6)]'
+                                    : 'ring-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.4)]'
+                                }`}
+                              />
+                              <span className="absolute -top-1 -right-2 rounded-full bg-[#212047] px-1 font-mono-num text-[8px] font-black text-[#7ADAD0] ring-1 ring-[#5ECBC0]">
+                                {pin.dist.girlZone}
+                                {pin.dist.girlCoreSeat}
+                              </span>
+                            </div>
+                            <span
+                              className={`mt-0.5 rounded-full px-1.5 py-0.2 font-mono-num text-[9px] font-extrabold whitespace-nowrap lg:text-[10px] ${
+                                pin.isActiveTarget
+                                  ? pNear
+                                    ? 'bg-[#5BAE84] text-white ring-1 ring-white'
+                                    : 'bg-amber-400 text-[#212047] ring-1 ring-white'
+                                  : pNear
+                                    ? 'bg-[#212047]/95 text-[#7ADAD0] ring-1 ring-[#5ECBC0]'
+                                    : 'bg-[#212047]/85 text-amber-300 ring-1 ring-amber-400/60'
+                              }`}
+                            >
+                              ★ {getMemberName(pin.member)} · {diff === 0 ? '0席' : `${diff}席`}
+                            </span>
+                          </button>
+                        );
+                      })}
 
                       {/* CENTER BADGE: Relative Seat Count & Camera Status */}
                       <div className="pointer-events-none absolute top-[54%] left-1/2 z-20 -translate-x-1/2">
@@ -2058,6 +2198,7 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
       <OshiStrategyCardModal
         isOpen={isStrategyModalOpen}
         initialGirlId={activeOshi.id}
+        favoriteIds={favoriteIds}
         initialMatchId={selectedMatchId}
         initialMode={strategyModalMode}
         initialZone={selectedZone}

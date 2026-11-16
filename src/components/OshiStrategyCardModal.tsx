@@ -3,6 +3,7 @@ import { MEMBERS, type AceVivaMember } from '../data/members';
 import {
   ACTIVE_STATION_ROTATION_SCHEDULES,
   CLOSEST_STATION_SCHEDULE,
+  findGirlPhaseDistance,
   getGirlSeatRecommendations,
   getCrossZoneGoldenIntervals,
   getFullMatchGirlDistanceSummary,
@@ -20,6 +21,7 @@ export type StrategyCardMode = 'seat_radar' | 'zone_hopping';
 interface OshiStrategyCardModalProps {
   isOpen: boolean;
   initialGirlId: string;
+  favoriteIds?: string[];
   initialMatchId: string;
   initialMode?: StrategyCardMode;
   initialZone?: AceZoneId;
@@ -322,7 +324,8 @@ async function renderSeatRadarCardToDataUrl(
   schedule: MatchStationSchedule,
   userZone: AceZoneId,
   userSeat: number,
-  memberMap: Map<string, AceVivaMember>
+  memberMap: Map<string, AceVivaMember>,
+  favoriteIds: string[] = []
 ): Promise<string> {
   const W = 1080;
   const H = 1520;
@@ -336,12 +339,25 @@ async function renderSeatRadarCardToDataUrl(
     '"Plus Jakarta Sans", "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif';
   const fontMono = '"JetBrains Mono", "Noto Sans TC", monospace';
 
-  // 預先載入主推與正前方女孩頭像
+  // Determine all rotating favorites in this match (always include primary member)
+  const rotatingSet = new Set<string>([
+    ...schedule.sets[0].initial.A,
+    ...schedule.sets[0].initial.B,
+    ...schedule.sets[0].initial.C,
+  ]);
+  const targetFavoriteIds = Array.from(
+    new Set([member.id, ...favoriteIds.filter((id) => rotatingSet.has(id))])
+  );
+  const targetFavorites = targetFavoriteIds
+    .map((id) => memberMap.get(id))
+    .filter((m): m is AceVivaMember => Boolean(m));
+  const isMergedMulti = targetFavorites.length > 1;
+
+  // 預先載入所有主推與正前方女孩頭像
   const distanceComparisons: SetGirlDistanceComparison[] =
     getFullMatchGirlDistanceSummary(schedule, userZone, userSeat, member.id);
-  const seatMapping = getSeatPositionMapping(userSeat);
 
-  const neededMemberIds = new Set<string>([member.id]);
+  const neededMemberIds = new Set<string>(targetFavoriteIds);
   schedule.sets.forEach((s) => {
     const initArr = s.initial[userZone];
     const afterArr = s.after10Points[userZone];
@@ -405,12 +421,14 @@ async function renderSeatRadarCardToDataUrl(
   ctx.fillStyle = '#FFFFFF';
   fillTextFit(
     ctx,
-    `你的座位：${userZone} 區 ${userSeat} 號  →  ★ ${member.name}`,
+    isMergedMulti
+      ? `你的座位：${userZone} 區 ${userSeat} 號  ·  ${targetFavorites.length} 位主推合併雷達`
+      : `你的座位：${userZone} 區 ${userSeat} 號  →  ★ ${member.name}`,
     infoX,
     heroY + 86,
     pillW,
     900,
-    40,
+    38,
     fontSans
   );
 
@@ -425,12 +443,14 @@ async function renderSeatRadarCardToDataUrl(
   ctx.fillStyle = '#5ECBC0';
   fillTextFit(
     ctx,
-    `★ 全場 6 階段共 ${nearPhasesCount} 個階段在 12 席正面好拍射程內`,
+    isMergedMulti
+      ? `★ 已合併主推：${targetFavorites.map((f) => f.name).join(' · ')}（綠＝0–10分／青＝破10分）`
+      : `★ 全場 6 階段共 ${nearPhasesCount} 個階段在 12 席正面好拍射程內`,
     infoX + 16,
     pill1Y + 20,
     pillW - 32,
     800,
-    19,
+    18,
     fontSans
   );
 
@@ -698,110 +718,251 @@ async function renderSeatRadarCardToDataUrl(
     const initPx = radarX + toRadarNorm(initGlobal) * radarW;
     const after10Px = radarX + toRadarNorm(after10Global) * radarW;
 
-    // Sightline 1: 0-10 pts (Dashed Green)
-    ctx.strokeStyle = '#5BAE84';
-    ctx.lineWidth = 2.5;
-    ctx.setLineDash([6, 5]);
-    ctx.beginPath();
-    ctx.moveTo(uPx, audY - 14);
-    ctx.lineTo(initPx, stageY + 18);
-    ctx.stroke();
+    // Multi-Favorite Merged Mode vs Single-Oshi Mode
+    if (isMergedMulti) {
+      const stageInitY = radarY + 78;
+      const stageAfterY = radarY + 144;
 
-    // Sightline 2: >10 pts (Solid Cyan or Amber)
-    ctx.setLineDash([]);
-    ctx.strokeStyle = comp.after10.isWithin12Seats ? '#5ECBC0' : '#FBBF24';
-    ctx.lineWidth = 3.5;
-    ctx.beginPath();
-    ctx.moveTo(uPx, audY - 14);
-    ctx.lineTo(after10Px, stageY + 18);
-    ctx.stroke();
+      // Helper to resolve horizontal collisions within a row
+      const spreadPins = <T extends { px: number }>(pins: T[], minGap: number): Array<T & { drawX: number }> => {
+        const sorted = [...pins]
+          .sort((a, b) => a.px - b.px)
+          .map((p) => ({
+            ...p,
+            drawX: Math.max(radarX + 64, Math.min(radarX + radarW - 64, p.px)),
+          }));
+        for (let i = 1; i < sorted.length; i += 1) {
+          if (sorted[i].drawX - sorted[i - 1].drawX < minGap) {
+            sorted[i].drawX = Math.min(
+              radarX + radarW - 64,
+              sorted[i - 1].drawX + minGap
+            );
+          }
+        }
+        return sorted;
+      };
 
-    // Format concise relative seat labels (No "建議移至" text!)
-    const fmtRel = (offset: number, within12: boolean) => {
-      const dir =
-        offset === 0
-          ? '▲正前0席'
-          : offset < 0
-            ? `◀左前${Math.abs(offset)}席`
-            : `右前${offset}席▶`;
-      return `${dir}·${within12 ? '好拍' : '逾12席'}`;
-    };
+      const initPins = spreadPins(
+        targetFavorites
+          .map((fav) => {
+            const d = findGirlPhaseDistance(
+              setObj.initial,
+              userZone,
+              userSeat,
+              fav.id
+            );
+            if (!d) return null;
+            const zIdx = d.girlZone === 'A' ? 0 : d.girlZone === 'B' ? 1 : 2;
+            const px = radarX + toRadarNorm(zIdx * 23 + d.girlCoreSeat) * radarW;
+            return { fav, d, px };
+          })
+          .filter((x): x is NonNullable<typeof x> => Boolean(x)),
+        118
+      );
 
-    // Draw Oshi Circular Avatar #1 at 0-10 pts Position (stageY - 14)
-    const clampInitPx = Math.max(
-      radarX + 82,
-      Math.min(radarX + radarW - 82, initPx)
-    );
-    const clampAfterPx = Math.max(
-      radarX + 86,
-      Math.min(radarX + radarW - 86, after10Px)
-    );
+      const afterPins = spreadPins(
+        targetFavorites
+          .map((fav) => {
+            const d = findGirlPhaseDistance(
+              setObj.after10Points,
+              userZone,
+              userSeat,
+              fav.id
+            );
+            if (!d) return null;
+            const zIdx = d.girlZone === 'A' ? 0 : d.girlZone === 'B' ? 1 : 2;
+            const px = radarX + toRadarNorm(zIdx * 23 + d.girlCoreSeat) * radarW;
+            return { fav, d, px };
+          })
+          .filter((x): x is NonNullable<typeof x> => Boolean(x)),
+        118
+      );
 
-    // Ensure the two pills don't overlap horizontally if they are close
-    let adjInitPx = clampInitPx;
-    let adjAfterPx = clampAfterPx;
-    if (Math.abs(adjAfterPx - adjInitPx) < 156) {
-      if (adjInitPx <= adjAfterPx) {
-        adjInitPx = Math.max(radarX + 78, adjAfterPx - 158);
-      } else {
-        adjInitPx = Math.min(radarX + radarW - 78, adjAfterPx + 158);
+      // Phase row labels on far left
+      ctx.fillStyle = 'rgba(91, 174, 132, 0.9)';
+      fillTextFit(ctx, '0-10分', radarX + 14, stageInitY, 48, 800, 12, fontMono);
+      ctx.fillStyle = 'rgba(94, 203, 192, 0.95)';
+      fillTextFit(ctx, '破10分', radarX + 14, stageAfterY, 48, 800, 12, fontMono);
+
+      // Draw sightlines & pins for 0-10 pts row
+      initPins.forEach(({ fav, d, px, drawX }) => {
+        ctx.strokeStyle = d.isWithin12Seats
+          ? 'rgba(91, 174, 132, 0.78)'
+          : 'rgba(251, 191, 36, 0.45)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 4]);
+        ctx.beginPath();
+        ctx.moveTo(uPx, audY - 14);
+        ctx.lineTo(px, stageInitY + 14);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        drawCircularAvatarOnCanvas(
+          ctx,
+          avatarCache.get(fav.id),
+          drawX,
+          stageInitY - 8,
+          17,
+          d.isWithin12Seats ? '#5BAE84' : '#FBBF24',
+          2.5,
+          fav.name[0],
+          fontMono
+        );
+        drawRoundedRect(ctx, drawX - 54, stageInitY + 11, 108, 20, 10);
+        ctx.fillStyle = d.isWithin12Seats ? '#5BAE84' : '#FBBF24';
+        ctx.fill();
+        ctx.fillStyle = d.isWithin12Seats ? '#FFFFFF' : '#212047';
+        ctx.textAlign = 'center';
+        fillTextFit(
+          ctx,
+          `${fav.name} ${d.girlZone}${d.girlCoreSeat}(${d.seatsToCoreCenter}席)`,
+          drawX,
+          stageInitY + 21,
+          100,
+          800,
+          11,
+          fontMono
+        );
+      });
+
+      // Draw sightlines & pins for >10 pts row
+      afterPins.forEach(({ fav, d, px, drawX }) => {
+        ctx.strokeStyle = d.isWithin12Seats
+          ? '#5ECBC0'
+          : 'rgba(251, 191, 36, 0.65)';
+        ctx.lineWidth = 2.6;
+        ctx.beginPath();
+        ctx.moveTo(uPx, audY - 14);
+        ctx.lineTo(px, stageAfterY + 14);
+        ctx.stroke();
+
+        drawCircularAvatarOnCanvas(
+          ctx,
+          avatarCache.get(fav.id),
+          drawX,
+          stageAfterY - 8,
+          18,
+          d.isWithin12Seats ? '#5ECBC0' : '#FBBF24',
+          3,
+          fav.name[0],
+          fontMono
+        );
+        drawRoundedRect(ctx, drawX - 54, stageAfterY + 12, 108, 20, 10);
+        ctx.fillStyle = d.isWithin12Seats ? '#5ECBC0' : '#FBBF24';
+        ctx.fill();
+        ctx.fillStyle = '#212047';
+        ctx.textAlign = 'center';
+        fillTextFit(
+          ctx,
+          `★${fav.name} ${d.girlZone}${d.girlCoreSeat}(${d.seatsToCoreCenter}席)`,
+          drawX,
+          stageAfterY + 22,
+          100,
+          900,
+          11,
+          fontMono
+        );
+      });
+    } else {
+      // Single-Oshi Mode (original detailed 2-pin layout)
+      ctx.strokeStyle = '#5BAE84';
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([6, 5]);
+      ctx.beginPath();
+      ctx.moveTo(uPx, audY - 14);
+      ctx.lineTo(initPx, stageY + 18);
+      ctx.stroke();
+
+      ctx.setLineDash([]);
+      ctx.strokeStyle = comp.after10.isWithin12Seats ? '#5ECBC0' : '#FBBF24';
+      ctx.lineWidth = 3.5;
+      ctx.beginPath();
+      ctx.moveTo(uPx, audY - 14);
+      ctx.lineTo(after10Px, stageY + 18);
+      ctx.stroke();
+
+      const fmtRel = (offset: number, within12: boolean) => {
+        const dir =
+          offset === 0
+            ? '▲正前0席'
+            : offset < 0
+              ? `◀左前${Math.abs(offset)}席`
+              : `右前${offset}席▶`;
+        return `${dir}·${within12 ? '好拍' : '逾12席'}`;
+      };
+
+      const clampInitPx = Math.max(
+        radarX + 82,
+        Math.min(radarX + radarW - 82, initPx)
+      );
+      const clampAfterPx = Math.max(
+        radarX + 86,
+        Math.min(radarX + radarW - 86, after10Px)
+      );
+
+      let adjInitPx = clampInitPx;
+      let adjAfterPx = clampAfterPx;
+      if (Math.abs(adjAfterPx - adjInitPx) < 156) {
+        if (adjInitPx <= adjAfterPx) {
+          adjInitPx = Math.max(radarX + 78, adjAfterPx - 158);
+        } else {
+          adjInitPx = Math.min(radarX + radarW - 78, adjAfterPx + 158);
+        }
       }
+
+      drawCircularAvatarOnCanvas(
+        ctx,
+        oshiAvatar,
+        adjInitPx,
+        stageY - 22,
+        22,
+        '#5BAE84',
+        3,
+        member.name[0],
+        fontMono
+      );
+      drawRoundedRect(ctx, adjInitPx - 72, stageY + 4, 144, 24, 12);
+      ctx.fillStyle = '#5BAE84';
+      ctx.fill();
+      ctx.fillStyle = '#FFFFFF';
+      ctx.textAlign = 'center';
+      fillTextFit(
+        ctx,
+        `0-10分:${comp.initial.girlZone}${comp.initial.girlCoreSeat} (${fmtRel(comp.initial.signedSeatOffset, comp.initial.isWithin12Seats)})`,
+        adjInitPx,
+        stageY + 16,
+        136,
+        800,
+        12,
+        fontMono
+      );
+
+      drawCircularAvatarOnCanvas(
+        ctx,
+        oshiAvatar,
+        adjAfterPx,
+        stageY - 24,
+        25,
+        comp.after10.isWithin12Seats ? '#5ECBC0' : '#FBBF24',
+        4,
+        member.name[0],
+        fontMono
+      );
+      drawRoundedRect(ctx, adjAfterPx - 76, stageY + 4, 152, 26, 13);
+      ctx.fillStyle = comp.after10.isWithin12Seats ? '#5ECBC0' : '#FBBF24';
+      ctx.fill();
+      ctx.fillStyle = '#212047';
+      fillTextFit(
+        ctx,
+        `★破10分:${comp.after10.girlZone}${comp.after10.girlCoreSeat} (${fmtRel(comp.after10.signedSeatOffset, comp.after10.isWithin12Seats)})`,
+        adjAfterPx,
+        stageY + 17,
+        144,
+        900,
+        12,
+        fontMono
+      );
     }
-
-    // 0-10 pts Avatar Pin
-    drawCircularAvatarOnCanvas(
-      ctx,
-      oshiAvatar,
-      adjInitPx,
-      stageY - 22,
-      22,
-      '#5BAE84',
-      3,
-      member.name[0],
-      fontMono
-    );
-    drawRoundedRect(ctx, adjInitPx - 72, stageY + 4, 144, 24, 12);
-    ctx.fillStyle = '#5BAE84';
-    ctx.fill();
-    ctx.fillStyle = '#FFFFFF';
-    ctx.textAlign = 'center';
-    fillTextFit(
-      ctx,
-      `0-10分:${comp.initial.girlZone}${comp.initial.girlCoreSeat} (${fmtRel(comp.initial.signedSeatOffset, comp.initial.isWithin12Seats)})`,
-      adjInitPx,
-      stageY + 16,
-      136,
-      800,
-      12,
-      fontMono
-    );
-
-    // >10 pts Avatar Pin (Main Segment)
-    drawCircularAvatarOnCanvas(
-      ctx,
-      oshiAvatar,
-      adjAfterPx,
-      stageY - 24,
-      25,
-      comp.after10.isWithin12Seats ? '#5ECBC0' : '#FBBF24',
-      4,
-      member.name[0],
-      fontMono
-    );
-    drawRoundedRect(ctx, adjAfterPx - 76, stageY + 4, 152, 26, 13);
-    ctx.fillStyle = comp.after10.isWithin12Seats ? '#5ECBC0' : '#FBBF24';
-    ctx.fill();
-    ctx.fillStyle = '#212047';
-    fillTextFit(
-      ctx,
-      `★破10分:${comp.after10.girlZone}${comp.after10.girlCoreSeat} (${fmtRel(comp.after10.signedSeatOffset, comp.after10.isWithin12Seats)})`,
-      adjAfterPx,
-      stageY + 17,
-      144,
-      900,
-      12,
-      fontMono
-    );
 
     // Draw User Fixed Seat Pin at Bottom Audience Line (audY)
     const clampUserPx = Math.max(
@@ -1315,6 +1476,7 @@ async function renderZoneHoppingCardToDataUrl(
 export const OshiStrategyCardModal: React.FC<OshiStrategyCardModalProps> = ({
   isOpen,
   initialGirlId,
+  favoriteIds = [],
   initialMatchId,
   initialMode = 'zone_hopping',
   initialZone = 'B',
@@ -1407,7 +1569,8 @@ export const OshiStrategyCardModal: React.FC<OshiStrategyCardModalProps> = ({
             currentSchedule,
             userZone,
             userSeat,
-            memberMap
+            memberMap,
+            favoriteIds
           )
         : renderZoneHoppingCardToDataUrl(
             activeGirl,
@@ -1436,6 +1599,7 @@ export const OshiStrategyCardModal: React.FC<OshiStrategyCardModalProps> = ({
     userZone,
     userSeat,
     memberMap,
+    favoriteIds,
   ]);
 
   if (!isOpen || !activeGirl) return null;

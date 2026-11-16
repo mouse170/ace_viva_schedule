@@ -1142,6 +1142,7 @@ export const GirlSeatRecommendationSection: React.FC<
       <OshiStrategyCardModal
         isOpen={isStrategyModalOpen}
         initialGirlId={activeGirl.id}
+        favoriteIds={favoriteIds}
         initialMatchId={selectedMatchId}
         initialMode={strategyModalMode}
         initialZone={topCrossZone?.bestSingleZone ?? primaryRec?.zone ?? 'B'}

@@ -1046,7 +1046,7 @@ function getSlotCoreMeta(slotIndex: number, totalSlots: number) {
   return SLOT_CORE_SEAT[idx];
 }
 
-function computePhaseDistance(
+export function computePhaseDistance(
   userZone: AceZoneId,
   userSeat: number,
   girlZone: AceZoneId,
@@ -1191,6 +1191,22 @@ function computePhaseDistance(
 /**
  * 計算使用者所選座位（userZone, userSeat）與指定主推女孩（girlId）在整場各局（開局 0–10 分、破 10 分後）之精確距離分析
  */
+export function findGirlPhaseDistance(
+  phaseRecord: Record<AceZoneId, string[]>,
+  userZone: AceZoneId,
+  userSeat: number,
+  girlId: string
+): PhaseDistanceDetail | null {
+  for (const zone of ['A', 'B', 'C'] as AceZoneId[]) {
+    const arr = phaseRecord[zone];
+    const slotIdx = arr.indexOf(girlId);
+    if (slotIdx !== -1) {
+      return computePhaseDistance(userZone, userSeat, zone, slotIdx, arr.length);
+    }
+  }
+  return null;
+}
+
 export function getFullMatchGirlDistanceSummary(
   matchSchedule: MatchStationSchedule,
   userZone: AceZoneId,
