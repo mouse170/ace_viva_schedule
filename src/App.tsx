@@ -586,6 +586,13 @@ export const App: React.FC = () => {
             <h1 className="mt-2 text-2xl font-black tracking-tight text-[#212047] sm:mt-2.5 sm:text-5xl">
               {t('連莊女孩全體成員應援圖鑑', 'ACE VIVA 전체 멤버 응원 도감')}
             </h1>
+            {lang === 'ko' && (
+              <p className="mt-2 inline-flex items-center gap-1.5 rounded-xl bg-amber-50 px-3 py-1.5 text-xs font-bold text-amber-900 ring-1 ring-amber-300/80">
+                <span>
+                  ※ 본 사이트의 한국어 안내는 기계 번역을 기반으로 제공되며, 오역이나 표기 차이가 있을 수 있습니다. 정확한 일정은 공식 공지를 참고해 주세요.
+                </span>
+              </p>
+            )}
           </div>
 
           {/* Search & Sort Controls */}
@@ -1199,7 +1206,7 @@ export const App: React.FC = () => {
               </a>
             </div>
 
-            <div className="mt-4 grid grid-cols-1 gap-4 text-xs leading-relaxed text-white/80 md:grid-cols-3 lg:text-sm">
+            <div className="mt-4 grid grid-cols-1 gap-4 text-xs leading-relaxed text-white/80 md:grid-cols-2 lg:grid-cols-4 lg:text-sm">
               <div className="rounded-2xl bg-white/[0.04] p-4 ring-1 ring-white/10 lg:p-5">
                 <div className="font-mono-num text-[10px] font-bold tracking-[0.15em] text-[#7ADAD0] lg:text-xs">
                   01 · 網站性質說明
@@ -1233,6 +1240,21 @@ export const App: React.FC = () => {
                 </div>
                 <p className="mt-1.5 text-white/75">
                   本站引用之成員形象照及相關名稱，其著作權、商標權與肖像權均歸屬臺中連莊職業排球隊、LEXX 原質娛樂及各成員本人所有，本站僅作非營利應援推廣與資訊索引使用。
+                </p>
+              </div>
+
+              <div className="rounded-2xl bg-white/[0.04] p-4 ring-1 ring-amber-300/30 lg:p-5">
+                <div className="font-mono-num text-[10px] font-bold tracking-[0.15em] text-amber-300 lg:text-xs">
+                  {t('04 · 韓文機器翻譯免責', '04 · 한국어 기계 번역 면책')}
+                </div>
+                <div className="mt-1 font-extrabold text-white lg:text-base">
+                  {t('韓文介面由機器翻譯產生，僅供參考', '기계 번역 기반 안내 (참고용)')}
+                </div>
+                <p className="mt-1.5 text-white/75">
+                  {t(
+                    '本網站之韓文語系與成員韓文音譯名稱係透過機器翻譯輔助生成，可能存在語意誤差或譯名差異，實際資訊請一律以繁體中文原文及官方公告為準。（한국어 번역은 기계 번역을 통해 제공되며, 오역이 있을 수 있습니다.）',
+                    '본 사이트의 한국어 번역 및 멤버 한글 음차 표기는 기계 번역을 통해 제공되며, 오역이나 표기 차이가 있을 수 있습니다. 정확한 정보는 번체 중국어 원문 및 공식 인스타그램 공지를 기준으로 확인해 주세요.'
+                  )}
                 </p>
               </div>
             </div>
