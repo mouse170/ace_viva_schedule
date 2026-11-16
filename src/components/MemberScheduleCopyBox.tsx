@@ -76,11 +76,14 @@ export const MemberScheduleCopyBox: React.FC<MemberScheduleCopyBoxProps> = ({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-1.5">
           <span
-            className={`font-mono-num text-[10px] font-bold tracking-[0.12em] ${
+            className={`font-mono-num text-[10px] font-bold tracking-[0.08em] sm:tracking-[0.12em] ${
               isDark ? 'text-[#7ADAD0]' : 'text-[#3F8E67]'
             }`}
           >
-            {t('站位文字複製（🟦A / 🟩B / 🟨C）', '응원 구역 일정 복사 (🟦A / 🟩B / 🟨C)')}
+            <span className="sm:hidden">🟦A 🟩B 🟨C</span>
+            <span className="hidden sm:inline">
+              {t('站位文字複製（🟦A / 🟩B / 🟨C）', '응원 구역 일정 복사 (🟦A / 🟩B / 🟨C)')}
+            </span>
           </span>
           <div className="flex items-center gap-1">
             {ACTIVE_STATION_ROTATION_SCHEDULES.length > 0 && (
@@ -88,7 +91,7 @@ export const MemberScheduleCopyBox: React.FC<MemberScheduleCopyBoxProps> = ({
                 <button
                   type="button"
                   onClick={() => setScope('single')}
-                  className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold transition-colors ${
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-bold whitespace-nowrap transition-colors sm:px-2.5 sm:text-[11px] ${
                     scope === 'single'
                       ? 'bg-[#5BAE84] text-white'
                       : isDark
@@ -96,12 +99,13 @@ export const MemberScheduleCopyBox: React.FC<MemberScheduleCopyBoxProps> = ({
                         : 'bg-white text-[#212047]/70 ring-1 ring-[#212047]/15'
                   }`}
                 >
-                  {t('單場次', '한 경기')}
+                  <span className="sm:hidden">{t('單場', '1경기')}</span>
+                  <span className="hidden sm:inline">{t('單場次', '한 경기')}</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setScope('all')}
-                  className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold transition-colors ${
+                  className={`rounded-full px-2 py-0.5 text-[10px] font-bold whitespace-nowrap transition-colors sm:px-2.5 sm:text-[11px] ${
                     scope === 'all'
                       ? 'bg-[#5BAE84] text-white'
                       : isDark
@@ -109,14 +113,15 @@ export const MemberScheduleCopyBox: React.FC<MemberScheduleCopyBoxProps> = ({
                         : 'bg-white text-[#212047]/70 ring-1 ring-[#212047]/15'
                   }`}
                 >
-                  {t('全部近期場次', '전체 일정')}
+                  <span className="sm:hidden">{t('全部', '전체')}</span>
+                  <span className="hidden sm:inline">{t('全部近期場次', '전체 일정')}</span>
                 </button>
               </>
             )}
             <button
               type="button"
               onClick={() => setIncludeTeammates((prev) => !prev)}
-              className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold transition-colors ${
+              className={`rounded-full px-2 py-0.5 text-[10px] font-bold whitespace-nowrap transition-colors sm:px-2.5 sm:text-[11px] ${
                 includeTeammates
                   ? isDark
                     ? 'bg-[#7ADAD0] text-[#212047]'
@@ -126,7 +131,10 @@ export const MemberScheduleCopyBox: React.FC<MemberScheduleCopyBoxProps> = ({
                     : 'bg-white text-[#212047]/70 ring-1 ring-[#212047]/15'
               }`}
             >
-              {includeTeammates ? t('✓ 含同區隊友', '✓ 같은 구역 포함') : t('+ 同區隊友', '+ 같은 구역')}
+              <span className="sm:hidden">{includeTeammates ? t('✓隊友', '✓동료') : t('+隊友', '+동료')}</span>
+              <span className="hidden sm:inline">
+                {includeTeammates ? t('✓ 含同區隊友', '✓ 같은 구역 포함') : t('+ 同區隊友', '+ 같은 구역')}
+              </span>
             </button>
           </div>
         </div>
@@ -134,7 +142,7 @@ export const MemberScheduleCopyBox: React.FC<MemberScheduleCopyBoxProps> = ({
         <button
           type="button"
           onClick={handleCopy}
-          className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-extrabold transition-all active:scale-[0.97] ${
+          className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-[11px] font-extrabold whitespace-nowrap transition-all active:scale-[0.97] sm:gap-1.5 sm:px-3.5 sm:text-xs ${
             copied
               ? 'bg-[#5BAE84] text-white'
               : isDark
@@ -142,7 +150,18 @@ export const MemberScheduleCopyBox: React.FC<MemberScheduleCopyBoxProps> = ({
                 : 'bg-[#212047] text-[#7ADAD0] hover:bg-[#5BAE84] hover:text-white'
           }`}
         >
-          <span>{copied ? t('已複製班表', '복사 완료!') : t('一鍵複製站位', '일정 복사')}</span>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            className="h-3.5 w-3.5 shrink-0"
+            aria-hidden="true"
+          >
+            <rect x="9" y="9" width="11" height="11" rx="2" />
+            <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" strokeLinecap="round" />
+          </svg>
+          <span>{copied ? t('已複製', '복사됨') : t('複製', '복사')}</span>
         </button>
       </div>
 

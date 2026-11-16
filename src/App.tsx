@@ -436,23 +436,36 @@ export const App: React.FC = () => {
           </div>
 
           <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
-            {/* Language Switcher (繁中 / 한국어) */}
+            {/* Language Switcher (繁中 / 한국어) — compact on mobile */}
             <button
               type="button"
               onClick={toggleLang}
               aria-label={t('切換為韓文介面', '중국어(번체)로 전환')}
-              className="flex items-center gap-1 rounded-full bg-amber-400/20 px-2.5 py-1 font-mono-num text-[11px] font-black text-amber-200 whitespace-nowrap ring-1 ring-amber-300/50 transition-all hover:bg-amber-400 hover:text-[#212047] sm:px-3 sm:py-1.5 sm:text-xs"
+              className="flex items-center gap-1 rounded-full bg-amber-400/20 px-2 py-1 font-mono-num text-[10px] font-black text-amber-200 whitespace-nowrap ring-1 ring-amber-300/50 transition-all hover:bg-amber-400 hover:text-[#212047] sm:px-3 sm:py-1.5 sm:text-xs"
             >
-              <span>{lang === 'ko' ? '繁中' : '한국어'}</span>
+              <span className="sm:hidden">{lang === 'ko' ? '繁' : '한'}</span>
+              <span className="hidden sm:inline">{lang === 'ko' ? '繁中' : '한국어'}</span>
             </button>
 
-            {/* 頁首「啦啦隊介紹」點選開啟按鈕（手機與電腦皆常駐於頁首） */}
+            {/* 頁首「啦啦隊介紹」點選開啟按鈕（手機以圖示+精簡字呈現） */}
             <button
               type="button"
               onClick={() => setIsTeamIntroOpen(true)}
-              className="flex items-center gap-1 rounded-full bg-white/12 px-2.5 py-1 text-[11px] font-extrabold text-[#7ADAD0] whitespace-nowrap ring-1 ring-[#5ECBC0]/45 transition-all hover:bg-[#5BAE84] hover:text-white sm:px-3 sm:py-1.5 sm:text-xs lg:px-3.5 lg:text-sm"
+              className="flex items-center gap-1 rounded-full bg-white/12 px-2 py-1 text-[10px] font-extrabold text-[#7ADAD0] whitespace-nowrap ring-1 ring-[#5ECBC0]/45 transition-all hover:bg-[#5BAE84] hover:text-white sm:px-3 sm:py-1.5 sm:text-xs lg:px-3.5 lg:text-sm"
             >
-              <span>{t('啦啦隊介紹', '팀 소개')}</span>
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.2"
+                className="h-3 w-3 shrink-0 sm:hidden"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 16v-4M12 8h.01" strokeLinecap="round" />
+              </svg>
+              <span className="sm:hidden">{t('介紹', '소개')}</span>
+              <span className="hidden sm:inline">{t('啦啦隊介紹', '팀 소개')}</span>
             </button>
 
             <button
@@ -463,9 +476,18 @@ export const App: React.FC = () => {
                   .getElementById('roster-section')
                   ?.scrollIntoView({ behavior: 'smooth' });
               }}
-              className="flex items-center gap-1 rounded-full bg-[#5BAE84]/25 px-2 py-1 text-[11px] font-bold text-[#7ADAD0] whitespace-nowrap ring-1 ring-[#5BAE84]/45 transition-all hover:bg-[#5BAE84] hover:text-white sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-xs lg:px-3.5 lg:text-sm"
+              aria-label={t('我的主推', '내 최애')}
+              className="flex items-center gap-1 rounded-full bg-[#5BAE84]/25 px-2 py-1 text-[10px] font-bold text-[#7ADAD0] whitespace-nowrap ring-1 ring-[#5BAE84]/45 transition-all hover:bg-[#5BAE84] hover:text-white sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-xs lg:px-3.5 lg:text-sm"
             >
-              <span>{t('我的主推', '내 최애')}</span>
+              <svg
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="h-3 w-3 shrink-0 text-[#5ECBC0] sm:hidden"
+                aria-hidden="true"
+              >
+                <path d="M12 20.5s-7.5-4.35-9.5-8.6C1.1 8.8 3.2 5 6.8 5c2.1 0 3.9 1.2 5.2 2.9C13.3 6.2 15.1 5 17.2 5c3.6 0 5.7 3.8 4.3 6.9-2 4.25-9.5 8.6-9.5 8.6z" />
+              </svg>
+              <span className="hidden sm:inline">{t('我的主推', '내 최애')}</span>
               <span className="rounded-full bg-[#5BAE84] px-1.5 py-0.2 font-mono-num text-[10px] font-extrabold text-white lg:text-xs">
                 {favoriteIds.length}
               </span>
@@ -475,9 +497,10 @@ export const App: React.FC = () => {
               href={TEAM_INFO.officialInstagramUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex shrink-0 items-center gap-1 rounded-full bg-[#5BAE84] px-2.5 py-1 text-[11px] font-extrabold text-white whitespace-nowrap transition-transform hover:bg-[#4FA87D] active:scale-[0.97] sm:px-3 sm:py-1.5 sm:text-xs lg:px-4 lg:text-sm"
+              className="flex shrink-0 items-center gap-0.5 rounded-full bg-[#5BAE84] px-2 py-1 text-[10px] font-extrabold text-white whitespace-nowrap transition-transform hover:bg-[#4FA87D] active:scale-[0.97] sm:gap-1 sm:px-3 sm:py-1.5 sm:text-xs lg:px-4 lg:text-sm"
             >
-              <span>{t('官方 IG', '공식 IG')}</span>
+              <span className="sm:hidden">IG</span>
+              <span className="hidden sm:inline">{t('官方 IG', '공식 IG')}</span>
               <span aria-hidden="true">↗</span>
             </a>
           </div>

@@ -803,12 +803,12 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
                                     return (
                                       <div
                                         key={zoneId}
-                                        className="flex min-w-0 items-center justify-between gap-2 rounded-lg bg-[#F4FAF8] px-3 py-2 ring-1 ring-[#5BAE84]/20"
+                                        className="flex min-w-0 flex-col items-start justify-between gap-1.5 rounded-lg bg-[#F4FAF8] px-3 py-2 ring-1 ring-[#5BAE84]/20 sm:flex-row sm:items-center sm:gap-2"
                                       >
                                         <span className="shrink-0 font-mono-num text-xs font-extrabold text-[#3F8E67]">
                                           2F {zoneId} 區
                                         </span>
-                                        <div className="flex min-w-0 flex-wrap items-center justify-end gap-1.5">
+                                        <div className="flex min-w-0 flex-wrap items-center justify-start gap-1.5 sm:justify-end">
                                           {zMembers.map((zm, zIdx) => {
                                             const st = memberStatusMap[zm.id];
                                             const isD1 = st === 'day1_only';

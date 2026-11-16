@@ -1135,16 +1135,15 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                 return (
                   <div className="mt-4 rounded-2xl border border-[#5ECBC0]/40 bg-[#181736] p-3 shadow-inner sm:p-5">
                     {/* Top Status Strip: Your Seat -> Oshi Target + Relative Direction Pill */}
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-mono-num text-xs font-black text-white sm:text-sm lg:text-base">
-                          {t('你', '내 좌석')}（{selectedZone}
-                          {selectedSeat}）→ ★{getMemberName(activeOshi)}（
-                          {activePhaseOshiDistance.girlZone}{' '}
-                          {t('區', '구역')}{' '}
+                    <div className="flex flex-wrap items-center justify-between gap-1.5">
+                      <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+                        <span className="truncate font-mono-num text-[11px] font-black text-white sm:text-sm lg:text-base">
+                          {t('你', '내')}{' '}
+                          ({selectedZone}
+                          {selectedSeat}) → ★{getMemberName(activeOshi)} (
+                          {activePhaseOshiDistance.girlZone}
                           {activePhaseOshiDistance.girlSeatRange[0]}–
-                          {activePhaseOshiDistance.girlSeatRange[1]} · IG
-                          {slotShort}）
+                          {activePhaseOshiDistance.girlSeatRange[1]})
                         </span>
                         <span className="rounded-md bg-white/10 px-2 py-0.5 font-mono-num text-[10px] font-bold text-[#7ADAD0] lg:text-xs">
                           {currentSetArrangement.setLabel} ·{' '}
@@ -1219,17 +1218,17 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                           {
                             id: 'C' as AceZoneId,
                             label: '◀ 左手邊：2F C 區 (23→1號)',
-                            mobileLabel: '◀ 左：C 區 (23→1)',
+                            mobileLabel: '◀ C區 23→1',
                           },
                           {
                             id: 'B' as AceZoneId,
                             label: '正中央：2F B 區 (23→1號)',
-                            mobileLabel: '中：B 區 (23→1)',
+                            mobileLabel: 'B區 23→1',
                           },
                           {
                             id: 'A' as AceZoneId,
                             label: '右手邊：2F A 區 (23→1號) ▶',
-                            mobileLabel: '右：A 區 (23→1) ▶',
+                            mobileLabel: 'A區 23→1 ▶',
                           },
                         ] as const
                       ).map((zItem) => (
@@ -1237,7 +1236,7 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                           key={zItem.id}
                           type="button"
                           onClick={() => setSelectedZone(zItem.id)}
-                          className={`rounded-lg py-1.5 transition-all ${
+                          className={`rounded-lg px-1 py-1.5 whitespace-nowrap transition-all ${
                             selectedZone === zItem.id
                               ? 'bg-[#5BAE84]/35 text-[#7ADAD0] ring-1 ring-[#5ECBC0]'
                               : 'bg-white/[0.06] text-white/60 hover:bg-white/10 hover:text-white'
@@ -1251,9 +1250,14 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
 
                     {/* Visual Radar Canvas (Top = 1F Court & Cheerleader Stage ▼, Bottom = Your Seat looking UP ▲) */}
                     <div className="relative mt-2 h-48 w-full overflow-hidden rounded-xl bg-[#212047]/95 ring-1 ring-white/15 sm:h-54">
-                      {/* TOP STRIP: 1F Court in front of the Audience */}
-                      <div className="absolute inset-x-2 top-1.5 z-10 flex items-center justify-center rounded-md bg-[#5BAE84]/25 py-0.5 text-center font-mono-num text-[10px] font-bold text-[#7ADAD0] ring-1 ring-[#5BAE84]/40 lg:text-xs">
-                        ▲ 前方 1F 球員席 ＆ 中央比賽球場（觀眾視線往上看 ▲）▲
+                      {/* TOP STRIP: 1F Court in front of the Audience (Single line to avoid covering avatars) */}
+                      <div className="absolute inset-x-2 top-1.5 z-10 flex items-center justify-center rounded-md bg-[#5BAE84]/25 px-2 py-0.5 text-center font-mono-num text-[10px] font-bold text-[#7ADAD0] ring-1 ring-[#5BAE84]/40 lg:text-xs">
+                        <span className="truncate sm:hidden">
+                          {t('▲ 1F 球場（觀眾往上視角）▲', '▲ 1F 코트 (위쪽 시야) ▲')}
+                        </span>
+                        <span className="hidden truncate sm:inline">
+                          {t('▲ 前方 1F 球員席 ＆ 中央比賽球場（觀眾視線往上看 ▲）▲', '▲ 앞쪽 1F 선수석 & 중앙 경기 코트 (관중 시야 위쪽 ▲) ▲')}
+                        </span>
                       </div>
 
                       <svg
