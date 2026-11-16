@@ -1553,6 +1553,7 @@ export const App: React.FC = () => {
         onToggleFavorite={toggleFavorite}
         onClose={() => setSelectedMember(null)}
         onSelectScheduleMember={handleSelectScheduleMemberFromModal}
+        onSelectMember={setSelectedMember}
       />
     </div>
   );

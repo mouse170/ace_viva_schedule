@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { MEMBERS, type AceVivaMember } from '../data/members';
+import { getPhaseAdjacentBonds } from '../data/memberRelations';
 import {
   ACTIVE_THEME_WEEKS,
   ACTIVE_STATION_ROTATION_SCHEDULES,
@@ -9,6 +10,7 @@ import {
   type WeekMemberAttendanceType,
 } from '../data/schedule';
 import { MemberPortrait } from './MemberPortrait';
+import { MemberScheduleCopyBox } from './MemberScheduleCopyBox';
 
 interface ScheduleSectionProps {
   selectedMemberId: string | 'all' | 'favorites';
@@ -40,6 +42,7 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
   const [stationDayMatchId, setStationDayMatchId] = useState<string>(
     () => CLOSEST_STATION_SCHEDULE.matchId
   );
+  const [copyTargetMemberId, setCopyTargetMemberId] = useState<string>('yuri');
 
   const memberMap = useMemo(() => {
     const map = new Map<string, AceVivaMember>();
@@ -726,7 +729,50 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
 
                       {isStationExpanded && (
                         <div className="mt-3.5 space-y-2.5 border-t border-[#212047]/10 pt-3.5">
-                          {activeStationSchedule.sets.map((s) => (
+                          {/* Member-centric Station Copy Bar inside Schedule Section */}
+                          {(() => {
+                            const copyMember =
+                              activeFilterMember ??
+                              memberMap.get(copyTargetMemberId) ??
+                              MEMBERS[0];
+                            return (
+                              <div className="space-y-2 rounded-xl bg-white p-3 ring-1 ring-[#5BAE84]/30">
+                                {!activeFilterMember && (
+                                  <div className="flex flex-wrap items-center justify-between gap-2">
+                                    <span className="text-xs font-extrabold text-[#212047]">
+                                      選擇成員一鍵複製個人站位班表：
+                                    </span>
+                                    <select
+                                      aria-label="選擇要複製站位班表的成員"
+                                      value={copyMember.id}
+                                      onChange={(e) =>
+                                        setCopyTargetMemberId(e.target.value)
+                                      }
+                                      className="rounded-lg border border-[#212047]/15 bg-[#F4FAF8] px-2.5 py-1 text-xs font-bold text-[#212047]"
+                                    >
+                                      {MEMBERS.map((m) => (
+                                        <option key={m.id} value={m.id}>
+                                          #{m.number} {m.name}
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                )}
+                                <MemberScheduleCopyBox
+                                  member={copyMember}
+                                  activeMatchId={activeStationSchedule.matchId}
+                                  variant="light"
+                                />
+                              </div>
+                            );
+                          })()}
+
+                          {activeStationSchedule.sets.map((s) => {
+                            const setBonds = getPhaseAdjacentBonds(
+                              s.initial,
+                              memberMap
+                            );
+                            return (
                             <div
                               key={s.setKey}
                               className="rounded-xl bg-white p-3 ring-1 ring-[#212047]/[0.07]"
@@ -761,19 +807,30 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
                                           2F {zoneId} 區
                                         </span>
                                         <div className="flex min-w-0 flex-wrap items-center justify-end gap-1.5">
-                                          {zMembers.map((zm) => {
+                                          {zMembers.map((zm, zIdx) => {
                                             const st = memberStatusMap[zm.id];
                                             const isD1 = st === 'day1_only';
                                             const isD2 = st === 'day2_only';
+                                            const posBonds =
+                                              setBonds.byPositionKey.get(
+                                                `${zoneId}-${zIdx}`
+                                              ) ?? [];
                                             return (
                                               <span
                                                 key={zm.id}
+                                                title={
+                                                  posBonds.length > 0
+                                                    ? `鄰近同經歷：${posBonds.map((b) => `${b.partner.name}(${b.sharedTags[0].shortLabel})`).join('、')}`
+                                                    : undefined
+                                                }
                                                 className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-extrabold ${
                                                   isD1
                                                     ? 'bg-amber-500 text-white ring-1 ring-amber-600'
                                                     : isD2
                                                       ? 'bg-rose-500 text-white ring-1 ring-rose-600'
-                                                      : 'bg-white text-[#212047] ring-1 ring-[#212047]/10'
+                                                      : posBonds.length > 0
+                                                        ? 'bg-amber-50 text-[#92400E] ring-1 ring-amber-400'
+                                                        : 'bg-white text-[#212047] ring-1 ring-[#212047]/10'
                                                 }`}
                                               >
                                                 <MemberPortrait
@@ -782,6 +839,11 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
                                                   className="h-4 w-4 rounded-full"
                                                 />
                                                 <span>{zm.name}</span>
+                                                {posBonds.length > 0 && (
+                                                  <span className="rounded-full bg-amber-400/30 px-1 font-mono-num text-[9px] font-black text-amber-900">
+                                                    {posBonds[0].sharedTags[0].shortLabel}
+                                                  </span>
+                                                )}
                                               </span>
                                             );
                                           })}
@@ -792,7 +854,8 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
                                 )}
                               </div>
                             </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       )}
                     </div>

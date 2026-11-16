@@ -1,7 +1,15 @@
-import React, { useEffect, useId, useRef, useState } from 'react';
-import type { AceVivaMember } from '../data/members';
-import { ACTIVE_HOME_SCHEDULE } from '../data/schedule';
+import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { MEMBERS, type AceVivaMember } from '../data/members';
+import {
+  getMemberMatchAdjacentMoments,
+  getSharedExperiencePeers,
+} from '../data/memberRelations';
+import {
+  ACTIVE_HOME_SCHEDULE,
+  CLOSEST_STATION_SCHEDULE,
+} from '../data/schedule';
 import { MemberPortrait } from './MemberPortrait';
+import { MemberScheduleCopyBox } from './MemberScheduleCopyBox';
 import { ZodiacIcon, isCurrentMonthBirthday } from './ZodiacIcon';
 
 interface MemberDetailDialogProps {
@@ -10,6 +18,7 @@ interface MemberDetailDialogProps {
   onToggleFavorite: (id: string) => void;
   onClose: () => void;
   onSelectScheduleMember: (memberId: string) => void;
+  onSelectMember?: (member: AceVivaMember) => void;
 }
 
 export const MemberDetailDialog: React.FC<MemberDetailDialogProps> = ({
@@ -18,6 +27,7 @@ export const MemberDetailDialog: React.FC<MemberDetailDialogProps> = ({
   onToggleFavorite,
   onClose,
   onSelectScheduleMember,
+  onSelectMember,
 }) => {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const titleId = useId();
@@ -92,6 +102,31 @@ export const MemberDetailDialog: React.FC<MemberDetailDialogProps> = ({
   const attendingMatches = member
     ? ACTIVE_HOME_SCHEDULE.filter((match) => match.attendingMemberIds.includes(member.id))
     : [];
+
+  const memberMap = useMemo(() => {
+    const map = new Map<string, AceVivaMember>();
+    for (const m of MEMBERS) {
+      map.set(m.id, m);
+    }
+    return map;
+  }, []);
+
+  const sharedPeers = useMemo(
+    () => (member ? getSharedExperiencePeers(member.id, MEMBERS) : []),
+    [member]
+  );
+
+  const closestAdjacentMoments = useMemo(
+    () =>
+      member
+        ? getMemberMatchAdjacentMoments(
+            member.id,
+            CLOSEST_STATION_SCHEDULE,
+            memberMap
+          )
+        : [],
+    [member, memberMap]
+  );
 
   return (
     <dialog
@@ -418,9 +453,76 @@ export const MemberDetailDialog: React.FC<MemberDetailDialogProps> = ({
                       ))}
                     </div>
                   </div>
+                  {/* Shared Experience Peers & Adjacent Station Preview */}
+                  {sharedPeers.length > 0 && (
+                    <div className="mt-6">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="font-mono-num text-[10px] tracking-[0.14em] text-[#212047]/55">
+                          相同經歷夥伴串聯（{sharedPeers.length} 位）
+                        </span>
+                        {closestAdjacentMoments.length > 0 && (
+                          <span className="rounded-full bg-[#F59E0B]/15 px-2.5 py-0.5 font-mono-num text-[10px] font-bold text-[#B45309] ring-1 ring-[#F59E0B]/40">
+                            {CLOSEST_STATION_SCHEDULE.dateLabel} 有 {closestAdjacentMoments.length} 次站位鄰近連線
+                          </span>
+                        )}
+                      </div>
+                      <div className="mt-2.5 flex flex-wrap gap-2">
+                        {sharedPeers.map(({ peer, sharedTags }) => {
+                          const hasClosestBond = closestAdjacentMoments.some(
+                            (m) => m.partner.id === peer.id
+                          );
+                          return (
+                            <button
+                              key={peer.id}
+                              type="button"
+                              onClick={() => onSelectMember?.(peer)}
+                              className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-left text-xs font-bold transition-colors ${
+                                hasClosestBond
+                                  ? 'bg-[#FEF3C7] text-[#92400E] ring-1 ring-[#F59E0B]/60 hover:bg-[#FDE68A]'
+                                  : 'bg-white text-[#212047] ring-1 ring-[#212047]/10 hover:bg-[#E6F5F1]'
+                              }`}
+                            >
+                              <MemberPortrait
+                                member={peer}
+                                variant="avatar"
+                                className="h-5 w-5 rounded-full"
+                              />
+                              <span>{peer.name}</span>
+                              <span
+                                className={`rounded-full px-1.5 py-0.2 font-mono-num text-[10px] ${
+                                  hasClosestBond
+                                    ? 'bg-[#F59E0B] text-white'
+                                    : 'bg-[#E6F5F1] text-[#3F8E67]'
+                                }`}
+                              >
+                                {sharedTags.map((t) => t.shortLabel).join(' · ')}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                      {closestAdjacentMoments.length > 0 && (
+                        <div className="mt-2.5 rounded-xl border border-[#F59E0B]/35 bg-[#FFFBEB] px-3 py-2 text-[11px] text-[#92400E]">
+                          <div className="font-mono-num text-[10px] font-extrabold text-[#B45309]">
+                            近期站位鄰近預告（{CLOSEST_STATION_SCHEDULE.dateLabel}）：
+                          </div>
+                          <div className="mt-1 flex flex-wrap gap-1.5">
+                            {closestAdjacentMoments.slice(0, 6).map((moment, idx) => (
+                              <span
+                                key={`${moment.setLabel}-${moment.phaseLabel}-${moment.partner.id}-${idx}`}
+                                className="rounded-md bg-white/90 px-2 py-0.5 font-mono-num text-[10px] font-bold text-[#92400E] ring-1 ring-[#F59E0B]/30"
+                              >
+                                {moment.setLabel} {moment.phaseLabel === '開局 0–10 分' ? '開局' : '換位'}・{moment.selfZone}區 鄰近 {moment.partner.name}（{moment.sharedTags.map((t) => t.shortLabel).join('/')}）
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
-                {/* Upcoming Home Match Attendance Preview */}
+                {/* Upcoming Home Match Attendance Preview & Schedule Copy */}
                 <div className="rounded-2xl bg-[#212047] p-4 text-white">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div>
@@ -451,6 +553,12 @@ export const MemberDetailDialog: React.FC<MemberDetailDialogProps> = ({
                         {match.date} ({match.dayOfWeek.split(' ')[0]}) 對戰 {match.opponent}
                       </span>
                     ))}
+                  </div>
+                  <div className="mt-3.5">
+                    <MemberScheduleCopyBox
+                      member={member}
+                      variant="dark"
+                    />
                   </div>
                 </div>
               </div>

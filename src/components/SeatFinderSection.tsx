@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { MEMBERS, type AceVivaMember } from '../data/members';
+import { getPhaseAdjacentBonds } from '../data/memberRelations';
 import {
   ACTIVE_STATION_ROTATION_SCHEDULES,
   CLOSEST_STATION_SCHEDULE,
@@ -494,12 +495,16 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
       selectedSeat,
       currentZoneLength
     );
+    const phaseBonds = getPhaseAdjacentBonds(phaseMap, memberMap);
 
     return orderedRaw
       .map((item) => {
         const girlId = phaseMap[item.zone][item.slotIndex];
         const member = memberMap.get(girlId);
         if (!member) return null;
+
+        const sharedExperienceBonds =
+          phaseBonds.byPositionKey.get(`${item.zone}-${item.slotIndex}`) ?? [];
 
         const stationGlobal =
           (item.zone === 'A' ? 0 : item.zone === 'B' ? 1 : 2) * 23 +
@@ -529,6 +534,7 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
           isDirectFront,
           isSameZoneAdjacent,
           relativeBadge,
+          sharedExperienceBonds,
         };
       })
       .filter((x): x is NonNullable<typeof x> => Boolean(x));
@@ -1446,6 +1452,23 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                             {st.shortLabel}
                           </div>
 
+                          {st.sharedExperienceBonds.length > 0 && (
+                            <div className="mt-1.5 flex flex-wrap justify-center gap-1">
+                              {st.sharedExperienceBonds.map((bond) => (
+                                <span
+                                  key={`hz-bond-${st.zone}-${st.slotIndex}-${bond.partner.id}`}
+                                  title={`與鄰近的 ${bond.partner.name} 曾同屬 ${bond.sharedTags.map((t) => t.label).join('、')}`}
+                                  className="inline-flex items-center gap-1 rounded-full bg-amber-400/20 px-2 py-0.5 font-mono-num text-[10px] font-extrabold text-amber-700 ring-1 ring-amber-400/60 dark:text-amber-300"
+                                >
+                                  <span>
+                                    鄰近 {bond.partner.name} ·{' '}
+                                    {bond.sharedTags[0].shortLabel}
+                                  </span>
+                                </span>
+                              ))}
+                            </div>
+                          )}
+
                           <div className="mt-2 flex flex-wrap items-center justify-center gap-1">
                             <a
                               href={m.instagramUrl}
@@ -1782,6 +1805,11 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
 
                 const initAdj = adjacentNeighborsForPhase(s.initial);
                 const after10Adj = adjacentNeighborsForPhase(s.after10Points);
+                const initBonds = getPhaseAdjacentBonds(s.initial, memberMap);
+                const after10Bonds = getPhaseAdjacentBonds(
+                  s.after10Points,
+                  memberMap
+                );
 
                 return (
                   <div
@@ -1831,6 +1859,10 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                               const g = memberMap.get(initArr[slotIdx]);
                               if (!g) return null;
                               const isMine = slotIdx === initMineSlot;
+                              const slotBonds =
+                                initBonds.byPositionKey.get(
+                                  `${selectedZone}-${slotIdx}`
+                                ) ?? [];
                               return (
                                 <button
                                   key={`init-${slotIdx}-${g.id}`}
@@ -1839,7 +1871,9 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                                   className={`flex min-w-0 flex-col items-center rounded-xl p-2 text-center transition-colors lg:p-2.5 ${
                                     isMine
                                       ? 'bg-[#5BAE84] text-white shadow-xs ring-2 ring-[#212047]'
-                                      : 'bg-white text-[#212047] ring-1 ring-[#212047]/10 hover:bg-[#E6F5F1]'
+                                      : slotBonds.length > 0
+                                        ? 'bg-amber-50 text-[#212047] ring-2 ring-amber-400 hover:bg-amber-100/70'
+                                        : 'bg-white text-[#212047] ring-1 ring-[#212047]/10 hover:bg-[#E6F5F1]'
                                   }`}
                                 >
                                   <span className="truncate font-mono-num text-[9px] opacity-75 lg:text-xs">
@@ -1853,6 +1887,18 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                                   <span className="mt-1 truncate text-xs font-extrabold lg:text-sm">
                                     {isMine ? `★ ${g.name}` : g.name}
                                   </span>
+                                  {slotBonds.length > 0 && (
+                                    <span
+                                      className={`mt-1 max-w-full truncate rounded-full px-1.5 py-0.5 font-mono-num text-[9px] font-extrabold ${
+                                        isMine
+                                          ? 'bg-[#212047] text-amber-300'
+                                          : 'bg-amber-400/25 text-amber-900'
+                                      }`}
+                                    >
+                                      鄰 {slotBonds[0].partner.name} ·{' '}
+                                      {slotBonds[0].sharedTags[0].shortLabel}
+                                    </span>
+                                  )}
                                 </button>
                               );
                             })}
@@ -1921,6 +1967,10 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                               const g = memberMap.get(afterArr[slotIdx]);
                               if (!g) return null;
                               const isMine = slotIdx === afterMineSlot;
+                              const slotBonds =
+                                after10Bonds.byPositionKey.get(
+                                  `${selectedZone}-${slotIdx}`
+                                ) ?? [];
                               return (
                                 <button
                                   key={`after10-${slotIdx}-${g.id}`}
@@ -1929,7 +1979,9 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                                   className={`flex min-w-0 flex-col items-center rounded-xl p-2 text-center transition-colors lg:p-2.5 ${
                                     isMine
                                       ? 'bg-[#212047] text-[#7ADAD0] shadow-xs ring-2 ring-[#5BAE84]'
-                                      : 'bg-white text-[#212047] ring-1 ring-[#212047]/10 hover:bg-[#E6F5F1]'
+                                      : slotBonds.length > 0
+                                        ? 'bg-amber-50 text-[#212047] ring-2 ring-amber-400 hover:bg-amber-100/70'
+                                        : 'bg-white text-[#212047] ring-1 ring-[#212047]/10 hover:bg-[#E6F5F1]'
                                   }`}
                                 >
                                   <span className="truncate font-mono-num text-[9px] opacity-75 lg:text-xs">
@@ -1943,6 +1995,18 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                                   <span className="mt-1 truncate text-xs font-extrabold lg:text-sm">
                                     {isMine ? `★ ${g.name}` : g.name}
                                   </span>
+                                  {slotBonds.length > 0 && (
+                                    <span
+                                      className={`mt-1 max-w-full truncate rounded-full px-1.5 py-0.5 font-mono-num text-[9px] font-extrabold ${
+                                        isMine
+                                          ? 'bg-amber-400/25 text-amber-300'
+                                          : 'bg-amber-400/25 text-amber-900'
+                                      }`}
+                                    >
+                                      鄰 {slotBonds[0].partner.name} ·{' '}
+                                      {slotBonds[0].sharedTags[0].shortLabel}
+                                    </span>
+                                  )}
                                 </button>
                               );
                             })}

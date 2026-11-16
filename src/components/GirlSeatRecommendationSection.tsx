@@ -10,6 +10,7 @@ import {
   type CrossZoneGoldenInterval,
 } from '../data/schedule';
 import { MemberPortrait } from './MemberPortrait';
+import { MemberScheduleCopyBox } from './MemberScheduleCopyBox';
 import {
   OshiStrategyCardModal,
   type StrategyCardMode,
@@ -359,6 +360,15 @@ export const GirlSeatRecommendationSection: React.FC<
                       </button>
                     </div>
                   </div>
+                </div>
+
+                {/* Member Station Text Copy Box */}
+                <div className="mt-4">
+                  <MemberScheduleCopyBox
+                    member={activeGirl}
+                    activeMatchId={currentMatchSchedule.matchId}
+                    variant="dark"
+                  />
                 </div>
 
                 {/* #1 Best Seat Interval Box */}
