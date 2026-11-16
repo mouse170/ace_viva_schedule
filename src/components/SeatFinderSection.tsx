@@ -183,11 +183,39 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
     [selectedMatchId]
   );
 
-  // All 9 rotating cheerleaders for the selected match day
+  // All rotating cheerleaders for the selected match day
   const rotatingMemberIds = useMemo(() => {
     const s1 = currentMatchSchedule.sets[0].initial;
     return [...s1.A, ...s1.B, ...s1.C];
   }, [currentMatchSchedule]);
+
+  // Sync radar targetOshiId whenever favoriteIds is updated (added or removed)
+  const prevFavoriteIdsRef = React.useRef<string[]>(favoriteIds);
+  React.useEffect(() => {
+    const prev = prevFavoriteIdsRef.current;
+    prevFavoriteIdsRef.current = favoriteIds;
+    if (prev === favoriteIds) return;
+
+    const addedIds = favoriteIds.filter((id) => !prev.includes(id));
+    const currentOnDutyFav = favoriteIds.find((id) =>
+      rotatingMemberIds.includes(id)
+    );
+
+    const addedOnDuty = addedIds.find((id) => rotatingMemberIds.includes(id));
+    if (addedOnDuty) {
+      setTargetOshiId(addedOnDuty);
+      return;
+    }
+
+    if (
+      prev.includes(targetOshiId) &&
+      !favoriteIds.includes(targetOshiId)
+    ) {
+      setTargetOshiId(
+        currentOnDutyFav ?? favoriteIds[0] ?? rotatingMemberIds[0] ?? 'yuri'
+      );
+    }
+  }, [favoriteIds, rotatingMemberIds, targetOshiId]);
 
   // Sort rotating members so user's favorites come first
   const sortedRotatingMembers = useMemo(() => {
