@@ -964,69 +964,78 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
           </div>
 
           {/* Unified First-Person Audience Seat Radar & Current Zone 3-Girl Stage Section */}
-          <div className="mt-6 border-t border-[#212047]/10 pt-6 lg:mt-8 lg:pt-8">
-            <div className="rounded-3xl bg-[#212047] p-4 text-white shadow-xl ring-1 ring-[#5ECBC0]/35 sm:p-6 lg:p-8">
-              {/* 1. Unified Top Bar: Title + Immediate Set & Score Phase Quick Switchers */}
-              <div className="flex flex-col gap-3 border-b border-white/15 pb-3.5 lg:flex-row lg:items-center lg:justify-between">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="rounded-full bg-[#5BAE84] px-3 py-0.5 font-mono-num text-[10px] font-extrabold tracking-wider text-white lg:text-xs">
-                    觀眾面向球場視角雷達
+          <div className="mt-5 border-t border-[#212047]/10 pt-4 lg:mt-8 lg:pt-8">
+            <div className="rounded-3xl bg-[#212047] p-3 text-white shadow-xl ring-1 ring-[#5ECBC0]/35 sm:p-6 lg:p-8">
+              {/* 1. Unified Top Bar: Compact Title + Concise Set & Phase Quick Switchers */}
+              <div className="flex flex-col gap-2 border-b border-white/15 pb-2.5 lg:flex-row lg:items-center lg:justify-between lg:pb-3.5">
+                <div className="flex flex-wrap items-center justify-between gap-1.5 sm:justify-start sm:gap-2">
+                  <span className="rounded-full bg-[#5BAE84] px-2.5 py-0.5 font-mono-num text-[10px] font-extrabold tracking-wider text-white lg:text-xs">
+                    {t('視角雷達', '시야 레이더')}
                   </span>
-                  <span className="font-mono-num text-xs font-bold text-[#7ADAD0] lg:text-sm">
-                    {currentMatchSchedule.dateLabel} · 座位：{selectedZone} 區{' '}
-                    {selectedSeat} 號
+                  <span className="font-mono-num text-[11px] font-bold text-[#7ADAD0] lg:text-sm">
+                    {currentMatchSchedule.dateLabel.split(' ')[0]} · {selectedZone}
+                    {selectedSeat}
                   </span>
-                  <span className="rounded-full bg-white/10 px-2.5 py-0.5 font-mono-num text-[10px] font-bold text-white/75">
-                    ◀ 左 C23 · ▲ 往前看 · 右 A1 ▶
+                  <span className="hidden rounded-full bg-white/10 px-2.5 py-0.5 font-mono-num text-[10px] font-bold text-white/75 sm:inline-block">
+                    {t('◀ 左 C23 · ▲ 往前看 · 右 A1 ▶', '◀ 좌 C23 · ▲ 정면 · 우 A1 ▶')}
                   </span>
                 </div>
 
-                {/* Quick Set & 10-Point Phase Switcher Controls (Merged right into Radar Top!) */}
-                <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
-                  {/* Set Quick Buttons */}
-                  <div className="grid grid-cols-3 gap-1.5 rounded-2xl bg-[#181736] p-1 ring-1 ring-white/15 sm:flex sm:rounded-full">
+                {/* Quick Set & 10-Point Phase Switcher Controls (Single-line concise labels) */}
+                <div className="grid grid-cols-5 gap-1.5 sm:flex sm:flex-wrap sm:items-center sm:gap-2">
+                  {/* Set Quick Buttons (3 cols on mobile) */}
+                  <div className="col-span-3 grid grid-cols-3 gap-1 rounded-full bg-[#181736] p-1 ring-1 ring-white/15 sm:flex">
                     {currentMatchSchedule.sets.map((s) => {
                       const isActive = s.setKey === activeSetKey;
+                      const shortSetLabel =
+                        s.setKey === 'set1_4'
+                          ? t('1、4局', '1·4세트')
+                          : s.setKey === 'set2_5'
+                            ? t('2、5局', '2·5세트')
+                            : t('3局', '3세트');
                       return (
                         <button
                           key={s.setKey}
                           type="button"
                           onClick={() => setActiveSetKey(s.setKey)}
-                          className={`rounded-xl px-2.5 py-2 text-center text-xs font-extrabold transition-all sm:rounded-full sm:px-3.5 sm:py-1.5 lg:px-4 lg:py-2 lg:text-sm ${
+                          className={`rounded-full px-1.5 py-1 text-center font-mono-num text-[11px] font-extrabold whitespace-nowrap transition-all sm:px-3.5 sm:py-1.5 lg:px-4 lg:py-2 lg:text-sm ${
                             isActive
                               ? 'bg-[#5BAE84] text-white shadow-sm ring-1 ring-[#7ADAD0]'
                               : 'text-white/75 hover:bg-white/10 hover:text-white'
                           }`}
                         >
-                          {s.setLabel}
+                          <span className="sm:hidden">{shortSetLabel}</span>
+                          <span className="hidden sm:inline">{s.setLabel}</span>
                         </button>
                       );
                     })}
                   </div>
 
-                  {/* 0-10 pts vs >10 pts Quick Switch */}
-                  <div className="grid grid-cols-2 gap-1 rounded-full bg-[#181736] p-1 ring-1 ring-[#5ECBC0]/35 sm:flex">
+                  {/* 0-10 pts vs >10 pts Quick Switch (2 cols on mobile) */}
+                  <div className="col-span-2 grid grid-cols-2 gap-1 rounded-full bg-[#181736] p-1 ring-1 ring-[#5ECBC0]/35 sm:flex">
                     <button
                       type="button"
                       onClick={() => setScorePhase('initial')}
-                      className={`rounded-full px-3 py-1.5 text-center text-xs font-extrabold transition-all lg:px-4 lg:py-2 lg:text-sm ${
+                      className={`rounded-full px-1.5 py-1 text-center font-mono-num text-[10px] font-extrabold whitespace-nowrap transition-all sm:px-3 sm:py-1.5 sm:text-xs lg:px-4 lg:py-2 lg:text-sm ${
                         scorePhase === 'initial'
                           ? 'bg-[#5ECBC0] text-[#212047] shadow-xs'
                           : 'text-white/75 hover:text-white'
                       }`}
                     >
-                      開局（0–10 分）
+                      <span className="sm:hidden">{t('0–10', '0–10')}</span>
+                      <span className="hidden sm:inline">{t('開局（0–10 分）', '초반 (0–10점)')}</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => setScorePhase('after10')}
-                      className={`rounded-full px-3 py-1.5 text-center text-xs font-extrabold transition-all lg:px-4 lg:py-2 lg:text-sm ${
+                      className={`rounded-full px-1.5 py-1 text-center font-mono-num text-[10px] font-extrabold whitespace-nowrap transition-all sm:px-3 sm:py-1.5 sm:text-xs lg:px-4 lg:py-2 lg:text-sm ${
                         scorePhase === 'after10'
                           ? 'bg-[#5ECBC0] text-[#212047] shadow-xs'
                           : 'text-white/75 hover:text-white'
                       }`}
                     >
-                      破 10 分換位後
+                      <span className="sm:hidden">{t('破10分', '10점+')}</span>
+                      <span className="hidden sm:inline">{t('破 10 分換位後', '10점 이후 교체')}</span>
                     </button>
                   </div>
                 </div>
@@ -1119,13 +1128,30 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                   .filter((p): p is NonNullable<typeof p> => Boolean(p))
                   .sort((a, b) => a.pinX - b.pinX);
 
-                // Stagger vertical tier (0 vs 1) if two favorites sit within 13% horizontally
-                const radarPins = rawRadarPins.map((pin, idx) => {
-                  let rowTier: 0 | 1 = 0;
-                  if (idx > 0 && Math.abs(pin.pinX - rawRadarPins[idx - 1].pinX) < 13) {
-                    rowTier = 1;
+                // Collision-free vertical tier assignment (0, 1, 2) checking last X in each tier
+                const lastXByTier: [number, number, number] = [-100, -100, -100];
+                const radarPins = rawRadarPins.map((pin) => {
+                  const clampedX = Math.max(11, Math.min(89, pin.pinX));
+                  let chosenTier: 0 | 1 | 2 = 0;
+                  for (const tier of [0, 1, 2] as const) {
+                    if (clampedX - lastXByTier[tier] >= 15) {
+                      chosenTier = tier;
+                      break;
+                    }
+                    if (tier === 2) {
+                      // Fallback: pick tier with farthest previous pin
+                      chosenTier =
+                        lastXByTier[0] <= lastXByTier[1]
+                          ? lastXByTier[0] <= lastXByTier[2]
+                            ? 0
+                            : 2
+                          : lastXByTier[1] <= lastXByTier[2]
+                            ? 1
+                            : 2;
+                    }
                   }
-                  return { ...pin, rowTier };
+                  lastXByTier[chosenTier] = clampedX;
+                  return { ...pin, pinX: clampedX, rowTier: chosenTier };
                 });
 
                 const nearFavCount = radarPins.filter(
@@ -1133,81 +1159,80 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                 ).length;
 
                 return (
-                  <div className="mt-4 rounded-2xl border border-[#5ECBC0]/40 bg-[#181736] p-3 shadow-inner sm:p-5">
-                    {/* Top Status Strip: Your Seat -> Oshi Target + Relative Direction Pill */}
-                    <div className="flex flex-wrap items-center justify-between gap-1.5">
-                      <div className="flex min-w-0 flex-wrap items-center gap-1.5">
-                        <span className="truncate font-mono-num text-[11px] font-black text-white sm:text-sm lg:text-base">
-                          {t('你', '내')}{' '}
-                          ({selectedZone}
-                          {selectedSeat}) → ★{getMemberName(activeOshi)} (
-                          {activePhaseOshiDistance.girlZone}
-                          {activePhaseOshiDistance.girlSeatRange[0]}–
-                          {activePhaseOshiDistance.girlSeatRange[1]})
-                        </span>
-                        <span className="rounded-md bg-white/10 px-2 py-0.5 font-mono-num text-[10px] font-bold text-[#7ADAD0] lg:text-xs">
-                          {currentSetArrangement.setLabel} ·{' '}
-                          {scorePhase === 'initial'
-                            ? t('0–10 分', '0–10점')
-                            : t('破 10 分後', '10점 이후')}
-                        </span>
-                      </div>
+                  <div className="mt-2.5 rounded-2xl border border-[#5ECBC0]/40 bg-[#181736] p-2.5 shadow-inner sm:mt-4 sm:p-5">
+                    {/* Top Status Strip: Single compact line with Favorite Avatar Switcher */}
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="truncate font-mono-num text-[11px] font-black text-white sm:text-sm lg:text-base">
+                        {t('你', '내')}{' '}
+                        ({selectedZone}
+                        {selectedSeat}) → ★{getMemberName(activeOshi)} (
+                        {activePhaseOshiDistance.girlZone}
+                        {activePhaseOshiDistance.girlSeatRange[0]}–
+                        {activePhaseOshiDistance.girlSeatRange[1]})
+                      </span>
                       <span
-                        className={`shrink-0 rounded-full px-3 py-0.5 font-mono-num text-xs font-black lg:text-sm ${
+                        className={`shrink-0 rounded-full px-2.5 py-0.5 font-mono-num text-[10px] font-black sm:px-3 sm:text-xs lg:text-sm ${
                           isNear
                             ? 'bg-[#5BAE84] text-white'
                             : 'bg-amber-400 text-[#212047]'
                         }`}
                       >
-                        {relativeBadge}
+                        {shortRelativeBadge}
                       </span>
                     </div>
 
-                    {/* All Favorites Distance Strip (sorted nearest first so nearby favorites are never missed) */}
+                    {/* All Favorites Avatar Switcher Strip (1 compact row with avatars instead of multi-line text) */}
                     {radarPins.length > 1 && (
-                      <div className="mt-2.5 flex flex-wrap items-center gap-1.5 rounded-xl bg-white/[0.06] px-2.5 py-2 ring-1 ring-white/10">
-                        <span className="font-mono-num text-[10px] font-bold text-[#7ADAD0] lg:text-xs">
+                      <div className="no-scrollbar mt-2 flex items-center gap-2 overflow-x-auto rounded-xl bg-white/[0.06] px-2.5 py-1.5 ring-1 ring-white/10">
+                        <span className="shrink-0 font-mono-num text-[10px] font-bold text-[#7ADAD0] lg:text-xs">
                           {t(
-                            `全主推位置（${nearFavCount}/${radarPins.length} 位在 12 席內）：`,
-                            `전체 최애 위치 (${nearFavCount}/${radarPins.length}명 12석 이내):`
+                            `主推(${nearFavCount}/${radarPins.length})`,
+                            `최애(${nearFavCount}/${radarPins.length})`
                           )}
                         </span>
-                        {[...radarPins]
-                          .sort(
-                            (a, b) =>
-                              a.dist.seatsToCoreCenter - b.dist.seatsToCoreCenter
-                          )
-                          .map((p) => {
-                            const pNear = p.dist.isWithin12Seats;
-                            const diff = p.dist.seatsToCoreCenter;
-                            return (
-                              <button
-                                key={`fav-strip-${p.member.id}`}
-                                type="button"
-                                onClick={() => setTargetOshiId(p.member.id)}
-                                className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-mono-num text-[10px] font-extrabold transition-all lg:text-xs ${
-                                  p.isActiveTarget
-                                    ? 'bg-[#5BAE84] text-white ring-1 ring-white'
-                                    : pNear
-                                      ? 'bg-[#5ECBC0]/20 text-[#7ADAD0] ring-1 ring-[#5ECBC0]/60 hover:bg-[#5BAE84] hover:text-white'
-                                      : 'bg-white/10 text-white/75 hover:bg-white/20'
-                                }`}
-                              >
-                                <span>★ {getMemberName(p.member)}</span>
-                                <span>
-                                  {p.dist.girlZone}
-                                  {p.dist.girlCoreSeat}
-                                </span>
-                                <span
-                                  className={
-                                    pNear ? 'text-[#A7F3D0]' : 'text-amber-300'
-                                  }
+                        <div className="flex items-center gap-2">
+                          {[...radarPins]
+                            .sort(
+                              (a, b) =>
+                                a.dist.seatsToCoreCenter - b.dist.seatsToCoreCenter
+                            )
+                            .map((p) => {
+                              const pNear = p.dist.isWithin12Seats;
+                              const diff = p.dist.seatsToCoreCenter;
+                              return (
+                                <button
+                                  key={`fav-strip-${p.member.id}`}
+                                  type="button"
+                                  onClick={() => setTargetOshiId(p.member.id)}
+                                  title={`${getMemberName(p.member)} · ${p.dist.girlZone}${p.dist.girlCoreSeat} (${diff}席)`}
+                                  className={`group flex shrink-0 items-center gap-1.5 rounded-full py-0.5 pr-2 pl-0.5 font-mono-num text-[10px] font-extrabold transition-all ${
+                                    p.isActiveTarget
+                                      ? 'bg-[#5BAE84] text-white ring-1 ring-white'
+                                      : pNear
+                                        ? 'bg-[#5ECBC0]/20 text-[#7ADAD0] ring-1 ring-[#5ECBC0]/60 hover:bg-[#5BAE84] hover:text-white'
+                                        : 'bg-white/10 text-white/75 hover:bg-white/20'
+                                  }`}
                                 >
-                                  ({diff === 0 ? t('0席', '0석') : `${diff}${t('席', '석')}`})
-                                </span>
-                              </button>
-                            );
-                          })}
+                                  <MemberPortrait
+                                    member={p.member}
+                                    variant="avatar"
+                                    className="h-6 w-6 rounded-full ring-1 ring-white/40 sm:h-7 sm:w-7"
+                                  />
+                                  <span>
+                                    {p.dist.girlZone}
+                                    {p.dist.girlCoreSeat}
+                                  </span>
+                                  <span
+                                    className={
+                                      pNear ? 'text-[#A7F3D0]' : 'text-amber-300'
+                                    }
+                                  >
+                                    {diff === 0 ? '0' : `${diff}${t('席', '석')}`}
+                                  </span>
+                                </button>
+                              );
+                            })}
+                        </div>
                       </div>
                     )}
 
@@ -1333,7 +1358,12 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                         {/* Sightlines from User (y=82) UP to ALL Favorites */}
                         {radarPins.map((pin) => {
                           const pNear = pin.dist.isWithin12Seats;
-                          const targetY = pin.rowTier === 0 ? '30' : '42';
+                          const targetY =
+                            pin.rowTier === 0
+                              ? '24'
+                              : pin.rowTier === 1
+                                ? '39'
+                                : '53';
                           return (
                             <line
                               key={`sight-${pin.member.id}`}
@@ -1372,7 +1402,11 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                         const pNear = pin.dist.isWithin12Seats;
                         const diff = pin.dist.seatsToCoreCenter;
                         const topClass =
-                          pin.rowTier === 0 ? 'top-[15%]' : 'top-[32%]';
+                          pin.rowTier === 0
+                            ? 'top-[13%]'
+                            : pin.rowTier === 1
+                              ? 'top-[30%]'
+                              : 'top-[47%]';
                         return (
                           <button
                             key={`radar-pin-${pin.member.id}`}
@@ -1385,7 +1419,7 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                               }
                             }}
                             style={{
-                              left: `${Math.max(12, Math.min(88, pin.pinX))}%`,
+                              left: `${pin.pinX}%`,
                             }}
                             className={`absolute ${topClass} flex -translate-x-1/2 flex-col items-center transition-all duration-300 ${
                               pin.isActiveTarget ? 'z-30 scale-105' : 'z-20 opacity-95 hover:z-30 hover:scale-105'
@@ -1395,10 +1429,10 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                               <MemberPortrait
                                 member={pin.member}
                                 variant="avatar"
-                                className={`h-8 w-8 rounded-full ring-2 sm:h-10 sm:w-10 ${
+                                className={`h-7 w-7 rounded-full ring-2 sm:h-10 sm:w-10 ${
                                   pNear
-                                    ? 'ring-[#5ECBC0] shadow-[0_0_14px_rgba(94,203,192,0.6)]'
-                                    : 'ring-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.4)]'
+                                    ? 'ring-[#5ECBC0] shadow-[0_0_12px_rgba(94,203,192,0.6)]'
+                                    : 'ring-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.4)]'
                                 }`}
                               />
                               <span className="absolute -top-1 -right-2 rounded-full bg-[#212047] px-1 font-mono-num text-[8px] font-black text-[#7ADAD0] ring-1 ring-[#5ECBC0]">
@@ -1407,7 +1441,7 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                               </span>
                             </div>
                             <span
-                              className={`mt-0.5 rounded-full px-1.5 py-0.2 font-mono-num text-[9px] font-extrabold whitespace-nowrap lg:text-[10px] ${
+                              className={`mt-0.5 rounded-full px-1.5 py-0.2 font-mono-num text-[8px] font-extrabold whitespace-nowrap sm:text-[10px] ${
                                 pin.isActiveTarget
                                   ? pNear
                                     ? 'bg-[#5BAE84] text-white ring-1 ring-white'
@@ -1417,14 +1451,19 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                                     : 'bg-[#212047]/85 text-amber-300 ring-1 ring-amber-400/60'
                               }`}
                             >
-                              ★ {getMemberName(pin.member)} · {diff === 0 ? '0席' : `${diff}席`}
+                              <span className="sm:hidden">
+                                {diff === 0 ? '0席' : `${diff}席`}
+                              </span>
+                              <span className="hidden sm:inline">
+                                ★ {getMemberName(pin.member)} · {diff === 0 ? '0席' : `${diff}席`}
+                              </span>
                             </span>
                           </button>
                         );
                       })}
 
                       {/* CENTER BADGE: Relative Seat Count & Camera Status */}
-                      <div className="pointer-events-none absolute top-[54%] left-1/2 z-20 -translate-x-1/2">
+                      <div className="pointer-events-none absolute top-[66%] left-1/2 z-20 -translate-x-1/2">
                         <span
                           className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 font-mono-num text-[10px] font-black whitespace-nowrap shadow-md ring-1 lg:text-xs ${
                             isNear
