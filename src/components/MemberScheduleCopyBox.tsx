@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { MEMBERS, type AceVivaMember } from '../data/members';
 import { formatMemberScheduleCopyText } from '../data/memberRelations';
 import { ACTIVE_STATION_ROTATION_SCHEDULES } from '../data/schedule';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface MemberScheduleCopyBoxProps {
   member: AceVivaMember;
@@ -14,6 +15,7 @@ export const MemberScheduleCopyBox: React.FC<MemberScheduleCopyBoxProps> = ({
   activeMatchId,
   variant = 'light',
 }) => {
+  const { lang, t } = useLanguage();
   const [scope, setScope] = useState<'single' | 'all'>(
     activeMatchId ? 'single' : 'all'
   );
@@ -41,8 +43,9 @@ export const MemberScheduleCopyBox: React.FC<MemberScheduleCopyBoxProps> = ({
         matchId: effectiveMatchId,
         includeTeammates,
         memberMap,
+        lang,
       }),
-    [member, scope, effectiveMatchId, includeTeammates, memberMap]
+    [member, scope, effectiveMatchId, includeTeammates, memberMap, lang]
   );
 
   const handleCopy = async () => {
@@ -77,7 +80,7 @@ export const MemberScheduleCopyBox: React.FC<MemberScheduleCopyBoxProps> = ({
               isDark ? 'text-[#7ADAD0]' : 'text-[#3F8E67]'
             }`}
           >
-            站位文字複製（🟦A / 🟩B / 🟨C）
+            {t('站位文字複製（🟦A / 🟩B / 🟨C）', '응원 구역 일정 복사 (🟦A / 🟩B / 🟨C)')}
           </span>
           <div className="flex items-center gap-1">
             {ACTIVE_STATION_ROTATION_SCHEDULES.length > 0 && (
@@ -93,7 +96,7 @@ export const MemberScheduleCopyBox: React.FC<MemberScheduleCopyBoxProps> = ({
                         : 'bg-white text-[#212047]/70 ring-1 ring-[#212047]/15'
                   }`}
                 >
-                  單場次
+                  {t('單場次', '한 경기')}
                 </button>
                 <button
                   type="button"
@@ -106,7 +109,7 @@ export const MemberScheduleCopyBox: React.FC<MemberScheduleCopyBoxProps> = ({
                         : 'bg-white text-[#212047]/70 ring-1 ring-[#212047]/15'
                   }`}
                 >
-                  全部近期場次
+                  {t('全部近期場次', '전체 일정')}
                 </button>
               </>
             )}
@@ -123,7 +126,7 @@ export const MemberScheduleCopyBox: React.FC<MemberScheduleCopyBoxProps> = ({
                     : 'bg-white text-[#212047]/70 ring-1 ring-[#212047]/15'
               }`}
             >
-              {includeTeammates ? '✓ 含同區隊友' : '+ 同區隊友'}
+              {includeTeammates ? t('✓ 含同區隊友', '✓ 같은 구역 포함') : t('+ 同區隊友', '+ 같은 구역')}
             </button>
           </div>
         </div>
@@ -139,7 +142,7 @@ export const MemberScheduleCopyBox: React.FC<MemberScheduleCopyBoxProps> = ({
                 : 'bg-[#212047] text-[#7ADAD0] hover:bg-[#5BAE84] hover:text-white'
           }`}
         >
-          <span>{copied ? '已複製班表' : '一鍵複製站位'}</span>
+          <span>{copied ? t('已複製班表', '복사 완료!') : t('一鍵複製站位', '일정 복사')}</span>
         </button>
       </div>
 

@@ -1,4 +1,5 @@
 import type { AceVivaMember } from './members';
+import { MEMBER_KO_NAMES } from '../i18n/LanguageContext';
 import {
   ACTIVE_HOME_SCHEDULE,
   ACTIVE_STATION_ROTATION_SCHEDULES,
@@ -289,7 +290,28 @@ const ZONE_EMOJI: Record<AceZoneId, string> = {
   C: '🟨 C區',
 };
 
-function getSlotDirectionLabel(slotIdx: number, totalSlots: number): string {
+const ZONE_EMOJI_KO: Record<AceZoneId, string> = {
+  A: '🟦 A구역',
+  B: '🟩 B구역',
+  C: '🟨 C구역',
+};
+
+function getSlotDirectionLabel(
+  slotIdx: number,
+  totalSlots: number,
+  lang: 'zh-TW' | 'ko' = 'zh-TW'
+): string {
+  if (lang === 'ko') {
+    if (totalSlots === 4) {
+      if (slotIdx === 3) return '좌';
+      if (slotIdx === 2) return '중좌';
+      if (slotIdx === 1) return '중우';
+      return '우';
+    }
+    if (slotIdx === 2) return '좌';
+    if (slotIdx === 1) return '중';
+    return '우';
+  }
   if (totalSlots === 4) {
     if (slotIdx === 3) return '左';
     if (slotIdx === 2) return '中左';
@@ -326,6 +348,7 @@ export interface FormatMemberCopyOptions {
   matchId?: string;
   includeTeammates: boolean;
   memberMap: Map<string, AceVivaMember>;
+  lang?: 'zh-TW' | 'ko';
 }
 
 /**
@@ -338,8 +361,13 @@ export function formatMemberScheduleCopyText({
   matchId,
   includeTeammates,
   memberMap,
+  lang = 'zh-TW',
 }: FormatMemberCopyOptions): string {
-  const header = `✨ ${member.name}（#${member.number}）2F 應援站位班表`;
+  const isKo = lang === 'ko';
+  const displayName = isKo ? MEMBER_KO_NAMES[member.id] ?? member.name : member.name;
+  const header = isKo
+    ? `✨ ${displayName}（#${member.number}）2F 응원 구역 일정표`
+    : `✨ ${displayName}（#${member.number}）2F 應援站位班表`;
 
   const targetMatches =
     scope === 'single' && matchId
@@ -349,8 +377,10 @@ export function formatMemberScheduleCopyText({
         );
 
   if (targetMatches.length === 0) {
-    return `${header}\n目前近期已公告場次暫無排班。`;
+    return `${header}\n${isKo ? '현재 공개된 다가오는 경기 일정이 없습니다.' : '目前近期已公告場次暫無排班。'}`;
   }
+
+  const zoneEmojiMap = isKo ? ZONE_EMOJI_KO : ZONE_EMOJI;
 
   const blocks = targetMatches.map((homeMatch) => {
     const shortDate = homeMatch.date.slice(5).replace('-', '/');
@@ -362,7 +392,11 @@ export function formatMemberScheduleCopyText({
     );
 
     if (!stationSchedule) {
-      return `${matchTitle}\n📋 當日已排定出席（2F 站位表待官方公告）`;
+      return `${matchTitle}\n${
+        isKo
+          ? '📋 당일 출석 예정 (2F 구역 배치는 추후 공지)'
+          : '📋 當日已排定出席（2F 站位表待官方公告）'
+      }`;
     }
 
     const lines: string[] = [matchTitle];
@@ -375,28 +409,39 @@ export function formatMemberScheduleCopyText({
       if (!initPos || !afterPos) return;
       hasRotatingSlot = true;
 
-      const initText = `${ZONE_EMOJI[initPos.zone]}(${getSlotDirectionLabel(
+      const initText = `${zoneEmojiMap[initPos.zone]}(${getSlotDirectionLabel(
         initPos.slotIdx,
-        initPos.totalSlots
+        initPos.totalSlots,
+        lang
       )})`;
-      const afterText = `${ZONE_EMOJI[afterPos.zone]}(${getSlotDirectionLabel(
+      const afterText = `${zoneEmojiMap[afterPos.zone]}(${getSlotDirectionLabel(
         afterPos.slotIdx,
-        afterPos.totalSlots
+        afterPos.totalSlots,
+        lang
       )})`;
 
       let line = `S${index + 1}：${initText} ➔ ${afterText}`;
 
       if (includeTeammates) {
-        const initNames = initPos.teammates
-          .map((id) => memberMap.get(id)?.name ?? id)
-          .join('、');
-        const afterNames = afterPos.teammates
-          .map((id) => memberMap.get(id)?.name ?? id)
-          .join('、');
-        line +=
-          initNames === afterNames
-            ? `｜同區：${initNames}`
-            : `｜同區：開局(${initNames})／換位(${afterNames})`;
+        const formatName = (id: string) => {
+          const m = memberMap.get(id);
+          if (!m) return id;
+          return isKo ? MEMBER_KO_NAMES[m.id] ?? m.name : m.name;
+        };
+        const sep = isKo ? ', ' : '、';
+        const initNames = initPos.teammates.map(formatName).join(sep);
+        const afterNames = afterPos.teammates.map(formatName).join(sep);
+        if (isKo) {
+          line +=
+            initNames === afterNames
+              ? ` | 같은 구역: ${initNames}`
+              : ` | 같은 구역: 초반(${initNames}) / 교체(${afterNames})`;
+        } else {
+          line +=
+            initNames === afterNames
+              ? `｜同區：${initNames}`
+              : `｜同區：開局(${initNames})／換位(${afterNames})`;
+        }
       }
 
       lines.push(line);
@@ -405,11 +450,19 @@ export function formatMemberScheduleCopyText({
     if (!hasRotatingSlot) {
       const isSpecialRole = stationSchedule.mcAndLeaderIds.includes(member.id);
       if (isSpecialRole) {
-        lines.push('📋 身份：主場 MC / 特別應援（無固定 2F 輪替站位）');
+        lines.push(
+          isKo
+            ? '📋 역할: 홈 MC / 스페셜 응원 (고정 2F 로테이션 없음)'
+            : '📋 身份：主場 MC / 特別應援（無固定 2F 輪替站位）'
+        );
       } else if (homeMatch.attendingMemberIds.includes(member.id)) {
-        lines.push('📋 當日已排定出席（無固定 2F 輪替站位）');
+        lines.push(
+          isKo
+            ? '📋 당일 출석 예정 (고정 2F 로테이션 없음)'
+            : '📋 當日已排定出席（無固定 2F 輪替站位）'
+        );
       } else {
-        lines.push('📋 當日未排班');
+        lines.push(isKo ? '📋 당일 휴식' : '📋 當日未排班');
       }
     }
 

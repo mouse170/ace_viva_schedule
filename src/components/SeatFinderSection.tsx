@@ -11,6 +11,7 @@ import {
   type PhaseDistanceDetail,
 } from '../data/schedule';
 import { MemberPortrait } from './MemberPortrait';
+import { useLanguage } from '../i18n/LanguageContext';
 import {
   OshiStrategyCardModal,
   type StrategyCardMode,
@@ -129,6 +130,7 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
   onSeatChange,
   onOpenMemberDetail,
 }) => {
+  const { t, getMemberName, getExperienceShort } = useLanguage();
   const [selectedMatchId, setSelectedMatchId] = useState<string>(
     CLOSEST_STATION_SCHEDULE.matchId
   );
@@ -560,14 +562,14 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex flex-wrap items-center gap-2 rounded-full bg-[#5BAE84]/15 px-3 py-1 font-mono-num text-[10px] font-bold tracking-[0.14em] text-[#212047] ring-1 ring-[#5BAE84]/35 sm:text-xs lg:text-sm">
               <span className="h-2 w-2 shrink-0 rounded-full bg-[#5BAE84]" />
-              <span>2F 集氣區 · 1–23 號直線選位與相對位置雷達</span>
+              <span>{t('2F 集氣區 · 1–23 號直線選位與相對位置雷達', '2F 응원 구역 · 1–23석 직선 좌석 및 상대 위치 레이더')}</span>
             </span>
             <span className="inline-flex items-center gap-1 rounded-full bg-[#E6F5F1] px-2.5 py-1 font-mono-num text-[10px] font-extrabold text-[#3F8E67] ring-1 ring-[#5BAE84]/35 sm:text-xs">
-              <span>◀ 左 C 區 (23→1) · ▲ 中 B 區 (23→1) · 右 A 區 (23→1) ▶</span>
+              <span>{t('◀ 左 C 區 (23→1) · ▲ 中 B 區 (23→1) · 右 A 區 (23→1) ▶', '◀ 좌 C구역 (23→1) · ▲ 중 B구역 (23→1) · 우 A구역 (23→1) ▶')}</span>
             </span>
           </div>
           <h2 className="mt-2.5 text-2xl font-black tracking-tight text-[#212047] sm:text-4xl lg:text-5xl">
-            選擇區域與拉動座位編號，查看面前女孩與主推雷達
+            {t('選擇區域與拉動座位編號，查看面前女孩與主推雷達', '구역 및 좌석 번호를 선택해 앞자리 치어리더 확인')}
           </h2>
         </div>
 
@@ -1461,8 +1463,12 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                                   className="inline-flex items-center gap-1 rounded-full bg-amber-400/20 px-2 py-0.5 font-mono-num text-[10px] font-extrabold text-amber-700 ring-1 ring-amber-400/60 dark:text-amber-300"
                                 >
                                   <span>
-                                    鄰近 {bond.partner.name} ·{' '}
-                                    {bond.sharedTags[0].shortLabel}
+                                    {t('鄰近 ', '인접 ')}
+                                    {getMemberName(bond.partner)} ·{' '}
+                                    {getExperienceShort(
+                                      bond.sharedTags[0].id,
+                                      bond.sharedTags[0].shortLabel
+                                    )}
                                   </span>
                                 </span>
                               ))}

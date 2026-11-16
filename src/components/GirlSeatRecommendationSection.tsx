@@ -11,6 +11,7 @@ import {
 } from '../data/schedule';
 import { MemberPortrait } from './MemberPortrait';
 import { MemberScheduleCopyBox } from './MemberScheduleCopyBox';
+import { useLanguage } from '../i18n/LanguageContext';
 import {
   OshiStrategyCardModal,
   type StrategyCardMode,
@@ -55,6 +56,7 @@ function isSeatInRange(seat: number, range: [number, number]): boolean {
 export const GirlSeatRecommendationSection: React.FC<
   GirlSeatRecommendationSectionProps
 > = ({ favoriteIds, onOpenMemberDetail, onJumpToSeatSimulator }) => {
+  const { t, getMemberName } = useLanguage();
   const [selectedMatchId, setSelectedMatchId] = useState<string>(
     CLOSEST_STATION_SCHEDULE.matchId
   );
@@ -145,14 +147,14 @@ export const GirlSeatRecommendationSection: React.FC<
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-2 rounded-full bg-[#212047] px-3 py-1 font-mono-num text-[10px] font-bold tracking-[0.14em] text-[#7ADAD0] lg:px-4 lg:py-1.5 lg:text-xs">
               <span className="h-2 w-2 shrink-0 rounded-full bg-[#5BAE84]" />
-              <span>女孩專屬黃金選位推薦</span>
+              <span>{t('女孩專屬黃金選位推薦', '치어리더별 추천 좌석 가이드')}</span>
             </span>
             <span className="inline-flex items-center gap-1 rounded-full bg-[#E6F5F1] px-2.5 py-1 font-mono-num text-[10px] font-extrabold text-[#3F8E67] ring-1 ring-[#5BAE84]/35 lg:text-xs">
-              <span>◀ 左 C 區 (23–16號) ↔ ▲ 中 B 區 (15–9號) ↔ 右 A 區 (8–1號) ▶</span>
+              <span>{t('◀ 左 C 區 (23–16號) ↔ ▲ 中 B 區 (15–9號) ↔ 右 A 區 (8–1號) ▶', '◀ 좌 C구역 (23–16) ↔ ▲ 중 B구역 (15–9) ↔ 우 A구역 (8–1) ▶')}</span>
             </span>
           </div>
           <h2 className="mt-2.5 text-2xl font-black tracking-tight text-[#212047] sm:text-4xl lg:text-5xl">
-            以女孩為主的黃金座位推薦區間
+            {t('以女孩為主的黃金座位推薦區間', '응원 멤버별 최적 좌석 추천 구간')}
           </h2>
         </div>
 
@@ -172,8 +174,8 @@ export const GirlSeatRecommendationSection: React.FC<
                       : 'text-[#212047]/75 hover:bg-white/60 hover:text-[#212047]'
                   }`}
                 >
-                  {idx === 0 ? '★ 最接近班表 · ' : ''}
-                  {sched.dateLabel.split(' ')[0]} 對戰 {sched.opponent}
+                  {idx === 0 ? t('★ 最接近班表 · ', '★ 가장 가까운 경기 · ') : ''}
+                  {sched.dateLabel.split(' ')[0]} {t('對戰', 'vs')} {sched.opponent}
                 </button>
               );
             })}
@@ -187,7 +189,7 @@ export const GirlSeatRecommendationSection: React.FC<
             }}
             className="inline-flex items-center gap-1.5 rounded-full bg-[#5BAE84] px-4 py-2.5 text-xs font-black text-white shadow-sm transition-all hover:bg-[#3F8E67] active:scale-95 lg:px-5 lg:py-3 lg:text-sm"
           >
-            <span>生出「{activeGirl.name}」最佳換位＆跨區圖卡</span>
+            <span>{t(`生出「${activeGirl.name}」最佳換位＆跨區圖卡`, `${getMemberName(activeGirl)} 이동 전략 이미지 생성`)}</span>
             <span>↓</span>
           </button>
 
@@ -199,7 +201,7 @@ export const GirlSeatRecommendationSection: React.FC<
             }}
             className="inline-flex items-center gap-1.5 rounded-full bg-[#212047] px-4 py-2.5 text-xs font-extrabold text-[#7ADAD0] shadow-sm ring-1 ring-[#5BAE84] transition-all hover:bg-[#2E2C5E] active:scale-95 lg:px-5 lg:py-3 lg:text-sm"
           >
-            <span>生出「已選座位雷達圖卡」</span>
+            <span>{t('生出「已選座位雷達圖卡」', '선택 좌석 레이더 이미지 생성')}</span>
             <span>↓</span>
           </button>
         </div>

@@ -11,6 +11,7 @@ import {
 } from '../data/schedule';
 import { MemberPortrait } from './MemberPortrait';
 import { MemberScheduleCopyBox } from './MemberScheduleCopyBox';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface ScheduleSectionProps {
   selectedMemberId: string | 'all' | 'favorites';
@@ -27,6 +28,7 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
   onSelectMemberFilter,
   onOpenMemberDetail,
 }) => {
+  const { t, getMemberName, getExperienceShort } = useLanguage();
   // 選擇主題週（預設以「最接近的未過期班表」為主）
   const [selectedWeekId, setSelectedWeekId] = useState<string>(
     () => ACTIVE_THEME_WEEKS[0]?.weekId ?? 'all'
@@ -100,7 +102,7 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-2 rounded-full bg-[#5BAE84]/15 px-3 py-1 font-mono-num text-[10px] font-bold tracking-[0.16em] text-[#212047] ring-1 ring-[#5BAE84]/30 lg:px-4 lg:py-1.5 lg:text-xs">
               <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#5BAE84]" />
-              <span>主題週合併班表</span>
+              <span>{t('主題週合併班表', '테마 주간 응원 일정')}</span>
             </span>
             <span className="inline-flex items-center gap-1 rounded-full bg-[#212047] px-3 py-1 font-mono-num text-[10px] font-bold text-[#7ADAD0] lg:text-xs">
               <span>已隱藏過期日 · 同週合併顯示</span>
@@ -687,13 +689,13 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
                           className="flex items-center gap-2 text-left"
                         >
                           <span className="rounded-md bg-[#212047] px-2.5 py-1 font-mono-num text-[10px] font-bold text-[#7ADAD0] lg:text-xs">
-                            2F 集氣區站位表
+                            {t('2F 集氣區站位表', '2F 응원 구역 배치표')}
                           </span>
                           <span className="text-xs font-extrabold text-[#212047] sm:text-sm">
-                            A / B / C 區各局排班一覽（單日限定成員以顏色標示）
+                            {t('A / B / C 區各局排班一覽（單日限定成員以顏色標示）', 'A / B / C 구역 세트별 배치 (단일 출석 멤버 색상 구분)')}
                           </span>
                           <span className="font-mono-num text-xs font-bold text-[#4FA87D]">
-                            {isStationExpanded ? '收合 ▲' : '展開 ▼'}
+                            {isStationExpanded ? t('收合 ▲', '접기 ▲') : t('展開 ▼', '펼치기 ▼')}
                           </span>
                         </button>
 
@@ -740,10 +742,10 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
                                 {!activeFilterMember && (
                                   <div className="flex flex-wrap items-center justify-between gap-2">
                                     <span className="text-xs font-extrabold text-[#212047]">
-                                      選擇成員一鍵複製個人站位班表：
+                                      {t('選擇成員一鍵複製個人站位班表：', '멤버 선택 후 개인 일정 복사:')}
                                     </span>
                                     <select
-                                      aria-label="選擇要複製站位班表的成員"
+                                      aria-label={t('選擇要複製站位班表的成員', '일정을 복사할 멤버 선택')}
                                       value={copyMember.id}
                                       onChange={(e) =>
                                         setCopyTargetMemberId(e.target.value)
@@ -752,7 +754,7 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
                                     >
                                       {MEMBERS.map((m) => (
                                         <option key={m.id} value={m.id}>
-                                          #{m.number} {m.name}
+                                          #{m.number} {getMemberName(m)}
                                         </option>
                                       ))}
                                     </select>
@@ -838,10 +840,13 @@ export const ScheduleSection: React.FC<ScheduleSectionProps> = ({
                                                   variant="avatar"
                                                   className="h-4 w-4 rounded-full"
                                                 />
-                                                <span>{zm.name}</span>
+                                                <span>{getMemberName(zm)}</span>
                                                 {posBonds.length > 0 && (
                                                   <span className="rounded-full bg-amber-400/30 px-1 font-mono-num text-[9px] font-black text-amber-900">
-                                                    {posBonds[0].sharedTags[0].shortLabel}
+                                                    {getExperienceShort(
+                                                      posBonds[0].sharedTags[0].id,
+                                                      posBonds[0].sharedTags[0].shortLabel
+                                                    )}
                                                   </span>
                                                 )}
                                               </span>

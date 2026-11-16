@@ -12,6 +12,7 @@ import { GirlSeatRecommendationSection } from './components/GirlSeatRecommendati
 import { SeatFinderSection } from './components/SeatFinderSection';
 import { ScheduleSection } from './components/ScheduleSection';
 import { ZodiacIcon, isCurrentMonthBirthday } from './components/ZodiacIcon';
+import { MEMBER_KO_NAMES, useLanguage } from './i18n/LanguageContext';
 import {
   ACTIVE_STATION_ROTATION_SCHEDULES,
   CLOSEST_STATION_SCHEDULE,
@@ -32,6 +33,7 @@ function parseBirthdaySortKey(birthdayStr: string): number {
 }
 
 export const App: React.FC = () => {
+  const { lang, toggleLang, t, getMemberName, getCategoryLabel } = useLanguage();
   const [activeCategory, setActiveCategory] = useState<RosterFilter>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('default');
@@ -309,6 +311,7 @@ export const App: React.FC = () => {
       if (!q) return true;
       const haystack = [
         m.name,
+        MEMBER_KO_NAMES[m.id] ?? '',
         m.realOrAltName ?? '',
         m.englishOrKoreanName,
         m.number,
@@ -410,36 +413,46 @@ export const App: React.FC = () => {
               href="#roster-section"
               className="rounded-full bg-white/10 px-3.5 py-1.5 text-sm font-extrabold text-white whitespace-nowrap transition-colors hover:bg-white/20 hover:text-[#7ADAD0] xl:text-base"
             >
-              成員圖鑑 ({MEMBERS.length})
+              {t(`成員圖鑑 (${MEMBERS.length})`, `멤버 도감 (${MEMBERS.length})`)}
             </a>
             <a
               href="#girl-seat-guide-section"
               className="rounded-full bg-[#5BAE84] px-4 py-1.5 text-sm font-extrabold text-white whitespace-nowrap transition-colors hover:bg-[#4FA87D] xl:text-base"
             >
-              女孩選位推薦
+              {t('女孩選位推薦', '좌석 추천')}
             </a>
             <a
               href="#seat-finder-section"
               className="rounded-full bg-[#5BAE84]/20 px-3.5 py-1.5 text-sm font-extrabold text-[#7ADAD0] whitespace-nowrap ring-1 ring-[#5ECBC0]/35 transition-colors hover:bg-[#5BAE84] hover:text-white xl:text-base"
             >
-              23 席面前女孩查詢
+              {t('23 席面前女孩查詢', '23석 좌석 조회')}
             </a>
             <a
               href="#schedule-section"
               className="rounded-full px-3.5 py-1.5 text-sm font-semibold text-white/80 whitespace-nowrap transition-colors hover:bg-white/10 hover:text-[#7ADAD0] xl:text-base"
             >
-              應援班表
+              {t('應援班表', '응원 일정')}
             </a>
           </div>
 
           <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
+            {/* Language Switcher (繁中 / 한국어) */}
+            <button
+              type="button"
+              onClick={toggleLang}
+              aria-label={t('切換為韓文介面', '중국어(번체)로 전환')}
+              className="flex items-center gap-1 rounded-full bg-amber-400/20 px-2.5 py-1 font-mono-num text-[11px] font-black text-amber-200 whitespace-nowrap ring-1 ring-amber-300/50 transition-all hover:bg-amber-400 hover:text-[#212047] sm:px-3 sm:py-1.5 sm:text-xs"
+            >
+              <span>{lang === 'ko' ? '繁中' : '한국어'}</span>
+            </button>
+
             {/* 頁首「啦啦隊介紹」點選開啟按鈕（手機與電腦皆常駐於頁首） */}
             <button
               type="button"
               onClick={() => setIsTeamIntroOpen(true)}
               className="flex items-center gap-1 rounded-full bg-white/12 px-2.5 py-1 text-[11px] font-extrabold text-[#7ADAD0] whitespace-nowrap ring-1 ring-[#5ECBC0]/45 transition-all hover:bg-[#5BAE84] hover:text-white sm:px-3 sm:py-1.5 sm:text-xs lg:px-3.5 lg:text-sm"
             >
-              <span>啦啦隊介紹</span>
+              <span>{t('啦啦隊介紹', '팀 소개')}</span>
             </button>
 
             <button
@@ -452,7 +465,7 @@ export const App: React.FC = () => {
               }}
               className="flex items-center gap-1 rounded-full bg-[#5BAE84]/25 px-2 py-1 text-[11px] font-bold text-[#7ADAD0] whitespace-nowrap ring-1 ring-[#5BAE84]/45 transition-all hover:bg-[#5BAE84] hover:text-white sm:gap-1.5 sm:px-3 sm:py-1.5 sm:text-xs lg:px-3.5 lg:text-sm"
             >
-              <span>我的主推</span>
+              <span>{t('我的主推', '내 최애')}</span>
               <span className="rounded-full bg-[#5BAE84] px-1.5 py-0.2 font-mono-num text-[10px] font-extrabold text-white lg:text-xs">
                 {favoriteIds.length}
               </span>
@@ -464,7 +477,7 @@ export const App: React.FC = () => {
               rel="noopener noreferrer"
               className="flex shrink-0 items-center gap-1 rounded-full bg-[#5BAE84] px-2.5 py-1 text-[11px] font-extrabold text-white whitespace-nowrap transition-transform hover:bg-[#4FA87D] active:scale-[0.97] sm:px-3 sm:py-1.5 sm:text-xs lg:px-4 lg:text-sm"
             >
-              <span>官方 IG</span>
+              <span>{t('官方 IG', '공식 IG')}</span>
               <span aria-hidden="true">↗</span>
             </a>
           </div>
@@ -494,7 +507,7 @@ export const App: React.FC = () => {
               <rect x="3" y="14" width="7" height="7" rx="1.5" />
               <rect x="14" y="14" width="7" height="7" rx="1.5" />
             </svg>
-            <span>成員圖鑑</span>
+            <span>{t('成員圖鑑', '멤버')}</span>
           </a>
           <a
             href="#girl-seat-guide-section"
@@ -508,7 +521,7 @@ export const App: React.FC = () => {
             >
               <path d="M12 2.75l2.76 5.59 6.17.9-4.46 4.35 1.05 6.15L12 16.83l-5.52 2.91 1.05-6.15-4.46-4.35 6.17-.9L12 2.75z" />
             </svg>
-            <span>女孩選位</span>
+            <span>{t('女孩選位', '추천')}</span>
           </a>
           <a
             href="#seat-finder-section"
@@ -526,7 +539,7 @@ export const App: React.FC = () => {
               <circle cx="12" cy="12" r="3" />
               <path d="M12 2v2M12 20v2M2 12h2M20 12h2" strokeLinecap="round" />
             </svg>
-            <span>座位雷達</span>
+            <span>{t('座位雷達', '레이더')}</span>
           </a>
           <a
             href="#schedule-section"
@@ -543,7 +556,7 @@ export const App: React.FC = () => {
               <rect x="3" y="5" width="18" height="16" rx="2" />
               <path d="M16 3v4M8 3v4M3 10h18" strokeLinecap="round" />
             </svg>
-            <span>應援班表</span>
+            <span>{t('應援班表', '일정')}</span>
           </a>
         </nav>
       </div>
@@ -559,19 +572,19 @@ export const App: React.FC = () => {
             <div className="flex flex-wrap items-center gap-2">
               <span className="inline-flex items-center gap-2 rounded-full bg-[#5BAE84]/15 px-3 py-1 font-mono-num text-[11px] font-bold tracking-[0.08em] text-[#212047] ring-1 ring-[#5BAE84]/30 lg:text-sm">
                 <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#5BAE84]" />
-                <span>2026–2027 連莊女孩 · 全體 18 人陣容</span>
+                <span>{t('2026–2027 連莊女孩 · 全體 18 人陣容', '2026–2027 ACE VIVA · 전체 18명 멤버')}</span>
               </span>
               <button
                 type="button"
                 onClick={() => setIsTeamIntroOpen(true)}
                 className="inline-flex items-center gap-1 rounded-full bg-[#212047] px-3 py-1 text-[11px] font-extrabold text-[#7ADAD0] shadow-2xs ring-1 ring-[#5ECBC0]/40 transition-colors hover:bg-[#5BAE84] hover:text-white lg:text-xs"
               >
-                <span>啦啦隊介紹與成軍誌要</span>
+                <span>{t('啦啦隊介紹與成軍誌要', '팀 소개 및 히스토리')}</span>
                 <span>↗</span>
               </button>
             </div>
             <h1 className="mt-2 text-2xl font-black tracking-tight text-[#212047] sm:mt-2.5 sm:text-5xl">
-              連莊女孩全體成員應援圖鑑
+              {t('連莊女孩全體成員應援圖鑑', 'ACE VIVA 전체 멤버 응원 도감')}
             </h1>
           </div>
 
@@ -582,8 +595,8 @@ export const App: React.FC = () => {
                 type="search"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="搜尋姓名、背號、MBTI、雙棲球隊..."
-                aria-label="搜尋成員姓名、背號、MBTI、IG 或雙棲球隊"
+                placeholder={t('搜尋姓名、背號、MBTI、雙棲球隊...', '이름, 등번호, MBTI, 소속팀 검색...')}
+                aria-label={t('搜尋成員姓名、背號、MBTI、IG 或雙棲球隊', '멤버 이름, 등번호, MBTI, IG, 소속팀 검색')}
                 className="w-full rounded-full bg-white py-2 pr-4 pl-9 text-xs font-medium text-[#212047] ring-1 ring-[#5BAE84]/35 transition-shadow placeholder:text-[#212047]/40 focus:ring-2 focus:ring-[#212047] focus:outline-none sm:w-64 sm:py-2.5 sm:pl-10 lg:w-72 lg:py-3 lg:text-sm"
               />
               <svg
@@ -601,12 +614,12 @@ export const App: React.FC = () => {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortOption)}
-              aria-label="成員排序方式"
+              aria-label={t('成員排序方式', '멤버 정렬 방식')}
               className="rounded-full bg-white px-3.5 py-2 text-xs font-bold text-[#212047] ring-1 ring-[#5BAE84]/35 focus:ring-2 focus:ring-[#212047] focus:outline-none sm:px-4 sm:py-2.5 lg:px-5 lg:py-3 lg:text-sm"
             >
-              <option value="default">排序：主推 → 座位面前 → 預設</option>
-              <option value="number_asc">排序：主推 → 座位面前 → 背號</option>
-              <option value="birthday_asc">排序：主推 → 座位面前 → 生日</option>
+              <option value="default">{t('排序：主推 → 座位面前 → 預設', '정렬: 최애 → 내 앞자리 → 기본')}</option>
+              <option value="number_asc">{t('排序：主推 → 座位面前 → 背號', '정렬: 최애 → 내 앞자리 → 등번호')}</option>
+              <option value="birthday_asc">{t('排序：主推 → 座位面前 → 生日', '정렬: 최애 → 내 앞자리 → 생일')}</option>
             </select>
           </div>
         </div>
@@ -717,7 +730,11 @@ export const App: React.FC = () => {
                       : 'bg-white text-[#212047]/80 ring-1 ring-[#212047]/10 hover:bg-[#E6F5F1]'
                   }`}
                 >
-                  <span>{info.label}</span>
+                  <span>
+                    {catKey === 'all'
+                      ? t('全部成員', '전체')
+                      : getCategoryLabel(catKey, info.label)}
+                  </span>
                   <span
                     className={`rounded-full px-1.5 py-0.2 font-mono-num text-[9px] sm:px-2 sm:py-0.5 sm:text-[10px] lg:text-xs ${
                       isActive
@@ -741,7 +758,7 @@ export const App: React.FC = () => {
                 : 'bg-[#5BAE84]/15 text-[#212047] hover:bg-[#5BAE84]/25'
             }`}
           >
-            <span>我的主推收藏</span>
+            <span>{t('我的主推收藏', '내 최애 멤버')}</span>
             <span className="rounded-full bg-[#212047]/15 px-1.5 py-0.2 font-mono-num text-[9px] sm:px-2 sm:py-0.5 sm:text-[10px] lg:text-xs">
               {categoryCounts.favorites}
             </span>
@@ -761,7 +778,7 @@ export const App: React.FC = () => {
                   : 'bg-amber-400/20 text-[#212047] ring-1 ring-amber-500/60 hover:bg-amber-400/35'
               }`}
             >
-              <span>★ {currentMonth} 月壽星</span>
+              <span>{t(`★ ${currentMonth} 月壽星`, `★ ${currentMonth}월 생일`)}</span>
               <span className="rounded-full bg-[#212047] px-1.5 py-0.2 font-mono-num text-[9px] text-amber-300 sm:px-2 sm:py-0.5 sm:text-[10px] lg:text-xs">
                 {categoryCounts.birthday_month}
               </span>
@@ -843,7 +860,7 @@ export const App: React.FC = () => {
                       {/* Top-Left Priority / Birthday Badge */}
                       {isFav ? (
                         <div className="pointer-events-none absolute top-1.5 left-1.5 z-20 inline-flex items-center gap-0.5 rounded-full bg-[#5BAE84] px-1.5 py-0.5 font-mono-num text-[9px] font-black text-white shadow-xs ring-1 ring-white sm:top-3.5 sm:left-3.5 sm:px-3 sm:py-1 sm:text-xs">
-                          <span>★ 主推</span>
+                          <span>★ {t('主推', '최애')}</span>
                         </div>
                       ) : frontInfo ? (
                         <div
@@ -855,13 +872,13 @@ export const App: React.FC = () => {
                         >
                           <span>
                             {frontInfo.relation === 'direct'
-                              ? `▲ ${currentUserSeat.zone}${currentUserSeat.seat}面前`
-                              : `↔ 鄰區${frontInfo.adjShortZone}`}
+                              ? `▲ ${currentUserSeat.zone}${currentUserSeat.seat}${t('面前', ' 앞')}`
+                              : `↔ ${t('鄰區', '인접')}${frontInfo.adjShortZone}`}
                           </span>
                         </div>
                       ) : isBirthdayStar ? (
                         <div className="pointer-events-none absolute top-1.5 left-1.5 z-20 inline-flex items-center gap-0.5 rounded-full bg-amber-500 px-1.5 py-0.5 font-mono-num text-[9px] font-black text-white shadow-xs ring-1 ring-white sm:top-3.5 sm:left-3.5 sm:px-3 sm:py-1 sm:text-xs">
-                          <span>★ {currentMonth}月壽星</span>
+                          <span>★ {currentMonth}{t('月壽星', '월 생일')}</span>
                         </div>
                       ) : null}
 
@@ -910,7 +927,7 @@ export const App: React.FC = () => {
                               onClick={() => setSelectedMember(member)}
                               className="truncate text-left focus:outline-none"
                             >
-                              {member.name}
+                              {getMemberName(member)}
                             </button>
                           </h3>
                           <span className="shrink-0 font-mono-num text-[10px] font-extrabold text-[#4FA87D]">

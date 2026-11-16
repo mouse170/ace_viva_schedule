@@ -11,6 +11,7 @@ import {
 import { MemberPortrait } from './MemberPortrait';
 import { MemberScheduleCopyBox } from './MemberScheduleCopyBox';
 import { ZodiacIcon, isCurrentMonthBirthday } from './ZodiacIcon';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface MemberDetailDialogProps {
   member: AceVivaMember | null;
@@ -29,6 +30,7 @@ export const MemberDetailDialog: React.FC<MemberDetailDialogProps> = ({
   onSelectScheduleMember,
   onSelectMember,
 }) => {
+  const { t, getMemberName, getExperienceShort } = useLanguage();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const titleId = useId();
   const [copiedKey, setCopiedKey] = useState<'name' | 'ig' | null>(null);
@@ -232,7 +234,9 @@ export const MemberDetailDialog: React.FC<MemberDetailDialogProps> = ({
                     }`}
                   >
                     <span>
-                      {isFavorite ? '已加入「我的主推」名單' : '加入「我的主推」收藏夾'}
+                      {isFavorite
+                        ? t('已加入「我的主推」名單', '내 최애 멤버에 등록됨')
+                        : t('加入「我的主推」收藏夾', '내 최애 멤버로 등록')}
                     </span>
                     <span
                       className={`flex h-8 w-8 items-center justify-center rounded-full transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:scale-105 ${
@@ -266,8 +270,8 @@ export const MemberDetailDialog: React.FC<MemberDetailDialogProps> = ({
                       <div className="flex items-center gap-2.5">
                         <span className="rounded-full bg-[#212047] px-3 py-0.5 font-mono-num text-[10px] font-semibold tracking-[0.14em] text-[#7ADAD0]">
                           {member.category === 'mc'
-                            ? `主場主持人 · #${member.number}`
-                            : `背號 #${member.number}`}
+                            ? t(`主場主持人 · #${member.number}`, `홈 MC · #${member.number}`)
+                            : t(`背號 #${member.number}`, `등번호 #${member.number}`)}
                         </span>
                         <span className="font-mono-num text-xs tracking-[0.12em] text-[#212047]/60">
                           {member.englishOrKoreanName}
@@ -277,7 +281,7 @@ export const MemberDetailDialog: React.FC<MemberDetailDialogProps> = ({
                         id={titleId}
                         className="mt-2.5 flex flex-wrap items-baseline gap-3 text-3xl font-black tracking-tight text-[#212047] sm:text-4xl"
                       >
-                        <span>{member.name}</span>
+                        <span>{getMemberName(member)}</span>
                         {member.realOrAltName && (
                           <span className="text-base font-medium text-[#212047]/60">
                             （{member.realOrAltName}）
@@ -356,11 +360,11 @@ export const MemberDetailDialog: React.FC<MemberDetailDialogProps> = ({
                     >
                       <div className="flex items-center justify-between gap-1">
                         <span className="font-mono-num text-[10px] tracking-[0.14em] text-[#212047]/60">
-                          生日
+                          {t('生日', '생일')}
                         </span>
                         {isCurrentMonthBirthday(member.birthday) && (
                           <span className="rounded-full bg-amber-500 px-1.5 py-0.2 font-mono-num text-[9px] font-black text-white">
-                            本月壽星
+                            {t('本月壽星', '이달의 생일')}
                           </span>
                         )}
                       </div>
@@ -370,7 +374,7 @@ export const MemberDetailDialog: React.FC<MemberDetailDialogProps> = ({
                     </div>
                     <div className="rounded-2xl bg-white px-4 py-3 ring-1 ring-[#212047]/[0.08]">
                       <div className="font-mono-num text-[10px] tracking-[0.14em] text-[#212047]/50">
-                        星座
+                        {t('星座', '별자리')}
                       </div>
                       <div className="mt-1 flex items-center gap-1.5 text-sm font-bold text-[#212047]">
                         <ZodiacIcon
@@ -382,7 +386,7 @@ export const MemberDetailDialog: React.FC<MemberDetailDialogProps> = ({
                     </div>
                     <div className="rounded-2xl bg-[#E6F5F1] px-4 py-3 ring-1 ring-[#5BAE84]/30">
                       <div className="font-mono-num text-[10px] tracking-[0.14em] text-[#3F8E67]">
-                        MBTI 性格
+                        {t('MBTI 性格', 'MBTI')}
                       </div>
                       <div className="mt-1 font-mono-num text-sm font-extrabold text-[#212047]">
                         {member.mbti}
@@ -390,7 +394,7 @@ export const MemberDetailDialog: React.FC<MemberDetailDialogProps> = ({
                     </div>
                     <div className="rounded-2xl bg-white px-4 py-3 ring-1 ring-[#212047]/[0.08]">
                       <div className="font-mono-num text-[10px] tracking-[0.14em] text-[#212047]/50">
-                        背號
+                        {t('背號', '등번호')}
                       </div>
                       <div className="mt-1 font-mono-num text-sm font-bold text-[#4FA87D]">
                         #{member.number}
@@ -402,7 +406,7 @@ export const MemberDetailDialog: React.FC<MemberDetailDialogProps> = ({
                   {member.dualTeams.length > 0 && (
                     <div className="mt-5">
                       <div className="font-mono-num text-[10px] tracking-[0.14em] text-[#212047]/55">
-                        同步活躍身分與雙棲團隊
+                        {t('同步活躍身分與雙棲團隊', '겸직 및 활동 팀')}
                       </div>
                       <div className="mt-2 flex flex-wrap gap-2">
                         {member.dualTeams.map((team) => (
@@ -420,7 +424,7 @@ export const MemberDetailDialog: React.FC<MemberDetailDialogProps> = ({
                   {/* Career Timeline */}
                   <div className="mt-6">
                     <div className="font-mono-num text-[10px] tracking-[0.14em] text-[#212047]/55">
-                      應援與演藝資歷
+                      {t('應援與演藝資歷', '경력 및 활동 이력')}
                     </div>
                     <div className="mt-2.5 space-y-2">
                       {member.career.map((item, idx) => (
@@ -458,11 +462,17 @@ export const MemberDetailDialog: React.FC<MemberDetailDialogProps> = ({
                     <div className="mt-6">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <span className="font-mono-num text-[10px] tracking-[0.14em] text-[#212047]/55">
-                          相同經歷夥伴串聯（{sharedPeers.length} 位）
+                          {t(
+                            `相同經歷夥伴串聯（${sharedPeers.length} 位）`,
+                            `함께 활동한 동료 연결 (${sharedPeers.length}명)`
+                          )}
                         </span>
                         {closestAdjacentMoments.length > 0 && (
                           <span className="rounded-full bg-[#F59E0B]/15 px-2.5 py-0.5 font-mono-num text-[10px] font-bold text-[#B45309] ring-1 ring-[#F59E0B]/40">
-                            {CLOSEST_STATION_SCHEDULE.dateLabel} 有 {closestAdjacentMoments.length} 次站位鄰近連線
+                            {t(
+                              `${CLOSEST_STATION_SCHEDULE.dateLabel} 有 ${closestAdjacentMoments.length} 次站位鄰近連線`,
+                              `${CLOSEST_STATION_SCHEDULE.dateLabel} 인접 배치 ${closestAdjacentMoments.length}회`
+                            )}
                           </span>
                         )}
                       </div>
@@ -487,7 +497,7 @@ export const MemberDetailDialog: React.FC<MemberDetailDialogProps> = ({
                                 variant="avatar"
                                 className="h-5 w-5 rounded-full"
                               />
-                              <span>{peer.name}</span>
+                              <span>{getMemberName(peer)}</span>
                               <span
                                 className={`rounded-full px-1.5 py-0.2 font-mono-num text-[10px] ${
                                   hasClosestBond
@@ -495,7 +505,11 @@ export const MemberDetailDialog: React.FC<MemberDetailDialogProps> = ({
                                     : 'bg-[#E6F5F1] text-[#3F8E67]'
                                 }`}
                               >
-                                {sharedTags.map((t) => t.shortLabel).join(' · ')}
+                                {sharedTags
+                                  .map((tag) =>
+                                    getExperienceShort(tag.id, tag.shortLabel)
+                                  )
+                                  .join(' · ')}
                               </span>
                             </button>
                           );
@@ -504,7 +518,10 @@ export const MemberDetailDialog: React.FC<MemberDetailDialogProps> = ({
                       {closestAdjacentMoments.length > 0 && (
                         <div className="mt-2.5 rounded-xl border border-[#F59E0B]/35 bg-[#FFFBEB] px-3 py-2 text-[11px] text-[#92400E]">
                           <div className="font-mono-num text-[10px] font-extrabold text-[#B45309]">
-                            近期站位鄰近預告（{CLOSEST_STATION_SCHEDULE.dateLabel}）：
+                            {t(
+                              `近期站位鄰近預告（${CLOSEST_STATION_SCHEDULE.dateLabel}）：`,
+                              `다가오는 인접 구역 예고 (${CLOSEST_STATION_SCHEDULE.dateLabel}):`
+                            )}
                           </div>
                           <div className="mt-1 flex flex-wrap gap-1.5">
                             {closestAdjacentMoments.slice(0, 6).map((moment, idx) => (
@@ -512,7 +529,19 @@ export const MemberDetailDialog: React.FC<MemberDetailDialogProps> = ({
                                 key={`${moment.setLabel}-${moment.phaseLabel}-${moment.partner.id}-${idx}`}
                                 className="rounded-md bg-white/90 px-2 py-0.5 font-mono-num text-[10px] font-bold text-[#92400E] ring-1 ring-[#F59E0B]/30"
                               >
-                                {moment.setLabel} {moment.phaseLabel === '開局 0–10 分' ? '開局' : '換位'}・{moment.selfZone}區 鄰近 {moment.partner.name}（{moment.sharedTags.map((t) => t.shortLabel).join('/')}）
+                                {moment.setLabel}{' '}
+                                {moment.phaseLabel === '開局 0–10 分'
+                                  ? t('開局', '초반')
+                                  : t('換位', '교체')}
+                                ·{moment.selfZone}
+                                {t('區 鄰近 ', '구역 인접 ')}
+                                {getMemberName(moment.partner)}（
+                                {moment.sharedTags
+                                  .map((tag) =>
+                                    getExperienceShort(tag.id, tag.shortLabel)
+                                  )
+                                  .join('/')}
+                                ）
                               </span>
                             ))}
                           </div>
@@ -527,10 +556,13 @@ export const MemberDetailDialog: React.FC<MemberDetailDialogProps> = ({
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div>
                       <span className="font-mono-num text-[10px] tracking-[0.14em] text-[#7ADAD0]">
-                        近期主場出席預告
+                        {t('近期主場出席預告', '다가오는 홈 경기 일정')}
                       </span>
                       <div className="mt-0.5 text-xs text-white/75">
-                        已排定出席 {attendingMatches.length} 場臺中連莊主場賽事
+                        {t(
+                          `已排定出席 ${attendingMatches.length} 場臺中連莊主場賽事`,
+                          `예정된 홈 경기 ${attendingMatches.length}경기 출석`
+                        )}
                       </div>
                     </div>
                     <button
@@ -541,7 +573,7 @@ export const MemberDetailDialog: React.FC<MemberDetailDialogProps> = ({
                       }}
                       className="rounded-full bg-[#5BAE84] px-3.5 py-1.5 text-xs font-bold text-white transition-transform duration-500 ease-[cubic-bezier(0.32,0.72,0,1)] hover:bg-[#4FA87D] active:scale-[0.97]"
                     >
-                      在班表中篩選她 →
+                      {t('在班表中篩選她 →', '일정표에서 보기 →')}
                     </button>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
