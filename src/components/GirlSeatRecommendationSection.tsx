@@ -420,10 +420,10 @@ export const GirlSeatRecommendationSection: React.FC<
                   <div className="mt-4 rounded-2xl border-2 border-[#5ECBC0] bg-[#191838] p-4 shadow-md sm:p-5">
                     <div className="flex flex-wrap items-center justify-between gap-1.5">
                       <span className="inline-flex items-center gap-1 rounded-full bg-[#5ECBC0] px-2.5 py-0.5 font-mono-num text-[10px] font-black tracking-wider text-[#212047] lg:text-xs">
-                        <span>↔ 觀眾視角跨區免換位黃金帶</span>
+                        <span>↔ {topCrossZone.junctionTitle}</span>
                       </span>
                       <span className="rounded-md bg-white/10 px-2 py-0.5 font-mono-num text-[10px] font-extrabold text-[#7ADAD0] lg:text-xs">
-                        涵蓋 {topCrossZone.coveredPhasesCount}/6 階段於 12 席內
+                        涵蓋 {topCrossZone.coveredPhasesCount}/6 階段於 8 席內
                       </span>
                     </div>
 
@@ -483,37 +483,58 @@ export const GirlSeatRecommendationSection: React.FC<
                       </button>
                     </div>
 
-                    {/* Secondary Cross-Zone Junction Option */}
+                    {/* Secondary Cross-Zone Junction Option (C小號↔B大號 / B小號↔A大號) */}
                     {secondaryCrossZone && (
-                      <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-white/15 pt-2.5 text-[11px] text-white/75 lg:text-xs">
-                        <div>
-                          <span className="font-bold text-[#7ADAD0]">
-                            次選跨區（{secondaryCrossZone.boundaryTag}）：
-                          </span>
-                          <span className="font-mono-num font-bold text-white">
-                            {secondaryCrossZone.combinedRangeLabel}
-                          </span>
-                          <span className="ml-1 text-white/60">
-                            （{secondaryCrossZone.coveredSetsLabel}）
-                          </span>
+                      <div className="mt-3 space-y-2 border-t border-white/15 pt-2.5 text-[11px] text-white/75 lg:text-xs">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <div>
+                            <span className="font-bold text-[#7ADAD0]">
+                              另一側跨區（{secondaryCrossZone.junctionTitle}）：
+                            </span>
+                            <span className="font-mono-num font-bold text-white">
+                              {secondaryCrossZone.combinedRangeLabel}
+                            </span>
+                            <span className="ml-1 text-white/60">
+                              （8 席內 {secondaryCrossZone.coveredPhasesCount}/6 階段 · {secondaryCrossZone.coveredSetsLabel}）
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (onJumpToSeatSimulator) {
+                                  onJumpToSeatSimulator(
+                                    currentMatchSchedule.matchId,
+                                    secondaryCrossZone.rightZone,
+                                    secondaryCrossZone.rightBestSeat,
+                                    activeGirl.id
+                                  );
+                                }
+                              }}
+                              className="shrink-0 rounded-full bg-white/15 px-2.5 py-1 font-mono-num text-[10px] font-bold text-[#7ADAD0] hover:bg-[#5BAE84] hover:text-white"
+                            >
+                              模擬 {secondaryCrossZone.rightZone}
+                              {secondaryCrossZone.rightBestSeat} →
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (onJumpToSeatSimulator) {
+                                  onJumpToSeatSimulator(
+                                    currentMatchSchedule.matchId,
+                                    secondaryCrossZone.leftZone,
+                                    secondaryCrossZone.leftBestSeat,
+                                    activeGirl.id
+                                  );
+                                }
+                              }}
+                              className="shrink-0 rounded-full bg-white/15 px-2.5 py-1 font-mono-num text-[10px] font-bold text-[#7ADAD0] hover:bg-[#5BAE84] hover:text-white"
+                            >
+                              模擬 {secondaryCrossZone.leftZone}
+                              {secondaryCrossZone.leftBestSeat} →
+                            </button>
+                          </div>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (onJumpToSeatSimulator) {
-                              onJumpToSeatSimulator(
-                                currentMatchSchedule.matchId,
-                                secondaryCrossZone.bestSingleZone,
-                                secondaryCrossZone.bestSingleSeat,
-                                activeGirl.id
-                              );
-                            }
-                          }}
-                          className="shrink-0 rounded-full bg-white/15 px-2.5 py-1 font-mono-num text-[10px] font-bold text-[#7ADAD0] hover:bg-[#5BAE84] hover:text-white"
-                        >
-                          模擬 {secondaryCrossZone.bestSingleZone}
-                          {secondaryCrossZone.bestSingleSeat} 號 →
-                        </button>
                       </div>
                     )}
                   </div>

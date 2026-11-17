@@ -445,7 +445,7 @@ async function renderSeatRadarCardToDataUrl(
     ctx,
     isMergedMulti
       ? `★ 已合併主推：${targetFavorites.map((f) => f.name).join(' · ')}（綠＝0–10分／青＝破10分）`
-      : `★ 全場 6 階段共 ${nearPhasesCount} 個階段在 12 席正面好拍射程內`,
+      : `★ 全場 6 階段共 ${nearPhasesCount} 個階段在 8 席黃金好拍射程內`,
     infoX + 16,
     pill1Y + 20,
     pillW - 32,
@@ -690,9 +690,9 @@ async function renderSeatRadarCardToDataUrl(
     // User & Oshi X coordinates
     const uPx = radarX + toRadarNorm(userGlobal) * radarW;
     const fovLeftPx =
-      radarX + toRadarNorm(Math.min(69, userGlobal + 12)) * radarW;
+      radarX + toRadarNorm(Math.min(69, userGlobal + 8)) * radarW;
     const fovRightPx =
-      radarX + toRadarNorm(Math.max(1, userGlobal - 12)) * radarW;
+      radarX + toRadarNorm(Math.max(1, userGlobal - 8)) * radarW;
 
     // Upward ±12 Seat Camera Cone
     const coneGrad = ctx.createLinearGradient(0, audY, 0, stageY);
@@ -888,7 +888,7 @@ async function renderSeatRadarCardToDataUrl(
             : offset < 0
               ? `◀左前${Math.abs(offset)}席`
               : `右前${offset}席▶`;
-        return `${dir}·${within12 ? '好拍' : '逾12席'}`;
+        return `${dir}·${within12 ? '好拍' : '逾8席'}`;
       };
 
       const clampInitPx = Math.max(
@@ -995,7 +995,7 @@ async function renderSeatRadarCardToDataUrl(
   ctx.fillStyle = '#7ADAD0';
   fillTextFit(
     ctx,
-    '■ 實線＋青框頭像：破 10 分主力站位（佔 60% 時間）  ■ 虛線＋綠框頭像：0–10 分開局站位  ■ 扇形：你的座位 ±12 席好拍射程',
+    '■ 實線＋青框頭像：破 10 分主力站位（佔 60% 時間）  ■ 虛線＋綠框頭像：0–10 分開局站位  ■ 扇形：你的座位 ±8 席黃金射程',
     64,
     H - 70,
     W - 128,

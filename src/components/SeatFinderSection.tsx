@@ -1098,9 +1098,9 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
 
                 const userX = toAudienceX(userGlobal);
                 const oshiX = toAudienceX(oshiGlobal);
-                // In Audience view, left of user is larger globalSeat (userGlobal + 12), right of user is smaller globalSeat (userGlobal - 12)
-                const fovLeftX = toAudienceX(Math.min(69, userGlobal + 12));
-                const fovRightX = toAudienceX(Math.max(1, userGlobal - 12));
+                // In Audience view, left of user is larger globalSeat (userGlobal + 8), right of user is smaller globalSeat (userGlobal - 8)
+                const fovLeftX = toAudienceX(Math.min(69, userGlobal + 8));
+                const fovRightX = toAudienceX(Math.max(1, userGlobal - 8));
 
                 // Concise relative seat count badge in Audience First-Person perspective
                 // offset < 0 means oshi is toward C/larger seat numbers = Audience's LEFT hand (左前方)
@@ -1502,7 +1502,7 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                           <span>{shortRelativeBadge}</span>
                           <span>·</span>
                           <span>
-                            {isNear ? '12 席內好拍' : '逾 12 席偏遠難拍'}
+                            {isNear ? '8 席黃金區好拍' : '逾 8 席偏遠難拍'}
                           </span>
                         </span>
                       </div>
@@ -1525,11 +1525,11 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                     <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
                       {isNear ? (
                         <span className="text-xs font-bold text-[#7ADAD0] lg:text-sm">
-                          ★ 距離 {seatsDiff} 席（12 席最佳正面拍攝射程內）
+                          ★ 距離 {seatsDiff} 席（8 席黃金正面拍攝射程內）
                         </span>
                       ) : (
                         <span className="text-xs font-bold text-amber-300 lg:text-sm">
-                          ▲ 相距 {seatsDiff} 席（超過 12 席，視角偏斜可能拍不到正面）
+                          ▲ 相距 {seatsDiff} 席（超過 8 席，視角偏斜可能拍不到正面）
                         </span>
                       )}
 
