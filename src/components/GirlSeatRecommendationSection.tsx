@@ -28,31 +28,6 @@ interface GirlSeatRecommendationSectionProps {
   ) => void;
 }
 
-// 依觀眾面向球場第一人稱視角排列：左手邊為 23 號（大號側），右手邊為 1 號（小號側）
-const SEAT_NUMBERS = Array.from({ length: 23 }, (_, i) => 23 - i);
-
-const MOBILE_SEAT_GROUPS = [
-  {
-    label: '◀ 左側 23–16號',
-    seats: [23, 22, 21, 20, 19, 18, 17, 16],
-    cols: 'grid-cols-8',
-  },
-  {
-    label: '▲ 中央 15–9號',
-    seats: [15, 14, 13, 12, 11, 10, 9],
-    cols: 'grid-cols-7',
-  },
-  {
-    label: '右側 8–1號 ▶',
-    seats: [8, 7, 6, 5, 4, 3, 2, 1],
-    cols: 'grid-cols-8',
-  },
-];
-
-function isSeatInRange(seat: number, range: [number, number]): boolean {
-  return seat >= range[0] && seat <= range[1];
-}
-
 export const GirlSeatRecommendationSection: React.FC<
   GirlSeatRecommendationSectionProps
 > = ({ favoriteIds, onOpenMemberDetail, onJumpToSeatSimulator }) => {
@@ -61,8 +36,6 @@ export const GirlSeatRecommendationSection: React.FC<
     CLOSEST_STATION_SCHEDULE.matchId
   );
   const [selectedGirlId, setSelectedGirlId] = useState<string>('yuri');
-  const [onlyFavoritesInMatrix, setOnlyFavoritesInMatrix] =
-    useState<boolean>(false);
   const [isStrategyModalOpen, setIsStrategyModalOpen] =
     useState<boolean>(false);
   const [strategyModalMode, setStrategyModalMode] =
@@ -84,7 +57,7 @@ export const GirlSeatRecommendationSection: React.FC<
     [selectedMatchId]
   );
 
-  // Get all 9 rotating cheerleaders for the selected match day
+  // Get all rotating cheerleaders for the selected match day
   const rotatingMemberIds = useMemo(() => {
     const set1 = currentMatchSchedule.sets[0].initial;
     return [...set1.A, ...set1.B, ...set1.C];
@@ -106,35 +79,29 @@ export const GirlSeatRecommendationSection: React.FC<
     [currentMatchSchedule, memberMap]
   );
 
-  // Ensure selectedGirlId is valid for current match day
-  const activeGirlId = rotatingMemberIds.includes(selectedGirlId)
-    ? selectedGirlId
-    : rotatingMemberIds[0];
+  // Ensure selectedGirlId is valid for the current match day
+  const activeGirl = useMemo(() => {
+    const found = rotatingMembers.find((m) => m.id === selectedGirlId);
+    if (found) return found;
+    const favOnDuty = rotatingMembers.find((m) => favoriteIds.includes(m.id));
+    return favOnDuty ?? rotatingMembers[0];
+  }, [rotatingMembers, selectedGirlId, favoriteIds]);
 
-  const activeGirl = memberMap.get(activeGirlId) ?? rotatingMembers[0];
-
-  const activeGirlRecommendations = useMemo(
+  const recommendations: GirlSetZoneRecommendation[] = useMemo(
     () => getGirlSeatRecommendations(currentMatchSchedule, activeGirl.id),
     [currentMatchSchedule, activeGirl.id]
   );
+
+  const primaryRec = recommendations[0];
 
   const crossZoneIntervals = useMemo(
     () => getCrossZoneGoldenIntervals(currentMatchSchedule, activeGirl.id),
     [currentMatchSchedule, activeGirl.id]
   );
-
-  const primaryRec: GirlSetZoneRecommendation | undefined =
-    activeGirlRecommendations[0];
   const topCrossZone: CrossZoneGoldenInterval | undefined =
     crossZoneIntervals[0];
   const secondaryCrossZone: CrossZoneGoldenInterval | undefined =
     crossZoneIntervals[1];
-
-  // Matrix list (all rotating members or filtered by favorites)
-  const matrixMembers = useMemo(() => {
-    if (!onlyFavoritesInMatrix) return rotatingMembers;
-    return rotatingMembers.filter((m) => favoriteIds.includes(m.id));
-  }, [rotatingMembers, onlyFavoritesInMatrix, favoriteIds]);
 
   return (
     <section
@@ -180,30 +147,6 @@ export const GirlSeatRecommendationSection: React.FC<
               );
             })}
           </div>
-
-          <button
-            type="button"
-            onClick={() => {
-              setStrategyModalMode('zone_hopping');
-              setIsStrategyModalOpen(true);
-            }}
-            className="inline-flex items-center gap-1.5 rounded-full bg-[#5BAE84] px-4 py-2.5 text-xs font-black text-white shadow-sm transition-all hover:bg-[#3F8E67] active:scale-95 lg:px-5 lg:py-3 lg:text-sm"
-          >
-            <span>{t(`生出「${activeGirl.name}」最佳換位＆跨區圖卡`, `${getMemberName(activeGirl)} 이동 전략 이미지 생성`)}</span>
-            <span>↓</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setStrategyModalMode('seat_radar');
-              setIsStrategyModalOpen(true);
-            }}
-            className="inline-flex items-center gap-1.5 rounded-full bg-[#212047] px-4 py-2.5 text-xs font-extrabold text-[#7ADAD0] shadow-sm ring-1 ring-[#5BAE84] transition-all hover:bg-[#2E2C5E] active:scale-95 lg:px-5 lg:py-3 lg:text-sm"
-          >
-            <span>{t('生出「已選座位雷達圖卡」', '선택 좌석 레이더 이미지 생성')}</span>
-            <span>↓</span>
-          </button>
         </div>
       </div>
 
@@ -212,14 +155,17 @@ export const GirlSeatRecommendationSection: React.FC<
         <div className="rounded-[calc(1.75rem-0.375rem)] bg-white p-3.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.95)] sm:rounded-[calc(2rem-0.375rem)] sm:p-6 lg:p-7">
           <div className="flex flex-wrap items-center justify-between gap-2 pb-3.5">
             <span className="font-mono-num text-[11px] font-extrabold tracking-[0.14em] text-[#212047] sm:text-xs lg:text-sm">
-              點選當日出席女孩檢視專屬推薦席位（{rotatingMembers.length} 位集氣區輪換女孩）
+              {t(
+                `點選當日出席女孩檢視 8 席黃金選位攻略（${rotatingMembers.length} 位輪換女孩）`,
+                `당일 출석 멤버를 선택해 8석 황금 좌석 공략 보기 (${rotatingMembers.length}명)`
+              )}
             </span>
             <span className="text-[11px] font-medium text-[#4FA87D] lg:text-xs">
-              ★ 為已加入「我的主推」成員
+              ★ {t('為已加入「我的主推」成員', '내 최애 멤버')}
             </span>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-9">
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-10">
             {rotatingMembers.map((m) => {
               const isSelected = m.id === activeGirl.id;
               const isFav = favoriteIds.includes(m.id);
@@ -263,7 +209,7 @@ export const GirlSeatRecommendationSection: React.FC<
                     #{m.number}
                   </div>
                   <div className="w-full truncate text-xs font-black sm:text-sm lg:text-base">
-                    {m.name}
+                    {getMemberName(m)}
                   </div>
                   {rec1 && (
                     <div
@@ -273,7 +219,7 @@ export const GirlSeatRecommendationSection: React.FC<
                           : 'bg-[#D5EFE9] text-[#212047]'
                       }`}
                     >
-                      首推 {rec1.zone} 區
+                      {t(`首推 ${rec1.zone} 區`, `추천 ${rec1.zone}구역`)}
                     </div>
                   )}
                 </button>
@@ -283,878 +229,404 @@ export const GirlSeatRecommendationSection: React.FC<
         </div>
       </div>
 
-      {/* Spotlight Dashboard for the Selected Girl */}
+      {/* EDM Poster Guide for Selected Girl (Golden 8-Seat Strategy + One-Set-One-Switch Route) */}
       <div className="mt-6 rounded-[1.75rem] bg-[#D5EFE9] p-1.5 ring-1 ring-[#5BAE84]/35 sm:mt-8 sm:rounded-[2rem] sm:p-2">
-        <div className="rounded-[calc(1.75rem-0.375rem)] bg-white p-3.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.95)] sm:rounded-[calc(2rem-0.375rem)] sm:p-8">
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:gap-8">
-            {/* Left 4 Cols: Selected Girl Dossier & #1 Ticket Recommendation */}
-            <div className="flex flex-col justify-between rounded-3xl bg-[#212047] p-4 text-white sm:p-6 lg:col-span-4 lg:p-7">
-              <div>
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <span className="rounded-full bg-[#5BAE84] px-3 py-0.5 font-mono-num text-[10px] font-extrabold tracking-wider text-white lg:text-xs">
-                    專屬選位攻略
-                  </span>
-                  <span className="font-editorial text-3xl font-bold text-[#7ADAD0] italic lg:text-4xl">
-                    #{activeGirl.number}
-                  </span>
-                </div>
-
-                <div className="mt-4 flex items-center gap-4">
-                  <button
-                    type="button"
-                    onClick={() => onOpenMemberDetail(activeGirl)}
-                    className="shrink-0 overflow-hidden rounded-2xl ring-2 ring-[#5ECBC0]"
-                  >
-                    <MemberPortrait
-                      member={activeGirl}
-                      variant="avatar"
-                      className="h-20 w-20 lg:h-24 lg:w-24"
-                    />
-                  </button>
-                  <div className="min-w-0">
-                    <h3 className="text-2xl font-black text-white sm:text-3xl lg:text-4xl">
-                      {activeGirl.name}
-                    </h3>
-                    {activeGirl.realOrAltName && (
-                      <div className="text-xs text-white/65 lg:text-sm">
-                        {activeGirl.realOrAltName} · MBTI {activeGirl.mbti}
-                      </div>
-                    )}
-                    <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                      <a
-                        href={activeGirl.instagramUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 rounded-full bg-[#5BAE84] px-3 py-1 font-mono-num text-xs font-black text-white shadow-xs ring-1 ring-white/25 transition-transform hover:bg-[#3F8E67] active:scale-95"
-                      >
-                        <span>IG @{activeGirl.instagramHandle}</span>
-                        <span>↗</span>
-                      </a>
-                      <button
-                        type="button"
-                        onClick={() => onOpenMemberDetail(activeGirl)}
-                        className="inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1 text-xs font-bold text-[#7ADAD0] hover:bg-white/25"
-                      >
-                        <span>個人檔案</span>
-                        <span>→</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setStrategyModalMode('zone_hopping');
-                          setIsStrategyModalOpen(true);
-                        }}
-                        className="inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1 text-xs font-black text-white ring-1 ring-[#5ECBC0]/40 transition-transform hover:bg-[#5BAE84] active:scale-95"
-                      >
-                        <span>換位＆跨區攻略圖</span>
-                        <span>↓</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setStrategyModalMode('seat_radar');
-                          setIsStrategyModalOpen(true);
-                        }}
-                        className="inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1 text-xs font-bold text-[#7ADAD0] ring-1 ring-[#5ECBC0]/40 transition-transform hover:bg-[#5BAE84] hover:text-white active:scale-95"
-                      >
-                        <span>固定座位雷達圖</span>
-                        <span>↓</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Member Station Text Copy Box */}
-                <div className="mt-4">
-                  <MemberScheduleCopyBox
+        <div className="overflow-hidden rounded-[calc(1.75rem-0.375rem)] bg-[#212047] text-white shadow-[0_24px_50px_-15px_rgba(33,32,71,0.45)] sm:rounded-[calc(2rem-0.375rem)]">
+          {/* EDM Top Banner */}
+          <div className="border-b border-white/15 bg-gradient-to-r from-[#212047] via-[#282658] to-[#1D3B3A] p-4 sm:p-6 lg:p-8">
+            <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+              <div className="flex items-center gap-3.5 sm:gap-5">
+                <button
+                  type="button"
+                  onClick={() => onOpenMemberDetail(activeGirl)}
+                  className="shrink-0 overflow-hidden rounded-2xl ring-2 ring-[#5ECBC0]"
+                >
+                  <MemberPortrait
                     member={activeGirl}
-                    activeMatchId={currentMatchSchedule.matchId}
-                    variant="dark"
+                    variant="avatar"
+                    className="h-16 w-16 sm:h-20 sm:w-20 lg:h-24 lg:w-24"
                   />
-                </div>
-
-                {/* #1 Best Seat Interval Box */}
-                {primaryRec && (
-                  <div className="mt-5 rounded-2xl border border-[#5ECBC0]/35 bg-white/10 p-4 sm:mt-6 sm:p-5">
-                    <div className="font-mono-num text-[10px] font-extrabold tracking-wider text-[#7ADAD0] lg:text-xs">
-                      本場頭號推薦座位區間
-                    </div>
-                    <div className="mt-1.5 text-2xl font-black text-white lg:text-3xl">
-                      2F 集氣 {primaryRec.zone} 區
-                    </div>
-                    <div className="mt-1 font-mono-num text-sm font-extrabold text-[#5ECBC0] sm:text-base lg:text-lg">
-                      推薦席次：{primaryRec.sweetSpotLabel}
-                    </div>
-
-                    <div className="mt-3.5 grid grid-cols-2 gap-2 border-t border-white/15 pt-3 text-xs lg:text-sm">
-                      <div className="rounded-xl bg-white/10 p-2.5 lg:p-3">
-                        <div className="font-mono-num text-[10px] text-[#7ADAD0] lg:text-xs">
-                          開局 0–10 分 · {primaryRec.initialSlotLabel.slice(0, 4)}
-                        </div>
-                        <div className="mt-0.5 font-extrabold text-white">
-                          {primaryRec.zone} 區 {primaryRec.initialSeatRange[0]}–
-                          {primaryRec.initialSeatRange[1]} 號
-                        </div>
-                        <div className="text-[10px] text-white/65 lg:text-xs">
-                          C 位核心：{primaryRec.initialCoreSeats}
-                        </div>
-                      </div>
-                      <div className="rounded-xl bg-[#5BAE84]/30 p-2.5 ring-1 ring-[#5ECBC0]/40 lg:p-3">
-                        <div className="font-mono-num text-[10px] text-[#7ADAD0] lg:text-xs">
-                          破 10 分後 · {primaryRec.after10SlotLabel.slice(0, 4)}
-                        </div>
-                        <div className="mt-0.5 font-extrabold text-white">
-                          {primaryRec.zone} 區 {primaryRec.after10SeatRange[0]}–
-                          {primaryRec.after10SeatRange[1]} 號
-                        </div>
-                        <div className="text-[10px] text-white/80 lg:text-xs">
-                          C 位核心：{primaryRec.after10CoreSeats}
-                        </div>
-                      </div>
-                    </div>
+                </button>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="rounded-full bg-[#5BAE84] px-2.5 py-0.5 font-mono-num text-[10px] font-extrabold tracking-wider text-white lg:text-xs">
+                      {t('專屬 EDM 選位攻略', '전용 좌석 가이드 EDM')}
+                    </span>
+                    <span className="font-mono-num text-xs font-extrabold text-[#7ADAD0]">
+                      #{activeGirl.number} · {currentMatchSchedule.dateLabel}
+                    </span>
                   </div>
-                )}
+                  <h3 className="mt-1 text-2xl font-black text-white sm:text-3xl lg:text-4xl">
+                    {getMemberName(activeGirl)}
+                  </h3>
+                  <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                    <a
+                      href={activeGirl.instagramUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 rounded-full bg-[#5BAE84] px-3 py-1 font-mono-num text-xs font-black text-white transition-transform hover:bg-[#3F8E67] active:scale-95"
+                    >
+                      <span>IG @{activeGirl.instagramHandle}</span>
+                      <span>↗</span>
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => onOpenMemberDetail(activeGirl)}
+                      className="inline-flex items-center gap-1 rounded-full bg-white/15 px-3 py-1 text-xs font-bold text-[#7ADAD0] hover:bg-white/25"
+                    >
+                      <span>{t('個人檔案', '프로필')}</span>
+                      <span>→</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
 
-                {/* Cross-Zone Multi-Set Golden Interval Recommendation Box */}
-                {topCrossZone && (
-                  <div className="mt-4 rounded-2xl border-2 border-[#5ECBC0] bg-[#191838] p-4 shadow-md sm:p-5">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStrategyModalMode('zone_hopping');
+                    setIsStrategyModalOpen(true);
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-[#5BAE84] px-4 py-2 text-xs font-black text-white shadow-sm transition-transform hover:bg-[#3F8E67] active:scale-95"
+                >
+                  <span>{t('換位＆跨區攻略圖 ↓', '이동 전략 카드 ↓')}</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setStrategyModalMode('seat_radar');
+                    setIsStrategyModalOpen(true);
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-4 py-2 text-xs font-bold text-[#7ADAD0] ring-1 ring-[#5ECBC0]/45 transition-transform hover:bg-[#5BAE84] hover:text-white active:scale-95"
+                >
+                  <span>{t('固定座位雷達圖 ↓', '좌석 레이더 카드 ↓')}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* EDM Body: 1. Golden 8-Seat Ticket Strategy + 2. One-Set-One-Switch Route + 3. Schedule Copy */}
+          <div className="space-y-5 p-4 sm:p-6 lg:p-8">
+            {/* Row 1: Primary Zone + Cross-Zone Golden 8-Seat Intervals */}
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+              {/* Primary Single-Zone Golden Pick */}
+              {primaryRec && (
+                <div className="flex flex-col justify-between rounded-2xl border border-[#5ECBC0]/40 bg-white/[0.07] p-4 sm:p-5 lg:col-span-5">
+                  <div>
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="rounded-full bg-[#5BAE84] px-2.5 py-0.5 font-mono-num text-[10px] font-black text-white lg:text-xs">
+                        {t('🏆 單區黃金 8 席首選', '🏆 단일 구역 8석 추천')}
+                      </span>
+                      <span className="font-mono-num text-[11px] font-bold text-[#7ADAD0]">
+                        {primaryRec.setShortLabel}
+                      </span>
+                    </div>
+                    <div className="mt-3 text-2xl font-black text-white sm:text-3xl">
+                      2F {primaryRec.zone} 區 · {primaryRec.sweetSpotLabel}
+                    </div>
+                    <p className="mt-1.5 text-xs leading-relaxed text-white/75 sm:text-sm">
+                      {t(
+                        `該局主力站位集中於 ${primaryRec.zone} 區，選擇核心 8 席區間即可涵蓋最長正面應援時段。`,
+                        `해당 세트 주력 구역인 ${primaryRec.zone}구역의 8석 황금 구간으로 정면 시야를 확보할 수 있습니다.`
+                      )}
+                    </p>
+                  </div>
+
+                  {onJumpToSeatSimulator && (() => {
+                    const targetSeat = Math.round(
+                      (primaryRec.sweetSpotRange[0] + primaryRec.sweetSpotRange[1]) / 2
+                    );
+                    return (
+                    <button
+                      type="button"
+                      onClick={() =>
+                        onJumpToSeatSimulator(
+                          currentMatchSchedule.matchId,
+                          primaryRec.zone,
+                          targetSeat,
+                          activeGirl.id
+                        )
+                      }
+                      className="mt-4 inline-flex w-full items-center justify-center gap-1.5 rounded-xl bg-[#5BAE84] px-4 py-2.5 font-mono-num text-xs font-black text-white transition-colors hover:bg-[#3F8E67] sm:text-sm"
+                    >
+                      <span>
+                        {t(
+                          `一鍵預覽 ${primaryRec.zone}${targetSeat} 席雷達 →`,
+                          `${primaryRec.zone}${targetSeat}석 레이더 보기 →`
+                        )}
+                      </span>
+                    </button>
+                    );
+                  })()}
+                </div>
+              )}
+
+              {/* Cross-Zone Golden 8-Seat Junctions (C小號↔B大號 & B小號↔A大號) */}
+              {topCrossZone && (
+                <div className="flex flex-col justify-between rounded-2xl border-2 border-[#5ECBC0] bg-[#181736] p-4 sm:p-5 lg:col-span-7">
+                  <div>
                     <div className="flex flex-wrap items-center justify-between gap-1.5">
-                      <span className="inline-flex items-center gap-1 rounded-full bg-[#5ECBC0] px-2.5 py-0.5 font-mono-num text-[10px] font-black tracking-wider text-[#212047] lg:text-xs">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-[#5ECBC0] px-2.5 py-0.5 font-mono-num text-[10px] font-black text-[#212047] lg:text-xs">
                         <span>↔ {topCrossZone.junctionTitle}</span>
                       </span>
                       <span className="rounded-md bg-white/10 px-2 py-0.5 font-mono-num text-[10px] font-extrabold text-[#7ADAD0] lg:text-xs">
-                        涵蓋 {topCrossZone.coveredPhasesCount}/6 階段於 8 席內
+                        {t(
+                          `8 席內涵蓋 ${topCrossZone.coveredPhasesCount}/6 階段`,
+                          `8석 내 ${topCrossZone.coveredPhasesCount}/6 단계 커버`
+                        )}
                       </span>
                     </div>
 
-                    <div className="mt-2 text-lg font-black text-white sm:text-xl lg:text-2xl">
+                    <div className="mt-2.5 text-lg font-black text-white sm:text-2xl">
                       {topCrossZone.combinedRangeLabel}
                     </div>
-                    <div className="mt-1 flex flex-wrap items-center gap-1.5 font-mono-num text-xs font-extrabold text-[#5ECBC0] lg:text-sm">
-                      <span>跨區雙局兼顧：{topCrossZone.coveredSetsLabel}</span>
+                    <div className="mt-1 flex flex-wrap items-center gap-1.5 font-mono-num text-xs font-extrabold text-[#5ECBC0]">
+                      <span>
+                        {t('跨區兼顧：', '연속 커버: ')}
+                        {topCrossZone.coveredSetsLabel}
+                      </span>
                       <span>·</span>
-                      <span>首選核心：{topCrossZone.bestSingleSeatLabel}</span>
+                      <span>
+                        {t('核心席：', '핵심 좌석: ')}
+                        {topCrossZone.bestSingleSeatLabel}
+                      </span>
                     </div>
 
-                    {/* Quick Jump Buttons Ordered by Audience Left-Hand (rightZone 1-7) to Right-Hand (leftZone 17-23) */}
                     <div className="mt-3 grid grid-cols-2 gap-2">
                       <button
                         type="button"
-                        onClick={() => {
-                          if (onJumpToSeatSimulator) {
-                            onJumpToSeatSimulator(
-                              currentMatchSchedule.matchId,
-                              topCrossZone.rightZone,
-                              topCrossZone.rightBestSeat,
-                              activeGirl.id
-                            );
-                          }
-                        }}
-                        className="flex flex-col items-start rounded-xl bg-white/10 px-3 py-2 text-left ring-1 ring-white/20 transition-all hover:bg-[#5BAE84] hover:text-white active:scale-95"
+                        onClick={() =>
+                          onJumpToSeatSimulator?.(
+                            currentMatchSchedule.matchId,
+                            topCrossZone.rightZone,
+                            topCrossZone.rightBestSeat,
+                            activeGirl.id
+                          )
+                        }
+                        className="flex flex-col items-start rounded-xl bg-white/10 px-3 py-2 text-left ring-1 ring-white/20 transition-all hover:bg-[#5BAE84]"
                       >
                         <span className="font-mono-num text-[10px] font-bold text-[#7ADAD0]">
-                          ◀ 左手邊（{topCrossZone.rightZone} 區 {topCrossZone.rightSeatRange[0]}–{topCrossZone.rightSeatRange[1]} 號）
+                          ◀ {topCrossZone.rightZone} 區 {topCrossZone.rightSeatRange[0]}–{topCrossZone.rightSeatRange[1]} 號
                         </span>
-                        <span className="mt-0.5 text-xs font-black text-white lg:text-sm">
-                          模擬 {topCrossZone.rightZone} 區 {topCrossZone.rightBestSeat} 號席 →
+                        <span className="mt-0.5 text-xs font-black text-white">
+                          模擬 {topCrossZone.rightZone}{topCrossZone.rightBestSeat} →
                         </span>
                       </button>
 
                       <button
                         type="button"
-                        onClick={() => {
-                          if (onJumpToSeatSimulator) {
-                            onJumpToSeatSimulator(
-                              currentMatchSchedule.matchId,
-                              topCrossZone.leftZone,
-                              topCrossZone.leftBestSeat,
-                              activeGirl.id
-                            );
-                          }
-                        }}
-                        className="flex flex-col items-start rounded-xl bg-white/10 px-3 py-2 text-left ring-1 ring-white/20 transition-all hover:bg-[#5BAE84] hover:text-white active:scale-95"
+                        onClick={() =>
+                          onJumpToSeatSimulator?.(
+                            currentMatchSchedule.matchId,
+                            topCrossZone.leftZone,
+                            topCrossZone.leftBestSeat,
+                            activeGirl.id
+                          )
+                        }
+                        className="flex flex-col items-start rounded-xl bg-white/10 px-3 py-2 text-left ring-1 ring-white/20 transition-all hover:bg-[#5BAE84]"
                       >
                         <span className="font-mono-num text-[10px] font-bold text-[#7ADAD0]">
-                          右手邊（{topCrossZone.leftZone} 區 {topCrossZone.leftSeatRange[0]}–{topCrossZone.leftSeatRange[1]} 號） ▶
+                          {topCrossZone.leftZone} 區 {topCrossZone.leftSeatRange[0]}–{topCrossZone.leftSeatRange[1]} 號 ▶
                         </span>
-                        <span className="mt-0.5 text-xs font-black text-white lg:text-sm">
-                          模擬 {topCrossZone.leftZone} 區 {topCrossZone.leftBestSeat} 號席 →
+                        <span className="mt-0.5 text-xs font-black text-white">
+                          模擬 {topCrossZone.leftZone}{topCrossZone.leftBestSeat} →
                         </span>
                       </button>
                     </div>
-
-                    {/* Secondary Cross-Zone Junction Option (C小號↔B大號 / B小號↔A大號) */}
-                    {secondaryCrossZone && (
-                      <div className="mt-3 space-y-2 border-t border-white/15 pt-2.5 text-[11px] text-white/75 lg:text-xs">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <div>
-                            <span className="font-bold text-[#7ADAD0]">
-                              另一側跨區（{secondaryCrossZone.junctionTitle}）：
-                            </span>
-                            <span className="font-mono-num font-bold text-white">
-                              {secondaryCrossZone.combinedRangeLabel}
-                            </span>
-                            <span className="ml-1 text-white/60">
-                              （8 席內 {secondaryCrossZone.coveredPhasesCount}/6 階段 · {secondaryCrossZone.coveredSetsLabel}）
-                            </span>
-                          </div>
-                          <div className="flex flex-wrap items-center gap-1.5">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (onJumpToSeatSimulator) {
-                                  onJumpToSeatSimulator(
-                                    currentMatchSchedule.matchId,
-                                    secondaryCrossZone.rightZone,
-                                    secondaryCrossZone.rightBestSeat,
-                                    activeGirl.id
-                                  );
-                                }
-                              }}
-                              className="shrink-0 rounded-full bg-white/15 px-2.5 py-1 font-mono-num text-[10px] font-bold text-[#7ADAD0] hover:bg-[#5BAE84] hover:text-white"
-                            >
-                              模擬 {secondaryCrossZone.rightZone}
-                              {secondaryCrossZone.rightBestSeat} →
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (onJumpToSeatSimulator) {
-                                  onJumpToSeatSimulator(
-                                    currentMatchSchedule.matchId,
-                                    secondaryCrossZone.leftZone,
-                                    secondaryCrossZone.leftBestSeat,
-                                    activeGirl.id
-                                  );
-                                }
-                              }}
-                              className="shrink-0 rounded-full bg-white/15 px-2.5 py-1 font-mono-num text-[10px] font-bold text-[#7ADAD0] hover:bg-[#5BAE84] hover:text-white"
-                            >
-                              模擬 {secondaryCrossZone.leftZone}
-                              {secondaryCrossZone.leftBestSeat} →
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Compact Visual Strategy Legend */}
-              <div className="mt-4 flex flex-wrap items-center gap-1.5 rounded-2xl bg-white/[0.06] px-3 py-2.5 text-[11px] font-bold text-white/85 lg:text-xs">
-                <span className="rounded-md bg-[#5BAE84] px-2 py-0.5 font-mono-num text-[10px] font-black text-white">
-                  破 10 分主力
-                </span>
-                <span>11–25 分佔單局 60% 時長，優先鎖定破 10 分正對區間</span>
-              </div>
-            </div>
-
-            {/* Right 8 Cols: Set 1&4, Set 2&5, Set 3 Detailed Seat Interval & 1-23 Heatmap */}
-            <div className="flex flex-col justify-between gap-4 sm:gap-5 lg:col-span-8">
-              {activeGirlRecommendations.map((rec) => (
-                <div
-                  key={rec.setKey}
-                  className={`rounded-3xl p-3.5 transition-all sm:p-6 ${
-                    rec.setKey === 'set1_4'
-                      ? 'bg-[#F4FAF8] ring-2 ring-[#5BAE84]'
-                      : 'bg-[#F4FAF8]/70 ring-1 ring-[#212047]/10'
-                  }`}
-                >
-                  {/* Top Row: Set Title + Zone Badge */}
-                  <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#212047]/10 pb-3">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span
-                        className={`rounded-full px-3 py-1 font-mono-num text-xs font-extrabold whitespace-nowrap lg:px-3.5 lg:text-sm ${
-                          rec.setKey === 'set1_4'
-                            ? 'bg-[#212047] text-[#7ADAD0]'
-                            : 'bg-[#212047]/10 text-[#212047]'
-                        }`}
-                      >
-                        {rec.setLabel}
-                      </span>
-                      <span className="text-xs font-bold text-[#3F8E67] lg:text-sm">
-                        {rec.priorityBadge}
-                      </span>
-                    </div>
-
-                    <span className="rounded-full bg-[#5BAE84] px-3 py-1 font-mono-num text-xs font-extrabold text-white whitespace-nowrap lg:px-4 lg:text-sm">
-                      2F 集氣 {rec.zone} 區
-                    </span>
                   </div>
 
-                  {/* Middle Row: 3 Interval Breakdown Cards */}
-                  <div className="mt-3.5 grid grid-cols-2 gap-2.5 sm:mt-4 sm:grid-cols-3 sm:gap-3">
-                    <div className="rounded-2xl bg-white p-3 ring-1 ring-[#212047]/10 lg:p-4">
-                      <div className="font-mono-num text-[10px] font-bold text-[#212047]/65 lg:text-xs">
-                        開局 0–10 分 · {rec.initialSlotLabel}
-                      </div>
-                      <div className="mt-1 text-sm font-black text-[#212047] sm:text-base lg:text-lg">
-                        {rec.zone} 區 {rec.initialSeatRange[0]}–
-                        {rec.initialSeatRange[1]} 號
-                      </div>
-                      <div className="mt-0.5 text-[11px] font-semibold text-[#4FA87D] lg:text-xs">
-                        核心 {rec.initialCoreSeats}
-                      </div>
-                    </div>
-
-                    <div className="rounded-2xl bg-[#212047] p-3 text-white lg:p-4">
-                      <div className="font-mono-num text-[10px] font-bold text-[#7ADAD0] lg:text-xs">
-                        破 10 分後 · {rec.after10SlotLabel}
-                      </div>
-                      <div className="mt-1 text-sm font-black text-white sm:text-base lg:text-lg">
-                        {rec.zone} 區 {rec.after10SeatRange[0]}–
-                        {rec.after10SeatRange[1]} 號
-                      </div>
-                      <div className="mt-0.5 text-[11px] font-semibold text-[#7ADAD0] lg:text-xs">
-                        核心 {rec.after10CoreSeats}
-                      </div>
-                    </div>
-
-                    <div className="col-span-2 rounded-2xl bg-[#E6F5F1] p-3 ring-1 ring-[#5BAE84]/40 sm:col-span-1 lg:p-4">
-                      <div className="font-mono-num text-[10px] font-extrabold text-[#3F8E67] lg:text-xs">
-                        區內推薦黃金帶
-                      </div>
-                      <div className="mt-1 text-sm font-black text-[#212047] lg:text-lg">
-                        {rec.sweetSpotLabel}
-                      </div>
-                      <div className="mt-0.5 text-[11px] text-[#212047]/70 lg:text-xs">
-                        兼顧開局與破 10 分視角
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Cross-Zone Adjacent Seat Recommendation Banner (when standing near zone boundary) */}
-                  {rec.crossZoneOption && (
-                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[#5BAE84]/50 bg-[#D5EFE9]/75 px-3 py-2 lg:px-4 lg:py-2.5">
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        <span className="rounded-md bg-[#212047] px-2 py-0.5 font-mono-num text-[10px] font-extrabold text-[#7ADAD0] lg:text-xs">
-                          ↔ 跨區鄰接（{rec.crossZoneOption.boundaryName}）
+                  {secondaryCrossZone && (
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-white/15 pt-2.5 text-[11px] text-white/80">
+                      <div className="min-w-0">
+                        <span className="font-bold text-[#7ADAD0]">
+                          {t('另一側跨區：', '반대편 경계: ')}
                         </span>
-                        <span className="font-mono-num text-xs font-black text-[#212047] lg:text-sm">
-                          {rec.crossZoneOption.label}
+                        <span className="font-mono-num font-bold text-white">
+                          {secondaryCrossZone.combinedRangeLabel}
                         </span>
                       </div>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (onJumpToSeatSimulator && rec.crossZoneOption) {
-                            onJumpToSeatSimulator(
-                              currentMatchSchedule.matchId,
-                              rec.crossZoneOption.adjacentZone,
-                              rec.crossZoneOption.adjacentCoreSeat,
-                              activeGirl.id
-                            );
-                          }
-                        }}
-                        className="shrink-0 rounded-full bg-[#212047] px-3 py-1 font-mono-num text-[11px] font-extrabold text-[#7ADAD0] transition-all hover:bg-[#5BAE84] hover:text-white active:scale-95 lg:text-xs"
-                      >
-                        模擬跨區 {rec.crossZoneOption.adjacentZone} 區{' '}
-                        {rec.crossZoneOption.adjacentCoreSeat} 號席 →
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Bottom Row: 23->1 Audience View Seat Heatmap Bar */}
-                  <div className="mt-4">
-                    <div className="mb-2 flex flex-wrap items-center justify-between gap-1.5 text-[11px] lg:text-xs">
-                      <span className="font-mono-num font-bold text-[#212047]/80">
-                        ▲ 觀眾面向球場視角尺規（◀ 左手邊 23 號 → 右手邊 1 號 ▶，點擊號碼模擬雷達）：
-                      </span>
-                      <div className="flex flex-wrap items-center gap-2.5 text-[10px] font-bold lg:text-xs">
-                        <span className="inline-flex items-center gap-1 text-[#212047]">
-                          <span className="h-2.5 w-2.5 rounded-xs bg-[#212047]" />
-                          破 10 分主力正對席
-                        </span>
-                        <span className="inline-flex items-center gap-1 text-[#3F8E67]">
-                          <span className="h-2.5 w-2.5 rounded-xs bg-[#5BAE84]" />
-                          開局 0–10 分正對席
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Mobile 3-Station Stacked Grid (Fits 100% of Phone Width!) */}
-                    <div className="grid grid-cols-1 gap-1.5 md:hidden">
-                      {MOBILE_SEAT_GROUPS.map((grp) => (
-                        <div
-                          key={grp.label}
-                          className="flex items-center gap-1.5 rounded-xl bg-white/75 p-1.5 ring-1 ring-[#212047]/[0.06]"
-                        >
-                          <span className="w-15 shrink-0 font-mono-num text-[10px] font-bold text-[#212047]/70">
-                            {grp.label}
-                          </span>
-                          <div className={`grid min-w-0 flex-1 ${grp.cols} gap-1`}>
-                            {grp.seats.map((seatNum) => {
-                              const inInit = isSeatInRange(
-                                seatNum,
-                                rec.initialSeatRange
-                              );
-                              const inAfter10 = isSeatInRange(
-                                seatNum,
-                                rec.after10SeatRange
-                              );
-                              const inSweet = isSeatInRange(
-                                seatNum,
-                                rec.sweetSpotRange
-                              );
-
-                              return (
-                                <button
-                                  key={seatNum}
-                                  type="button"
-                                  onClick={() => {
-                                    if (onJumpToSeatSimulator) {
-                                      onJumpToSeatSimulator(
-                                        currentMatchSchedule.matchId,
-                                        rec.zone,
-                                        seatNum,
-                                        activeGirl.id
-                                      );
-                                    }
-                                  }}
-                                  className={`flex items-center justify-center rounded-lg py-1.5 font-mono-num text-[11px] font-extrabold active:scale-95 ${
-                                    inAfter10
-                                      ? 'bg-[#212047] text-[#7ADAD0] ring-1 ring-[#5BAE84]'
-                                      : inInit
-                                        ? 'bg-[#5BAE84] text-white'
-                                        : inSweet
-                                          ? 'bg-[#D5EFE9] text-[#212047]'
-                                          : 'bg-[#F4FAF8] text-[#212047]/35'
-                                  }`}
-                                >
-                                  {seatNum}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Desktop 23-Column Linear Bar */}
-                    <div className="hidden md:grid md:grid-cols-23 md:gap-1">
-                      {SEAT_NUMBERS.map((seatNum) => {
-                        const inInit = isSeatInRange(
-                          seatNum,
-                          rec.initialSeatRange
-                        );
-                        const inAfter10 = isSeatInRange(
-                          seatNum,
-                          rec.after10SeatRange
-                        );
-                        const inSweet = isSeatInRange(
-                          seatNum,
-                          rec.sweetSpotRange
-                        );
-
-                        return (
-                          <button
-                            key={seatNum}
-                            type="button"
-                            onClick={() => {
-                              if (onJumpToSeatSimulator) {
-                                onJumpToSeatSimulator(
-                                  currentMatchSchedule.matchId,
-                                  rec.zone,
-                                  seatNum,
-                                  activeGirl.id
-                                );
-                              }
-                            }}
-                            title={`${rec.zone} 區 ${seatNum} 號席`}
-                            className={`flex flex-col items-center justify-center rounded-lg py-2 font-mono-num text-xs font-extrabold transition-transform hover:scale-105 ${
-                              inAfter10
-                                ? 'bg-[#212047] text-[#7ADAD0] ring-1 ring-[#5BAE84]'
-                                : inInit
-                                  ? 'bg-[#5BAE84] text-white'
-                                  : inSweet
-                                    ? 'bg-[#D5EFE9] text-[#212047] ring-1 ring-[#5BAE84]/50'
-                                    : 'bg-white text-[#212047]/35 ring-1 ring-[#212047]/[0.06]'
-                            }`}
-                          >
-                            <span>{seatNum}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Complete Matrix: Mobile Card Stack + Desktop Table */}
-      <div className="mt-8 rounded-[1.75rem] bg-[#D5EFE9] p-1.5 ring-1 ring-[#5BAE84]/35 sm:mt-10 sm:rounded-[2rem] sm:p-2">
-        <div className="rounded-[calc(1.75rem-0.375rem)] bg-white p-3.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.95)] sm:rounded-[calc(2rem-0.375rem)] sm:p-8">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#212047]/10 pb-4 sm:pb-5">
-            <div>
-              <span className="font-mono-num text-[10px] font-bold tracking-[0.16em] text-[#4FA87D] sm:text-[11px] lg:text-xs">
-                當日全體女孩推薦座位區間總覽
-              </span>
-              <h3 className="mt-1 text-lg font-black text-[#212047] sm:text-2xl lg:text-3xl">
-                {currentMatchSchedule.dateLabel.split(' ')[0]}（對戰{' '}
-                {currentMatchSchedule.opponent}）全體女孩選位速查表
-              </h3>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setOnlyFavoritesInMatrix((prev) => !prev)}
-              className={`flex items-center gap-2 rounded-full px-3.5 py-2 text-xs font-bold transition-all lg:px-4 lg:py-2.5 lg:text-sm ${
-                onlyFavoritesInMatrix
-                  ? 'bg-[#5BAE84] text-white shadow-xs'
-                  : 'bg-[#F4FAF8] text-[#212047] ring-1 ring-[#5BAE84]/35 hover:bg-[#E6F5F1]'
-              }`}
-            >
-              <span>只看「我的主推」</span>
-              <span className="rounded-full bg-[#212047]/15 px-1.5 py-0.2 font-mono-num text-[10px] lg:text-xs">
-                {favoriteIds.length}
-              </span>
-            </button>
-          </div>
-
-          {onlyFavoritesInMatrix && matrixMembers.length === 0 ? (
-            <div className="py-10 text-center">
-              <p className="text-sm font-bold text-[#212047] lg:text-base">
-                你收藏的「我的主推」成員未在此場次的 2F 集氣區輪換名單中，或尚未加入主推成員。
-              </p>
-              <button
-                type="button"
-                onClick={() => setOnlyFavoritesInMatrix(false)}
-                className="mt-3 rounded-full bg-[#212047] px-4 py-2 text-xs font-bold text-white lg:text-sm"
-              >
-                顯示當日全部 {rotatingMembers.length} 位輪換女孩
-              </button>
-            </div>
-          ) : (
-            <>
-              {/* Mobile Dedicated Schedule Cards (No Horizontal Scroll Needed) */}
-              <div className="mt-4 grid grid-cols-1 gap-3 md:hidden">
-                {matrixMembers.map((m) => {
-                  const recs = getGirlSeatRecommendations(
-                    currentMatchSchedule,
-                    m.id
-                  );
-                  const topCross = getCrossZoneGoldenIntervals(
-                    currentMatchSchedule,
-                    m.id
-                  )[0];
-                  const isSelected = m.id === activeGirl.id;
-
-                  return (
-                    <div
-                      key={m.id}
-                      onClick={() => setSelectedGirlId(m.id)}
-                      className={`rounded-2xl p-3 transition-all ${
-                        isSelected
-                          ? 'bg-[#E6F5F1] ring-2 ring-[#5BAE84]'
-                          : 'bg-[#F4FAF8] ring-1 ring-[#212047]/10'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-2 border-b border-[#212047]/10 pb-3">
-                        <div className="flex min-w-0 items-center gap-2.5">
-                          <MemberPortrait
-                            member={m}
-                            variant="avatar"
-                            className="h-12 w-12 shrink-0 rounded-full ring-2 ring-[#5BAE84]/50"
-                          />
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-1.5">
-                              <span className="font-mono-num text-xs font-extrabold text-[#4FA87D]">
-                                #{m.number}
-                              </span>
-                              <span className="truncate text-base font-black text-[#212047]">
-                                {m.name}
-                              </span>
-                            </div>
-                            <a
-                              href={m.instagramUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-[#212047] px-2 py-0.5 font-mono-num text-[10px] font-bold text-[#7ADAD0] hover:bg-[#5BAE84] hover:text-white"
-                            >
-                              <span>IG @{m.instagramHandle} ↗</span>
-                            </a>
-                          </div>
-                        </div>
-
+                      <div className="flex shrink-0 items-center gap-1.5">
                         <button
                           type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedGirlId(m.id);
-                            document
-                              .getElementById('girl-seat-guide-section')
-                              ?.scrollIntoView({ behavior: 'smooth' });
-                          }}
-                          className={`shrink-0 rounded-full px-3 py-1.5 text-xs font-bold whitespace-nowrap ${
-                            isSelected
-                              ? 'bg-[#5BAE84] text-white'
-                              : 'bg-[#212047] text-white'
-                          }`}
+                          onClick={() =>
+                            onJumpToSeatSimulator?.(
+                              currentMatchSchedule.matchId,
+                              secondaryCrossZone.rightZone,
+                              secondaryCrossZone.rightBestSeat,
+                              activeGirl.id
+                            )
+                          }
+                          className="rounded-full bg-white/15 px-2.5 py-0.5 font-mono-num text-[10px] font-bold text-[#7ADAD0] hover:bg-[#5BAE84] hover:text-white"
                         >
-                          {isSelected ? '檢視中' : '查看尺規 ↑'}
+                          {secondaryCrossZone.rightZone}
+                          {secondaryCrossZone.rightBestSeat} →
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onJumpToSeatSimulator?.(
+                              currentMatchSchedule.matchId,
+                              secondaryCrossZone.leftZone,
+                              secondaryCrossZone.leftBestSeat,
+                              activeGirl.id
+                            )
+                          }
+                          className="rounded-full bg-white/15 px-2.5 py-0.5 font-mono-num text-[10px] font-bold text-[#7ADAD0] hover:bg-[#5BAE84] hover:text-white"
+                        >
+                          {secondaryCrossZone.leftZone}
+                          {secondaryCrossZone.leftBestSeat} →
                         </button>
                       </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
 
-                      {topCross && (
-                        <div className="mt-2.5 rounded-xl bg-[#212047] px-3 py-2 text-xs text-white">
-                          <div className="flex flex-wrap items-center justify-between gap-1">
-                            <span className="font-mono-num text-[10px] font-extrabold text-[#7ADAD0]">
-                              ↔ 跨區免換位黃金區間（兼顧 {topCross.coveredSetsLabel}）
-                            </span>
-                            <span className="font-mono-num text-[10px] font-bold text-[#5ECBC0]">
-                              首選 {topCross.bestSingleSeatLabel}
-                            </span>
-                          </div>
-                          <div className="mt-0.5 font-mono-num text-xs font-black text-white">
-                            {topCross.combinedRangeLabel}
-                          </div>
+            {/* Row 2: One-Set-One-Switch EDM Route (Set 1&4 -> Set 2&5 -> Set 3, no 0-10 / >10 clutter) */}
+            <div className="rounded-2xl bg-white/[0.06] p-4 ring-1 ring-white/12 sm:p-5">
+              <div className="flex flex-wrap items-center justify-between gap-2 pb-3">
+                <span className="font-mono-num text-xs font-extrabold tracking-wider text-[#7ADAD0]">
+                  {t(
+                    '🔄 一局一換位黃金路線（依單局最佳 8 席推薦）',
+                    '🔄 세트별 이동 황금 루트 (세트 단위 8석 추천)'
+                  )}
+                </span>
+                <span className="text-[11px] text-white/65">
+                  {t('點選各局可直接於下方雷達預覽位置', '각 세트를 눌러 아래 레이더에서 위치 확인')}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                {recommendations.map((rec) => {
+                  const zoneEmoji =
+                    rec.zone === 'A' ? '🟦' : rec.zone === 'B' ? '🟩' : '🟨';
+                  return (
+                    <div
+                      key={`edm-set-${rec.setKey}`}
+                      className="flex flex-col justify-between rounded-2xl bg-[#181736] p-3.5 ring-1 ring-[#5ECBC0]/30"
+                    >
+                      <div>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="rounded-full bg-[#212047] px-2.5 py-0.5 font-mono-num text-xs font-black text-[#7ADAD0] ring-1 ring-[#5ECBC0]/40">
+                            {rec.setShortLabel}
+                          </span>
+                          <span className="font-mono-num text-xs font-extrabold text-white">
+                            {zoneEmoji} 2F {rec.zone} {t('區', '구역')}
+                          </span>
                         </div>
-                      )}
 
-                      <div className="mt-2 space-y-2">
-                        {recs.map((r, idx) => (
-                          <div
-                            key={r.setKey}
-                            className="flex flex-wrap items-center justify-between gap-1.5 rounded-xl bg-white px-2.5 py-2 text-xs ring-1 ring-[#212047]/[0.06]"
-                          >
-                            <span
-                              className={`rounded-md px-2 py-0.5 font-mono-num text-[10px] font-extrabold whitespace-nowrap ${
-                                idx === 0
-                                  ? 'bg-[#212047] text-[#7ADAD0]'
-                                  : 'bg-[#D5EFE9] text-[#212047]'
-                              }`}
-                            >
-                              {r.setLabel} · {r.zone} 區
-                            </span>
-                            <div className="font-mono-num text-[11px]">
-                              <span className="text-[#212047]/65">
-                                0–10 分 {r.initialSeatRange[0]}–
-                                {r.initialSeatRange[1]} 號
-                              </span>
-                              <span className="mx-1 text-[#212047]/30">|</span>
-                              <strong className="font-extrabold text-[#3F8E67]">
-                                破 10 分 {r.after10SeatRange[0]}–
-                                {r.after10SeatRange[1]} 號
-                              </strong>
-                            </div>
+                        <div className="mt-2.5 text-lg font-black text-[#5ECBC0]">
+                          {rec.sweetSpotLabel}
+                        </div>
+
+                        {rec.crossZoneOption && (
+                          <div className="mt-1.5 rounded-lg bg-[#5BAE84]/20 px-2.5 py-1.5 font-mono-num text-[11px] font-bold text-[#A7F3D0] ring-1 ring-[#5BAE84]/40">
+                            ↔ {t('跨區 8 席可選：', '인접 구역: ')}
+                            {rec.crossZoneOption.adjacentZone} 區{' '}
+                            {rec.crossZoneOption.adjacentSeatRange[0]}–
+                            {rec.crossZoneOption.adjacentSeatRange[1]} 號
                           </div>
-                        ))}
+                        )}
                       </div>
+
+                      {onJumpToSeatSimulator && (() => {
+                        const recSeat = Math.round(
+                          (rec.sweetSpotRange[0] + rec.sweetSpotRange[1]) / 2
+                        );
+                        return (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onJumpToSeatSimulator(
+                              currentMatchSchedule.matchId,
+                              rec.zone,
+                              recSeat,
+                              activeGirl.id
+                            )
+                          }
+                          className="mt-3 inline-flex items-center justify-center gap-1 rounded-xl bg-white/10 px-3 py-1.5 font-mono-num text-xs font-extrabold text-[#7ADAD0] transition-colors hover:bg-[#5BAE84] hover:text-white"
+                        >
+                          <span>
+                            {t(
+                              `模擬 ${rec.zone}${recSeat} 席 →`,
+                              `${rec.zone}${recSeat}석 보기 →`
+                            )}
+                          </span>
+                        </button>
+                        );
+                      })()}
                     </div>
                   );
                 })}
               </div>
-
-              {/* Desktop Full Table */}
-              <div className="mt-6 hidden overflow-x-auto md:block">
-                <table className="w-full min-w-[920px] border-collapse text-left">
-                  <thead>
-                    <tr className="border-b border-[#212047]/10 font-mono-num text-xs font-extrabold tracking-[0.14em] text-[#212047]/60 lg:text-sm">
-                      <th className="py-3 pr-4">女孩成員</th>
-                      <th className="px-3 py-3 text-[#3F8E67]">
-                        ↔ 跨區免換位黃金區間（雙區多局兼顧）
-                      </th>
-                      <th className="px-3 py-3">
-                        ★ 首選主戰區（第 1 &amp; 4 局）
-                      </th>
-                      <th className="px-3 py-3">
-                        ◆ 次選推薦區（第 2 &amp; 5 局）
-                      </th>
-                      <th className="px-3 py-3">● 第三局必打區（第 3 局）</th>
-                      <th className="py-3 pl-3 text-right">攻略詳情</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[#212047]/[0.08] text-xs lg:text-sm">
-                    {matrixMembers.map((m) => {
-                      const recs = getGirlSeatRecommendations(
-                        currentMatchSchedule,
-                        m.id
-                      );
-                      const topCross = getCrossZoneGoldenIntervals(
-                        currentMatchSchedule,
-                        m.id
-                      )[0];
-                      const r1 = recs.find((r) => r.setKey === 'set1_4');
-                      const r2 = recs.find((r) => r.setKey === 'set2_5');
-                      const r3 = recs.find((r) => r.setKey === 'set3');
-                      const isSelected = m.id === activeGirl.id;
-
-                      return (
-                        <tr
-                          key={m.id}
-                          onClick={() => setSelectedGirlId(m.id)}
-                          className={`cursor-pointer transition-colors ${
-                            isSelected
-                              ? 'bg-[#E6F5F1]/80'
-                              : 'hover:bg-[#F4FAF8]'
-                          }`}
-                        >
-                          <td className="py-4 pr-4">
-                            <div className="flex items-center gap-3">
-                              <MemberPortrait
-                                member={m}
-                                variant="avatar"
-                                className="h-12 w-12 shrink-0 rounded-full ring-1 ring-[#5BAE84]/40 lg:h-14 lg:w-14"
-                              />
-                              <div>
-                                <div className="flex items-center gap-1.5">
-                                  <span className="font-mono-num text-xs font-extrabold text-[#4FA87D] lg:text-sm">
-                                    #{m.number}
-                                  </span>
-                                  <span className="text-sm font-black text-[#212047] lg:text-base">
-                                    {m.name}
-                                  </span>
-                                </div>
-                                <a
-                                  href={m.instagramUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="mt-1 inline-flex items-center gap-1 rounded-full bg-[#212047] px-2.5 py-0.5 font-mono-num text-[11px] font-bold text-[#7ADAD0] transition-colors hover:bg-[#5BAE84] hover:text-white lg:text-xs"
-                                >
-                                  <span>IG @{m.instagramHandle} ↗</span>
-                                </a>
-                              </div>
-                            </div>
-                          </td>
-
-                          <td className="px-3 py-4">
-                            {topCross && (
-                              <div className="rounded-xl bg-[#212047] px-3 py-2 text-white">
-                                <div className="font-mono-num text-xs font-black text-[#5ECBC0] lg:text-sm">
-                                  {topCross.combinedRangeLabel}
-                                </div>
-                                <div className="mt-0.5 font-mono-num text-[11px] text-white/80 lg:text-xs">
-                                  兼顧 {topCross.coveredSetsLabel} · 首選{' '}
-                                  <strong className="text-[#7ADAD0]">
-                                    {topCross.bestSingleSeatLabel}
-                                  </strong>
-                                </div>
-                              </div>
-                            )}
-                          </td>
-
-                          {[r1, r2, r3].map((r, idx) => (
-                            <td key={idx} className="px-3 py-4">
-                              {r && (
-                                <div>
-                                  <div className="flex items-center gap-1.5">
-                                    <span
-                                      className={`rounded-md px-2 py-0.5 font-mono-num text-[11px] font-extrabold lg:text-xs ${
-                                        idx === 0
-                                          ? 'bg-[#212047] text-[#7ADAD0]'
-                                          : 'bg-[#D5EFE9] text-[#212047]'
-                                      }`}
-                                    >
-                                      {r.zone} 區
-                                    </span>
-                                    <span className="font-bold text-[#212047] lg:text-base">
-                                      推薦 {r.sweetSpotRange[0]}–
-                                      {r.sweetSpotRange[1]} 號
-                                    </span>
-                                  </div>
-                                  <div className="mt-1 font-mono-num text-[11px] text-[#212047]/65 lg:text-xs">
-                                    0–10 分：{r.initialSeatRange[0]}–
-                                    {r.initialSeatRange[1]} 號 ｜ 破 10 分：
-                                    <strong className="text-[#3F8E67]">
-                                      {r.after10SeatRange[0]}–
-                                      {r.after10SeatRange[1]} 號
-                                    </strong>
-                                  </div>
-                                </div>
-                              )}
-                            </td>
-                          ))}
-
-                          <td className="py-4 pl-4 text-right">
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedGirlId(m.id);
-                                document
-                                  .getElementById('girl-seat-guide-section')
-                                  ?.scrollIntoView({ behavior: 'smooth' });
-                              }}
-                              className={`rounded-full px-3.5 py-1.5 font-bold transition-colors lg:px-4 lg:py-2 ${
-                                isSelected
-                                  ? 'bg-[#5BAE84] text-white'
-                                  : 'bg-[#212047]/[0.06] text-[#212047] hover:bg-[#212047] hover:text-white'
-                              }`}
-                            >
-                              {isSelected ? '檢視中' : '查看尺規 ↑'}
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </>
-          )}
-
-          {/* Special Note for MC (#25 心璇) & Cheer Leader (#41 馬妹) & Court Performances (Compact Visual Pills) */}
-          <div className="mt-6 grid grid-cols-1 gap-3 border-t border-[#212047]/10 pt-5 md:grid-cols-2">
-            <div className="flex flex-wrap items-center justify-between gap-2.5 rounded-2xl bg-[#F4FAF8] p-3 ring-1 ring-[#5BAE84]/30 sm:px-4">
-              <div>
-                <div className="font-mono-num text-[10px] font-extrabold tracking-[0.14em] text-[#4FA87D] lg:text-xs">
-                  團長與主持核心視野
-                </div>
-                <div className="mt-0.5 text-xs font-black text-[#212047] sm:text-sm">
-                  1F 場邊舞台 ＆ 2F 中央 B 區
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {mcAndLeaderMembers.map((m) => (
-                  <button
-                    key={m.id}
-                    type="button"
-                    onClick={() => onOpenMemberDetail(m)}
-                    className="flex items-center gap-1.5 rounded-full bg-white py-1 pr-2.5 pl-1 ring-1 ring-[#212047]/10 transition-colors hover:ring-[#5BAE84]"
-                  >
-                    <MemberPortrait
-                      member={m}
-                      variant="avatar"
-                      className="h-7 w-7 rounded-full"
-                    />
-                    <span className="font-mono-num text-[10px] font-bold text-[#4FA87D]">
-                      #{m.number}
-                    </span>
-                    <span className="text-xs font-extrabold text-[#212047]">
-                      {m.name}
-                    </span>
-                  </button>
-                ))}
-              </div>
             </div>
 
-            <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-[#212047] p-3 text-white sm:px-4">
-              <div>
-                <div className="font-mono-num text-[10px] font-extrabold tracking-[0.14em] text-[#7ADAD0] lg:text-xs">
-                  場中央演出拍攝方位
-                </div>
-                <div className="mt-0.5 text-xs font-black text-white sm:text-sm">
-                  開場舞 · 中場演出 · 2F 拍攝區
-                </div>
-              </div>
-              <div className="flex flex-wrap gap-1.5 font-mono-num text-[10px] font-bold">
-                <span className="rounded-full bg-white/12 px-2.5 py-1 text-[#7ADAD0]">
-                  開場舞：1F 精武區 ▶
-                </span>
-                <span className="rounded-full bg-white/12 px-2.5 py-1 text-[#7ADAD0]">
-                  ◀ 中場：1F 力行區
-                </span>
-                <span className="rounded-full bg-[#5BAE84] px-2.5 py-1 text-white">
-                  ▲ 南側 2F 拍攝限定區
-                </span>
-              </div>
+            {/* Row 3: Member Station Copy Box */}
+            <MemberScheduleCopyBox
+              member={activeGirl}
+              activeMatchId={currentMatchSchedule.matchId}
+              variant="dark"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Special Note for MC & Cheer Leader & Court Performances */}
+      <div className="mt-5 grid grid-cols-1 gap-3 md:grid-cols-2">
+        <div className="flex flex-wrap items-center justify-between gap-2.5 rounded-2xl bg-[#F4FAF8] p-3 ring-1 ring-[#5BAE84]/30 sm:px-4">
+          <div>
+            <div className="font-mono-num text-[10px] font-extrabold tracking-[0.14em] text-[#4FA87D] lg:text-xs">
+              {t('團長與主持核心視野', '단장 및 MC 핵심 시야')}
             </div>
+            <div className="mt-0.5 text-xs font-black text-[#212047] sm:text-sm">
+              1F 場邊舞台 ＆ 2F 中央 B 區
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {mcAndLeaderMembers.map((m) => (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => onOpenMemberDetail(m)}
+                className="flex items-center gap-1.5 rounded-full bg-white py-1 pr-2.5 pl-1 ring-1 ring-[#212047]/10 transition-colors hover:ring-[#5BAE84]"
+              >
+                <MemberPortrait
+                  member={m}
+                  variant="avatar"
+                  className="h-7 w-7 rounded-full"
+                />
+                <span className="font-mono-num text-[10px] font-bold text-[#4FA87D]">
+                  #{m.number}
+                </span>
+                <span className="text-xs font-extrabold text-[#212047]">
+                  {getMemberName(m)}
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl bg-[#212047] p-3 text-white sm:px-4">
+          <div>
+            <div className="font-mono-num text-[10px] font-extrabold tracking-[0.14em] text-[#7ADAD0] lg:text-xs">
+              {t('場中央演出拍攝方位', '코트 중앙 공연 촬영 방향')}
+            </div>
+            <div className="mt-0.5 text-xs font-black text-white sm:text-sm">
+              開場舞 · 中場演出 · 2F 拍攝區
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-1.5 font-mono-num text-[10px] font-bold">
+            <span className="rounded-full bg-white/12 px-2.5 py-1 text-[#7ADAD0]">
+              開場舞：1F 精武區 ▶
+            </span>
+            <span className="rounded-full bg-white/12 px-2.5 py-1 text-[#7ADAD0]">
+              ◀ 中場：1F 力行區
+            </span>
+            <span className="rounded-full bg-[#5BAE84] px-2.5 py-1 text-white">
+              ▲ 南側 2F 拍攝限定區
+            </span>
           </div>
         </div>
       </div>
