@@ -1756,15 +1756,21 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                             }`}
                           >
                             <div>
-                              <div className="mb-1 flex items-center justify-between gap-1">
+                              <div className="mb-1 flex items-center justify-center">
                                 <span
-                                  className={`truncate rounded-full px-1.5 py-0.5 font-mono-num text-[9px] font-extrabold ${
+                                  className={`max-w-full truncate rounded-full px-1.5 py-0.5 font-mono-num text-[9px] font-extrabold whitespace-nowrap ${
                                     st.isDirectFront
                                       ? 'bg-[#5BAE84] text-white'
-                                      : 'bg-[#E6F5F1] text-[#3F8E67]'
+                                      : st.isWithin12Seats
+                                        ? 'bg-[#212047] text-[#5ECBC0]'
+                                        : 'bg-[#E6F5F1] text-[#3F8E67]'
                                   }`}
                                 >
-                                  {st.relativeBadge}
+                                  {st.isDirectFront
+                                    ? t('★ 正對你', '★ 정면')
+                                    : st.signedOffset < 0
+                                      ? `◀ ${t('左', '좌')}${st.seatsDiff}${t('席', '석')}`
+                                      : `${t('右', '우')}${st.seatsDiff}${t('席', '석')} ▶`}
                                 </span>
                               </div>
 
@@ -1785,7 +1791,7 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                                 />
                                 {isTargetOshi && (
                                   <span className="absolute right-1 bottom-1 rounded-full bg-[#212047]/90 px-1.5 py-0.5 font-mono-num text-[8px] font-black text-[#5ECBC0] ring-1 ring-[#5ECBC0]">
-                                    ★ 主推
+                                    ★ {t('主推', '최애')}
                                   </span>
                                 )}
                               </button>
@@ -1793,7 +1799,7 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
 
                             <div className="mt-1.5 text-center">
                               <div className="truncate text-xs font-black sm:text-sm">
-                                {m.name}
+                                {getMemberName(m)}
                               </div>
                               <div
                                 className={`truncate font-mono-num text-[9px] font-bold ${
@@ -1802,7 +1808,7 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                                     : 'text-[#212047]/65'
                                 }`}
                               >
-                                {st.seatsLabel}
+                                {st.seatsLabel.replace(/^[ABC]\s*區\s*/, '')}
                               </div>
 
                               <div className="mt-1.5 flex items-center justify-center gap-1">
@@ -1811,9 +1817,9 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   onClick={(e) => e.stopPropagation()}
-                                  className="rounded-full bg-[#5BAE84] px-2 py-0.5 font-mono-num text-[9px] font-black text-white transition-colors hover:bg-[#3F8E67]"
+                                  className="shrink-0 rounded-full bg-[#5BAE84] px-2 py-0.5 font-mono-num text-[9px] font-black whitespace-nowrap text-white transition-colors hover:bg-[#3F8E67]"
                                 >
-                                  IG ↗
+                                  IG↗
                                 </a>
                                 {!st.isDirectFront && (
                                   <button
@@ -1821,9 +1827,9 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                                     onClick={() =>
                                       setSelectedSeat(st.coreSeat)
                                     }
-                                    className="rounded-full bg-[#E6F5F1] px-2 py-0.5 font-mono-num text-[9px] font-bold text-[#3F8E67] hover:bg-[#5BAE84] hover:text-white"
+                                    className="shrink-0 rounded-full bg-[#E6F5F1] px-2 py-0.5 font-mono-num text-[9px] font-bold whitespace-nowrap text-[#3F8E67] hover:bg-[#5BAE84] hover:text-white"
                                   >
-                                    坐 {st.coreSeat}
+                                    {t(`坐${st.coreSeat}`, `${st.coreSeat}석`)}
                                   </button>
                                 )}
                               </div>
@@ -1833,24 +1839,35 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                       })}
                   </div>
 
-                  {/* Compact Adjacent-Zone Neighbor Row Matching Top Row Size (Zero Verbose Text) */}
-                  <div className="mt-2 grid grid-cols-2 gap-2">
-                    {frontHorizonStations
-                      .filter((st) => st.isAdjacentZone)
-                      .map((st) => {
+                  {/* Compact Adjacent-Zone Neighbor Row (1-col when 1 neighbor, 2-col on sm+ or when 2 neighbors) */}
+                  {(() => {
+                    const adjStations = frontHorizonStations.filter(
+                      (st) => st.isAdjacentZone
+                    );
+                    return (
+                  <div
+                    className={`mt-2 grid gap-2 ${
+                      adjStations.length === 1 ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'
+                    }`}
+                  >
+                    {adjStations.map((st) => {
                         const m = st.member;
                         const isTargetOshi = m.id === activeOshi.id;
+                        const adjDistText =
+                          st.signedOffset < 0
+                            ? `◀ ${t('左前', '좌')}${st.seatsDiff}${t('席', '석')}`
+                            : `${t('右前', '우')}${st.seatsDiff}${t('席', '석')} ▶`;
 
                         return (
                           <div
                             key={`mob-adj-${st.zone}-${st.slotIndex}-${m.id}`}
-                            className={`flex items-center justify-between gap-2 rounded-2xl p-2 transition-all ${
+                            className={`flex min-w-0 items-center justify-between gap-2 overflow-hidden rounded-2xl p-2 transition-all ${
                               st.isWithin12Seats
                                 ? 'bg-[#212047] text-white ring-1 ring-[#5BAE84]'
                                 : 'bg-white text-[#212047] ring-1 ring-[#212047]/15'
                             }`}
                           >
-                            <div className="flex min-w-0 items-center gap-2">
+                            <div className="flex min-w-0 flex-1 items-center gap-2">
                               <button
                                 type="button"
                                 onClick={() => onOpenMemberDetail(m)}
@@ -1868,19 +1885,19 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                                 )}
                               </button>
 
-                              <div className="min-w-0">
-                                <div className="flex items-center gap-1">
+                              <div className="min-w-0 flex-1">
+                                <div className="flex flex-wrap items-center gap-1">
                                   <span className="truncate text-xs font-black">
-                                    {m.name}
+                                    {getMemberName(m)}
                                   </span>
                                   <span
-                                    className={`shrink-0 rounded-full px-1.5 py-0.2 font-mono-num text-[9px] font-extrabold ${
+                                    className={`shrink-0 rounded-full px-1.5 py-0.2 font-mono-num text-[9px] font-extrabold whitespace-nowrap ${
                                       st.isWithin12Seats
                                         ? 'bg-[#5BAE84] text-white'
                                         : 'bg-[#E6F5F1] text-[#3F8E67]'
                                     }`}
                                   >
-                                    {st.relativeBadge}
+                                    {adjDistText}
                                   </span>
                                 </div>
                                 <div
@@ -1890,7 +1907,7 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                                       : 'text-[#212047]/65'
                                   }`}
                                 >
-                                  ↔ 鄰區 {st.seatsLabel}
+                                  ↔ {t('鄰區', '인접')} {st.seatsLabel}
                                 </div>
                               </div>
                             </div>
@@ -1901,9 +1918,9 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 onClick={(e) => e.stopPropagation()}
-                                className="rounded-full bg-[#5BAE84] px-2 py-0.5 font-mono-num text-[9px] font-black text-white transition-colors hover:bg-[#3F8E67]"
+                                className="shrink-0 rounded-full bg-[#5BAE84] px-2 py-0.5 font-mono-num text-[9px] font-black whitespace-nowrap text-white transition-colors hover:bg-[#3F8E67]"
                               >
-                                IG ↗
+                                IG↗
                               </a>
                               <button
                                 type="button"
@@ -1911,7 +1928,7 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                                   setSelectedZone(st.zone);
                                   setSelectedSeat(st.coreSeat);
                                 }}
-                                className={`rounded-full px-2 py-0.5 font-mono-num text-[9px] font-bold transition-colors ${
+                                className={`shrink-0 rounded-full px-2 py-0.5 font-mono-num text-[9px] font-bold whitespace-nowrap transition-colors ${
                                   st.isWithin12Seats
                                     ? 'bg-white/15 text-[#7ADAD0] hover:bg-white/25'
                                     : 'bg-[#212047] text-[#7ADAD0] hover:bg-[#3F8E67] hover:text-white'
@@ -1925,6 +1942,8 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                         );
                       })}
                   </div>
+                    );
+                  })()}
                 </div>
               </div>
 
