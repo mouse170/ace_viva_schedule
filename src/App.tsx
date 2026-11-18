@@ -522,14 +522,14 @@ export const App: React.FC = () => {
         >
           <a
             href="#roster-section"
-            className="flex flex-1 items-center justify-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-extrabold text-white whitespace-nowrap transition-colors hover:bg-white/20 active:bg-[#5BAE84] sm:flex-initial sm:px-3 sm:py-1.5 sm:text-xs"
+            className="flex flex-1 items-center justify-center gap-0.5 rounded-full bg-white/10 px-1.5 py-1 text-[10px] font-extrabold text-white whitespace-nowrap transition-colors hover:bg-white/20 active:bg-[#5BAE84] sm:flex-initial sm:gap-1 sm:px-3 sm:py-1.5 sm:text-xs"
           >
             <svg
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
               strokeWidth="2.2"
-              className="h-3.5 w-3.5 shrink-0 text-[#7ADAD0]"
+              className="h-3 w-3 shrink-0 text-[#7ADAD0] sm:h-3.5 sm:w-3.5"
               aria-hidden="true"
             >
               <rect x="3" y="3" width="7" height="7" rx="1.5" />
@@ -537,56 +537,72 @@ export const App: React.FC = () => {
               <rect x="3" y="14" width="7" height="7" rx="1.5" />
               <rect x="14" y="14" width="7" height="7" rx="1.5" />
             </svg>
-            <span>{t('成員圖鑑', '멤버')}</span>
+            <span>{t('圖鑑', '멤버')}</span>
           </a>
           <a
             href="#girl-seat-guide-section"
-            className="flex flex-1 items-center justify-center gap-1 rounded-full bg-[#5BAE84] px-2.5 py-1 text-[11px] font-extrabold text-white whitespace-nowrap shadow-2xs transition-colors hover:bg-[#4FA87D] active:bg-[#3F8E67] sm:flex-initial sm:px-3 sm:py-1.5 sm:text-xs"
+            className="flex flex-1 items-center justify-center gap-0.5 rounded-full bg-[#5BAE84] px-1.5 py-1 text-[10px] font-extrabold text-white whitespace-nowrap shadow-2xs transition-colors hover:bg-[#4FA87D] active:bg-[#3F8E67] sm:flex-initial sm:gap-1 sm:px-3 sm:py-1.5 sm:text-xs"
           >
             <svg
               viewBox="0 0 24 24"
               fill="currentColor"
-              className="h-3.5 w-3.5 shrink-0 text-white"
+              className="h-3 w-3 shrink-0 text-white sm:h-3.5 sm:w-3.5"
               aria-hidden="true"
             >
               <path d="M12 2.75l2.76 5.59 6.17.9-4.46 4.35 1.05 6.15L12 16.83l-5.52 2.91 1.05-6.15-4.46-4.35 6.17-.9L12 2.75z" />
             </svg>
-            <span>{t('女孩選位', '추천')}</span>
+            <span>{t('選位', '추천')}</span>
           </a>
           <a
             href="#seat-finder-section"
-            className="flex flex-1 items-center justify-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-extrabold text-[#7ADAD0] whitespace-nowrap ring-1 ring-[#5ECBC0]/35 transition-colors hover:bg-white/20 active:bg-[#5BAE84] active:text-white sm:flex-initial sm:px-3 sm:py-1.5 sm:text-xs"
+            className="flex flex-1 items-center justify-center gap-0.5 rounded-full bg-white/10 px-1.5 py-1 text-[10px] font-extrabold text-[#7ADAD0] whitespace-nowrap ring-1 ring-[#5ECBC0]/35 transition-colors hover:bg-white/20 active:bg-[#5BAE84] active:text-white sm:flex-initial sm:gap-1 sm:px-3 sm:py-1.5 sm:text-xs"
           >
             <svg
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
               strokeWidth="2.2"
-              className="h-3.5 w-3.5 shrink-0 text-[#5ECBC0]"
+              className="h-3 w-3 shrink-0 text-[#5ECBC0] sm:h-3.5 sm:w-3.5"
               aria-hidden="true"
             >
               <circle cx="12" cy="12" r="8" />
               <circle cx="12" cy="12" r="3" />
               <path d="M12 2v2M12 20v2M2 12h2M20 12h2" strokeLinecap="round" />
             </svg>
-            <span>{t('座位雷達', '레이더')}</span>
+            <span>{t('雷達', '레이더')}</span>
           </a>
           <a
-            href="#schedule-section"
-            className="flex flex-1 items-center justify-center gap-1 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-extrabold text-white whitespace-nowrap transition-colors hover:bg-white/20 active:bg-[#5BAE84] sm:flex-initial sm:px-3 sm:py-1.5 sm:text-xs"
+            href="#theme-event-section"
+            className="flex flex-1 items-center justify-center gap-0.5 rounded-full bg-amber-400/20 px-1.5 py-1 text-[10px] font-extrabold text-amber-200 whitespace-nowrap ring-1 ring-amber-300/45 transition-colors hover:bg-amber-400 hover:text-[#212047] sm:flex-initial sm:gap-1 sm:px-3 sm:py-1.5 sm:text-xs"
           >
             <svg
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
               strokeWidth="2.2"
-              className="h-3.5 w-3.5 shrink-0 text-[#7ADAD0]"
+              className="h-3 w-3 shrink-0 text-amber-300 sm:h-3.5 sm:w-3.5"
+              aria-hidden="true"
+            >
+              <path d="M12 3l2.4 5 5.6.8-4 3.9.9 5.5L12 15.6 7.1 18.2l.9-5.5-4-3.9 5.6-.8L12 3z" strokeLinejoin="round" />
+            </svg>
+            <span>{t('主題日', '테마')}</span>
+          </a>
+          <a
+            href="#schedule-section"
+            className="flex flex-1 items-center justify-center gap-0.5 rounded-full bg-white/10 px-1.5 py-1 text-[10px] font-extrabold text-white whitespace-nowrap transition-colors hover:bg-white/20 active:bg-[#5BAE84] sm:flex-initial sm:gap-1 sm:px-3 sm:py-1.5 sm:text-xs"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              className="h-3 w-3 shrink-0 text-[#7ADAD0] sm:h-3.5 sm:w-3.5"
               aria-hidden="true"
             >
               <rect x="3" y="5" width="18" height="16" rx="2" />
               <path d="M16 3v4M8 3v4M3 10h18" strokeLinecap="round" />
             </svg>
-            <span>{t('應援班表', '일정')}</span>
+            <span>{t('班表', '일정')}</span>
           </a>
         </nav>
       </div>
@@ -612,6 +628,12 @@ export const App: React.FC = () => {
                 <span>{t('啦啦隊介紹與成軍誌要', '팀 소개 및 히스토리')}</span>
                 <span>↗</span>
               </button>
+              <a
+                href="#theme-event-section"
+                className="inline-flex items-center gap-1 rounded-full bg-[#5BAE84] px-3 py-1 text-[11px] font-extrabold text-white shadow-2xs transition-colors hover:bg-[#3F8E67] lg:text-xs"
+              >
+                <span>{t('11/21–22 致青春主題日 & 賽前活動 ↓', '11/21–22 테마 이벤트 & 사인회 ↓')}</span>
+              </a>
             </div>
             <h1 className="mt-2 text-2xl font-black tracking-tight text-[#212047] sm:mt-2.5 sm:text-5xl">
               {t('連莊女孩全體成員應援圖鑑', 'ACE VIVA 전체 멤버 응원 도감')}
