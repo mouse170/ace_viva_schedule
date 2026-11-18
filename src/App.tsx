@@ -11,6 +11,7 @@ import { MemberDetailDialog } from './components/MemberDetailDialog';
 import { GirlSeatRecommendationSection } from './components/GirlSeatRecommendationSection';
 import { SeatFinderSection } from './components/SeatFinderSection';
 import { ScheduleSection } from './components/ScheduleSection';
+import { ThemeEventSection } from './components/ThemeEventSection';
 import { ZodiacIcon, isCurrentMonthBirthday } from './components/ZodiacIcon';
 import { MEMBER_KO_NAMES, useLanguage } from './i18n/LanguageContext';
 import {
@@ -426,6 +427,12 @@ export const App: React.FC = () => {
               className="rounded-full bg-[#5BAE84]/20 px-3.5 py-1.5 text-sm font-extrabold text-[#7ADAD0] whitespace-nowrap ring-1 ring-[#5ECBC0]/35 transition-colors hover:bg-[#5BAE84] hover:text-white xl:text-base"
             >
               {t('23 席面前女孩查詢', '23석 좌석 조회')}
+            </a>
+            <a
+              href="#theme-event-section"
+              className="rounded-full px-3.5 py-1.5 text-sm font-semibold text-[#7ADAD0] whitespace-nowrap transition-colors hover:bg-white/10 hover:text-white xl:text-base"
+            >
+              {t('主題活動', '테마 이벤트')}
             </a>
             <a
               href="#schedule-section"
@@ -1192,6 +1199,9 @@ export const App: React.FC = () => {
         onSeatChange={setCurrentUserSeat}
         onOpenMemberDetail={(m) => setSelectedMember(m)}
       />
+
+      {/* Theme Week & Pre-Game Event Guide Section */}
+      <ThemeEventSection onOpenMemberDetail={(m) => setSelectedMember(m)} />
 
       {/* Bidirectional Home Match Attendance Schedule Section */}
       <ScheduleSection
