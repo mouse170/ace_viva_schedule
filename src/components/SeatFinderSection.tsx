@@ -6,6 +6,7 @@ import {
   CLOSEST_STATION_SCHEDULE,
   findGirlPhaseDistance,
   getFullMatchGirlDistanceSummary,
+  getMultiFavoriteTopSeats,
   getSeatPositionMapping,
   getZoneSlotIndexForSeat,
   type AceZoneId,
@@ -237,6 +238,11 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
   }, [targetOshiId, rotatingMemberIds, favoriteIds]);
 
   const activeOshi = memberMap.get(activeOshiId) ?? sortedRotatingMembers[0];
+
+  const multiFavTopSeats = useMemo(
+    () => getMultiFavoriteTopSeats(currentMatchSchedule, favoriteIds, 3),
+    [currentMatchSchedule, favoriteIds]
+  );
 
   const currentSetArrangement = useMemo(
     () =>
@@ -1007,6 +1013,37 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                   <span className="hidden rounded-full bg-white/10 px-2.5 py-0.5 font-mono-num text-[10px] font-bold text-white/75 sm:inline-block">
                     {t('◀ 左 C23 · ▲ 往前看 · 右 A1 ▶', '◀ 좌 C23 · ▲ 정면 · 우 A1 ▶')}
                   </span>
+                  {multiFavTopSeats.length > 0 && (
+                    <div className="flex items-center gap-1">
+                      {multiFavTopSeats.map((item) => {
+                        const isCurrentTop =
+                          selectedZone === item.zone &&
+                          selectedSeat === item.seat;
+                        return (
+                          <button
+                            key={`radar-top-${item.rank}-${item.zone}-${item.seat}`}
+                            type="button"
+                            onClick={() => {
+                              setSelectedZone(item.zone);
+                              setSelectedSeat(item.seat);
+                            }}
+                            title={t(
+                              `多主推綜合 #${item.rank}：${item.zone} 區 ${item.seat} 號（涵蓋 ${item.uniqueFavsCovered} 位主推）`,
+                              `다중 최애 #${item.rank}: ${item.zone}${item.seat} (${item.uniqueFavsCovered}명)`
+                            )}
+                            className={`rounded-full px-2 py-0.5 font-mono-num text-[10px] font-black whitespace-nowrap transition-all ${
+                              isCurrentTop
+                                ? 'bg-[#5ECBC0] text-[#212047] ring-1 ring-white'
+                                : 'bg-white/12 text-[#7ADAD0] hover:bg-[#5BAE84] hover:text-white'
+                            }`}
+                          >
+                            {item.rank === 1 ? '🏆' : `#${item.rank}`} {item.zone}
+                            {item.seat}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
 
                 {/* Quick Set & 10-Point Phase Switcher Controls (Single-line concise labels) */}

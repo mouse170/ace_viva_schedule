@@ -5,6 +5,7 @@ import {
   CLOSEST_STATION_SCHEDULE,
   getGirlSeatRecommendations,
   getCrossZoneGoldenIntervals,
+  getMultiFavoriteTopSeats,
   type AceZoneId,
   type GirlSetZoneRecommendation,
   type CrossZoneGoldenInterval,
@@ -40,6 +41,10 @@ export const GirlSeatRecommendationSection: React.FC<
     useState<boolean>(false);
   const [strategyModalMode, setStrategyModalMode] =
     useState<StrategyCardMode>('zone_hopping');
+  const [strategyModalSeat, setStrategyModalSeat] = useState<{
+    zone: AceZoneId;
+    seat: number;
+  } | null>(null);
 
   const memberMap = useMemo(() => {
     const map = new Map<string, AceVivaMember>();
@@ -103,6 +108,11 @@ export const GirlSeatRecommendationSection: React.FC<
   const secondaryCrossZone: CrossZoneGoldenInterval | undefined =
     crossZoneIntervals[1];
 
+  const multiFavTopSeats = useMemo(
+    () => getMultiFavoriteTopSeats(currentMatchSchedule, favoriteIds, 3),
+    [currentMatchSchedule, favoriteIds]
+  );
+
   return (
     <section
       id="girl-seat-guide-section"
@@ -149,6 +159,163 @@ export const GirlSeatRecommendationSection: React.FC<
           </div>
         </div>
       </div>
+
+      {/* Multi-Favorite Combined Top 3 Seats Card (Auto-shown when >= 2 favorites are on duty) */}
+      {multiFavTopSeats.length > 0 && (
+        <div className="mt-6 rounded-[1.75rem] bg-[#D5EFE9] p-1.5 ring-1 ring-[#5BAE84]/35 sm:mt-8 sm:rounded-[2rem] sm:p-2">
+          <div className="rounded-[calc(1.75rem-0.375rem)] bg-[#212047] p-4 text-white shadow-lg sm:rounded-[calc(2rem-0.375rem)] sm:p-6">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/15 pb-3.5">
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="rounded-full bg-[#5ECBC0] px-2.5 py-0.5 font-mono-num text-[10px] font-black text-[#212047] lg:text-xs">
+                    {t('🏆 多主推綜合選位 Top 3', '🏆 다중 최애 종합 좌석 Top 3')}
+                  </span>
+                  <span className="font-mono-num text-[11px] font-bold text-[#7ADAD0]">
+                    {t(
+                      `已分析 ${multiFavTopSeats[0].totalFavsOnDuty} 位當日輪替主推 · 8 席黃金區`,
+                      `당일 출석 최애 ${multiFavTopSeats[0].totalFavsOnDuty}명 분석 · 8석 황금 구간`
+                    )}
+                  </span>
+                </div>
+                <h3 className="mt-1.5 text-lg font-black text-white sm:text-2xl">
+                  {t(
+                    '一次看最多主推的黃金座位排行',
+                    '최애 멤버를 가장 많이 볼 수 있는 추천 좌석'
+                  )}
+                </h3>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setStrategyModalSeat({
+                    zone: multiFavTopSeats[0].zone,
+                    seat: multiFavTopSeats[0].seat,
+                  });
+                  setStrategyModalMode('seat_radar');
+                  setIsStrategyModalOpen(true);
+                }}
+                className="inline-flex items-center gap-1.5 rounded-full bg-[#5BAE84] px-3.5 py-2 text-xs font-black text-white shadow-xs transition-transform hover:bg-[#3F8E67] active:scale-95"
+              >
+                <span>
+                  {t(
+                    `生成 #1 (${multiFavTopSeats[0].zone}${multiFavTopSeats[0].seat}) 合併雷達圖 ↓`,
+                    `#1 (${multiFavTopSeats[0].zone}${multiFavTopSeats[0].seat}) 통합 레이더 이미지 ↓`
+                  )}
+                </span>
+              </button>
+            </div>
+
+            <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+              {multiFavTopSeats.map((item) => {
+                const isFirst = item.rank === 1;
+                const rangeLabel =
+                  item.seatRange[0] === item.seatRange[1]
+                    ? `${item.seat} 號`
+                    : `${item.seatRange[0]}–${item.seatRange[1]} 號`;
+                return (
+                  <div
+                    key={`multi-fav-top-${item.rank}-${item.zone}-${item.seat}`}
+                    className={`flex flex-col justify-between rounded-2xl p-3.5 transition-all sm:p-4 ${
+                      isFirst
+                        ? 'bg-[#181736] ring-2 ring-[#5ECBC0]'
+                        : 'bg-white/[0.07] ring-1 ring-white/15'
+                    }`}
+                  >
+                    <div>
+                      <div className="flex items-center justify-between gap-2">
+                        <span
+                          className={`rounded-full px-2.5 py-0.5 font-mono-num text-[11px] font-black ${
+                            isFirst
+                              ? 'bg-[#5ECBC0] text-[#212047]'
+                              : 'bg-white/15 text-[#7ADAD0]'
+                          }`}
+                        >
+                          #{item.rank} {isFirst ? t('最推薦', 'BEST') : ''}
+                        </span>
+                        <span className="font-mono-num text-[11px] font-bold text-[#7ADAD0]">
+                          {t(
+                            `涵蓋 ${item.uniqueFavsCovered}/${item.totalFavsOnDuty} 位 · ${item.totalNearPhases} 階段`,
+                            `${item.uniqueFavsCovered}/${item.totalFavsOnDuty}명 · ${item.totalNearPhases}단계`
+                          )}
+                        </span>
+                      </div>
+
+                      <div className="mt-2 flex items-baseline gap-2">
+                        <span className="text-xl font-black text-white sm:text-2xl">
+                          2F {item.zone} 區 {item.seat} 號
+                        </span>
+                        <span className="font-mono-num text-xs font-bold text-[#5ECBC0]">
+                          ({t('推薦', '추천')} {rangeLabel})
+                        </span>
+                      </div>
+
+                      {/* Per-Favorite Hit Avatars */}
+                      <div className="mt-2.5 flex flex-wrap gap-1.5">
+                        {item.memberHits.map((hit) => {
+                          const m = memberMap.get(hit.memberId);
+                          if (!m) return null;
+                          const hasHit = hit.nearPhases > 0;
+                          return (
+                            <button
+                              key={`hit-${item.rank}-${m.id}`}
+                              type="button"
+                              onClick={() => onOpenMemberDetail(m)}
+                              className={`inline-flex items-center gap-1 rounded-full py-0.5 pr-2 pl-0.5 font-mono-num text-[10px] font-extrabold ${
+                                hasHit
+                                  ? 'bg-[#5BAE84]/25 text-[#A7F3D0] ring-1 ring-[#5ECBC0]/50'
+                                  : 'bg-white/5 text-white/45 ring-1 ring-white/10'
+                              }`}
+                            >
+                              <MemberPortrait
+                                member={m}
+                                variant="avatar"
+                                className="h-5 w-5 rounded-full"
+                              />
+                              <span>{getMemberName(m)}</span>
+                              <span className="opacity-85">
+                                {hasHit
+                                  ? hit.coveredSetLabels.join('/')
+                                  : t('無', '없음')}
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {onJumpToSeatSimulator && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onJumpToSeatSimulator(
+                            currentMatchSchedule.matchId,
+                            item.zone,
+                            item.seat,
+                            item.memberHits[0]?.memberId ?? activeGirl.id
+                          )
+                        }
+                        className={`mt-3 inline-flex w-full items-center justify-center gap-1 rounded-xl px-3 py-1.5 font-mono-num text-xs font-extrabold transition-colors ${
+                          isFirst
+                            ? 'bg-[#5ECBC0] text-[#212047] hover:bg-white'
+                            : 'bg-white/12 text-[#7ADAD0] hover:bg-[#5BAE84] hover:text-white'
+                        }`}
+                      >
+                        <span>
+                          {t(
+                            `跳轉雷達模擬 ${item.zone}${item.seat} →`,
+                            `${item.zone}${item.seat} 레이더 보기 →`
+                          )}
+                        </span>
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Girl Selector Pill Strip (Face-Focused Avatars) */}
       <div className="mt-6 rounded-[1.75rem] bg-[#D5EFE9] p-1.5 ring-1 ring-[#5BAE84]/35 sm:mt-8 sm:rounded-[2rem] sm:p-2">
@@ -638,9 +805,19 @@ export const GirlSeatRecommendationSection: React.FC<
         favoriteIds={favoriteIds}
         initialMatchId={selectedMatchId}
         initialMode={strategyModalMode}
-        initialZone={topCrossZone?.bestSingleZone ?? primaryRec?.zone ?? 'B'}
-        initialSeat={topCrossZone?.bestSingleSeat ?? 12}
-        onClose={() => setIsStrategyModalOpen(false)}
+        initialZone={
+          strategyModalSeat?.zone ??
+          topCrossZone?.bestSingleZone ??
+          primaryRec?.zone ??
+          'B'
+        }
+        initialSeat={
+          strategyModalSeat?.seat ?? topCrossZone?.bestSingleSeat ?? 12
+        }
+        onClose={() => {
+          setIsStrategyModalOpen(false);
+          setStrategyModalSeat(null);
+        }}
       />
     </section>
   );

@@ -1633,6 +1633,190 @@ export function getMergedThemeWeekRoster(
   };
 }
 
+export interface MultiFavoriteSeatMemberHit {
+  memberId: string;
+  nearPhases: number;
+  directZeroPhases: number;
+  coveredSetLabels: string[];
+}
+
+export interface MultiFavoriteSeatRank {
+  rank: 1 | 2 | 3;
+  zone: AceZoneId;
+  seat: number;
+  seatRange: [number, number];
+  score: number;
+  totalNearPhases: number;
+  maxPossiblePhases: number;
+  uniqueFavsCovered: number;
+  totalFavsOnDuty: number;
+  memberHits: MultiFavoriteSeatMemberHit[];
+}
+
+/**
+ * 針對已收藏的多位主推（當日至少 2 位輪替），掃描 2F A/B/C 區全 69 席，
+ * 綜合計算 8 席黃金區命中階段數、涵蓋主推人數與 0 席正前方加權，回傳去重後之 Top 3 最佳座位。
+ */
+export function getMultiFavoriteTopSeats(
+  matchSchedule: MatchStationSchedule,
+  favoriteIds: string[],
+  topN = 3
+): MultiFavoriteSeatRank[] {
+  const s1 = matchSchedule.sets[0]?.initial;
+  if (!s1) return [];
+
+  const rotatingSet = new Set<string>([...s1.A, ...s1.B, ...s1.C]);
+  const onDutyFavs = Array.from(
+    new Set(favoriteIds.filter((id) => rotatingSet.has(id)))
+  );
+  if (onDutyFavs.length < 2) return [];
+
+  const setWeightMap: Record<'set1_4' | 'set2_5' | 'set3', number> = {
+    set1_4: 2.0,
+    set2_5: 1.65,
+    set3: 1.25,
+  };
+
+  interface RawSeatEval {
+    zone: AceZoneId;
+    seat: number;
+    globalSeat: number;
+    score: number;
+    totalNearPhases: number;
+    uniqueFavsCovered: number;
+    memberHits: MultiFavoriteSeatMemberHit[];
+  }
+
+  const allEvals: RawSeatEval[] = [];
+  const zones: AceZoneId[] = ['A', 'B', 'C'];
+
+  for (const zone of zones) {
+    const zIdx = ZONE_INDEX[zone];
+    for (let seat = 1; seat <= 23; seat++) {
+      let score = 0;
+      let totalNearPhases = 0;
+      let uniqueFavsCovered = 0;
+      const memberHits: MultiFavoriteSeatMemberHit[] = [];
+
+      for (const favId of onDutyFavs) {
+        const summary = getFullMatchGirlDistanceSummary(
+          matchSchedule,
+          zone,
+          seat,
+          favId
+        );
+        let nearPhases = 0;
+        let directZeroPhases = 0;
+        const coveredSetLabels: string[] = [];
+
+        for (const item of summary) {
+          const w = setWeightMap[item.setKey];
+          const initNear = item.initial.isWithin12Seats;
+          const afterNear = item.after10.isWithin12Seats;
+
+          if (initNear) {
+            nearPhases += 1;
+            const distPts = Math.max(30, 100 - item.initial.seatsToCoreCenter * 7);
+            const zeroBonus = item.initial.seatsToCoreCenter === 0 ? 18 : 0;
+            if (zeroBonus > 0) directZeroPhases += 1;
+            score += w * 0.4 * (distPts + zeroBonus);
+          }
+
+          if (afterNear) {
+            nearPhases += 1;
+            const distPts = Math.max(30, 100 - item.after10.seatsToCoreCenter * 7);
+            const zeroBonus = item.after10.seatsToCoreCenter === 0 ? 18 : 0;
+            if (zeroBonus > 0) directZeroPhases += 1;
+            score += w * 0.6 * (distPts + zeroBonus);
+          }
+
+          if (initNear || afterNear) {
+            const shortSet =
+              item.setKey === 'set1_4'
+                ? '1·4局'
+                : item.setKey === 'set2_5'
+                  ? '2·5局'
+                  : '3局';
+            coveredSetLabels.push(shortSet);
+          }
+        }
+
+        if (nearPhases > 0) {
+          uniqueFavsCovered += 1;
+          totalNearPhases += nearPhases;
+        }
+        memberHits.push({
+          memberId: favId,
+          nearPhases,
+          directZeroPhases,
+          coveredSetLabels,
+        });
+      }
+
+      // Bonus for covering more distinct favorites at the same seat
+      score += uniqueFavsCovered * 42;
+
+      allEvals.push({
+        zone,
+        seat,
+        globalSeat: zIdx * 23 + seat,
+        score,
+        totalNearPhases,
+        uniqueFavsCovered,
+        memberHits: memberHits.sort((a, b) => b.nearPhases - a.nearPhases),
+      });
+    }
+  }
+
+  const sorted = [...allEvals].sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    if (b.uniqueFavsCovered !== a.uniqueFavsCovered) {
+      return b.uniqueFavsCovered - a.uniqueFavsCovered;
+    }
+    return b.totalNearPhases - a.totalNearPhases;
+  });
+
+  const picked: RawSeatEval[] = [];
+  for (const cand of sorted) {
+    if (picked.length >= topN) break;
+    if (cand.totalNearPhases === 0) break;
+    const tooClose = picked.some(
+      (p) => Math.abs(p.globalSeat - cand.globalSeat) < 5
+    );
+    if (tooClose) continue;
+    picked.push(cand);
+  }
+
+  return picked.map((p, idx) => {
+    // Find contiguous sweet-spot seats in the same zone within ±2 seats that achieve >= 90% of peak score
+    const nearbyGood = allEvals
+      .filter(
+        (e) =>
+          e.zone === p.zone &&
+          Math.abs(e.seat - p.seat) <= 2 &&
+          e.score >= p.score * 0.9
+      )
+      .map((e) => e.seat);
+    const seatRange: [number, number] =
+      nearbyGood.length > 0
+        ? [Math.min(...nearbyGood), Math.max(...nearbyGood)]
+        : [p.seat, p.seat];
+
+    return {
+      rank: (idx + 1) as 1 | 2 | 3,
+      zone: p.zone,
+      seat: p.seat,
+      seatRange,
+      score: Math.round(p.score),
+      totalNearPhases: p.totalNearPhases,
+      maxPossiblePhases: onDutyFavs.length * 6,
+      uniqueFavsCovered: p.uniqueFavsCovered,
+      totalFavsOnDuty: onDutyFavs.length,
+      memberHits: p.memberHits,
+    };
+  });
+}
+
 
 
 
