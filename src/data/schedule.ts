@@ -1023,6 +1023,16 @@ export interface SetGirlDistanceComparison {
 
 const ZONE_INDEX: Record<AceZoneId, number> = { A: 0, B: 1, C: 2 };
 
+export const SEATS_PER_ZONE = 24;
+export const ZONE_STAIR_GAP_SEATS = 1.2;
+export const ZONE_PHYSICAL_STRIDE = SEATS_PER_ZONE + ZONE_STAIR_GAP_SEATS; // 25.2
+export const MAX_PHYSICAL_SEAT_COORD =
+  2 * ZONE_PHYSICAL_STRIDE + SEATS_PER_ZONE; // 74.4
+
+export function toPhysicalSeatCoord(zone: AceZoneId, seat: number): number {
+  return ZONE_INDEX[zone] * ZONE_PHYSICAL_STRIDE + seat;
+}
+
 const SLOT_CORE_SEAT: Record<0 | 1 | 2, { center: number; minCore: number; maxCore: number; label: string }> = {
   0: { center: 5, minCore: 4, maxCore: 5, label: '4–5 號' },
   1: { center: 12, minCore: 12, maxCore: 13, label: '12–13 號' },
@@ -1061,41 +1071,46 @@ export function computePhaseDistance(
   const coreMeta = getSlotCoreMeta(girlSlotIndex, totalSlots);
   const [rangeStart, rangeEnd] = slotMeta.range;
 
-  // 連續座位編號：A 區 1..24、B 區 25..48（A24 接 B1）、C 區 49..72（B24 接 C1）
-  const userGlobalSeat = uZ * 24 + userSeat;
-  const girlGlobalCoreSeat = gZ * 24 + coreMeta.center;
-  const girlGlobalCoreMin = gZ * 24 + coreMeta.minCore;
-  const girlGlobalCoreMax = gZ * 24 + coreMeta.maxCore;
-  const girlGlobalRangeStart = gZ * 24 + rangeStart;
-  const girlGlobalRangeEnd = gZ * 24 + rangeEnd;
+  // 連續物理座位座標：每區 24 席，A↔B 與 B↔C 中間各間隔 1.2 席樓梯（A: 1..24, B: 26.2..49.2, C: 51.4..74.4）
+  const userGlobalSeat = toPhysicalSeatCoord(userZone, userSeat);
+  const girlGlobalCoreSeat = toPhysicalSeatCoord(girlZone, coreMeta.center);
+  const girlGlobalCoreMin = toPhysicalSeatCoord(girlZone, coreMeta.minCore);
+  const girlGlobalCoreMax = toPhysicalSeatCoord(girlZone, coreMeta.maxCore);
+  const girlGlobalRangeStart = toPhysicalSeatCoord(girlZone, rangeStart);
+  const girlGlobalRangeEnd = toPhysicalSeatCoord(girlZone, rangeEnd);
 
-  const globalSeatDistance = Math.abs(girlGlobalCoreSeat - userGlobalSeat);
+  const globalSeatDistance = Math.round(
+    Math.abs(girlGlobalCoreSeat - userGlobalSeat)
+  );
 
-  let seatsToDirectRange = 0;
+  let rawSeatsToDirectRange = 0;
   if (userGlobalSeat < girlGlobalRangeStart) {
-    seatsToDirectRange = girlGlobalRangeStart - userGlobalSeat;
+    rawSeatsToDirectRange = girlGlobalRangeStart - userGlobalSeat;
   } else if (userGlobalSeat > girlGlobalRangeEnd) {
-    seatsToDirectRange = userGlobalSeat - girlGlobalRangeEnd;
+    rawSeatsToDirectRange = userGlobalSeat - girlGlobalRangeEnd;
   }
+  const seatsToDirectRange = Math.round(rawSeatsToDirectRange);
 
-  let seatsToCoreCenter = 0;
-  let signedSeatOffset = 0;
+  let rawSeatsToCore = 0;
+  let signedDirection = 0;
   if (userGlobalSeat >= girlGlobalCoreMin && userGlobalSeat <= girlGlobalCoreMax) {
-    seatsToCoreCenter = 0;
-    signedSeatOffset = 0;
+    rawSeatsToCore = 0;
+    signedDirection = 0;
   } else if (userGlobalSeat < girlGlobalCoreMin) {
     // 女孩位於較大號或往 C 區方向：當觀眾坐在座位面向球場時，大號／C 區側為觀眾的「左手邊（左前方）」
-    seatsToCoreCenter = girlGlobalCoreMin - userGlobalSeat;
-    signedSeatOffset = -seatsToCoreCenter; // 負值代表在觀眾視角左前方（左手邊 C 區／大號側）
+    rawSeatsToCore = girlGlobalCoreMin - userGlobalSeat;
+    signedDirection = -1; // 負值代表在觀眾視角左前方（左手邊 C 區／大號側）
   } else {
     // 女孩位於較小號或往 A 區方向：當觀眾坐在座位面向球場時，小號／A 區側為觀眾的「右手邊（右前方）」
-    seatsToCoreCenter = userGlobalSeat - girlGlobalCoreMax;
-    signedSeatOffset = seatsToCoreCenter; // 正值代表在觀眾視角右前方（右手邊 A 區／小號側）
+    rawSeatsToCore = userGlobalSeat - girlGlobalCoreMax;
+    signedDirection = 1; // 正值代表在觀眾視角右前方（右手邊 A 區／小號側）
   }
+  const seatsToCoreCenter = Math.round(rawSeatsToCore);
+  const signedSeatOffset = signedDirection * seatsToCoreCenter;
 
   const isDirectFront = isSameZone && userSeat >= rangeStart && userSeat <= rangeEnd;
   const isExactCore = isSameZone && seatsToCoreCenter === 0;
-  const isWithin12Seats = seatsToCoreCenter <= PROXIMITY_SEAT_THRESHOLD;
+  const isWithin12Seats = rawSeatsToCore <= PROXIMITY_SEAT_THRESHOLD;
   const isConnectedBoundary = !isSameZone && isWithin12Seats;
 
   let boundaryConnectionLabel: string | null = null;

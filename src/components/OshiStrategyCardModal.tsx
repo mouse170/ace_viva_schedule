@@ -3,12 +3,14 @@ import { MEMBERS, type AceVivaMember } from '../data/members';
 import {
   ACTIVE_STATION_ROTATION_SCHEDULES,
   CLOSEST_STATION_SCHEDULE,
+  MAX_PHYSICAL_SEAT_COORD,
   findGirlPhaseDistance,
   getGirlSeatRecommendations,
   getCrossZoneGoldenIntervals,
   getFullMatchGirlDistanceSummary,
   getSeatPositionMapping,
   getZoneSlotIndexForSeat,
+  toPhysicalSeatCoord,
   type AceZoneId,
   type GirlSetZoneRecommendation,
   type CrossZoneGoldenInterval,
@@ -477,10 +479,17 @@ async function renderSeatRadarCardToDataUrl(
   let currentY = 358;
   const cardH = 344;
 
-  const userGlobal =
-    (userZone === 'A' ? 0 : userZone === 'B' ? 1 : 2) * 24 + userSeat;
+  const userGlobal = toPhysicalSeatCoord(userZone, userSeat);
   const toRadarNorm = (gSeat: number) =>
-    Math.max(0.07, Math.min(0.93, 0.05 + ((72 - gSeat) / 71) * 0.9));
+    Math.max(
+      0.07,
+      Math.min(
+        0.93,
+        0.05 +
+          ((MAX_PHYSICAL_SEAT_COORD - gSeat) / (MAX_PHYSICAL_SEAT_COORD - 1)) *
+            0.9
+      )
+    );
 
   distanceComparisons.forEach((comp, index) => {
     const setObj = schedule.sets[index];
@@ -690,7 +699,8 @@ async function renderSeatRadarCardToDataUrl(
     // User & Oshi X coordinates
     const uPx = radarX + toRadarNorm(userGlobal) * radarW;
     const fovLeftPx =
-      radarX + toRadarNorm(Math.min(72, userGlobal + 8)) * radarW;
+      radarX +
+      toRadarNorm(Math.min(MAX_PHYSICAL_SEAT_COORD, userGlobal + 8)) * radarW;
     const fovRightPx =
       radarX + toRadarNorm(Math.max(1, userGlobal - 8)) * radarW;
 
@@ -712,8 +722,14 @@ async function renderSeatRadarCardToDataUrl(
         : comp.initial.girlZone === 'B'
           ? 1
           : 2;
-    const initGlobal = gZIndex * 24 + comp.initial.girlCoreSeat;
-    const after10Global = gZIndex * 24 + comp.after10.girlCoreSeat;
+    const initGlobal = toPhysicalSeatCoord(
+      comp.initial.girlZone,
+      comp.initial.girlCoreSeat
+    );
+    const after10Global = toPhysicalSeatCoord(
+      comp.after10.girlZone,
+      comp.after10.girlCoreSeat
+    );
 
     const initPx = radarX + toRadarNorm(initGlobal) * radarW;
     const after10Px = radarX + toRadarNorm(after10Global) * radarW;
@@ -753,7 +769,10 @@ async function renderSeatRadarCardToDataUrl(
             );
             if (!d) return null;
             const zIdx = d.girlZone === 'A' ? 0 : d.girlZone === 'B' ? 1 : 2;
-            const px = radarX + toRadarNorm(zIdx * 24 + d.girlCoreSeat) * radarW;
+            const px =
+              radarX +
+              toRadarNorm(toPhysicalSeatCoord(d.girlZone, d.girlCoreSeat)) *
+                radarW;
             return { fav, d, px };
           })
           .filter((x): x is NonNullable<typeof x> => Boolean(x)),
@@ -771,7 +790,10 @@ async function renderSeatRadarCardToDataUrl(
             );
             if (!d) return null;
             const zIdx = d.girlZone === 'A' ? 0 : d.girlZone === 'B' ? 1 : 2;
-            const px = radarX + toRadarNorm(zIdx * 24 + d.girlCoreSeat) * radarW;
+            const px =
+              radarX +
+              toRadarNorm(toPhysicalSeatCoord(d.girlZone, d.girlCoreSeat)) *
+                radarW;
             return { fav, d, px };
           })
           .filter((x): x is NonNullable<typeof x> => Boolean(x)),

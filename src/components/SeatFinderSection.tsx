@@ -4,11 +4,15 @@ import { getPhaseAdjacentBonds } from '../data/memberRelations';
 import {
   ACTIVE_STATION_ROTATION_SCHEDULES,
   CLOSEST_STATION_SCHEDULE,
+  MAX_PHYSICAL_SEAT_COORD,
+  PROXIMITY_SEAT_THRESHOLD,
+  computePhaseDistance,
   findGirlPhaseDistance,
   getFullMatchGirlDistanceSummary,
   getMultiFavoriteTopSeats,
   getSeatPositionMapping,
   getZoneSlotIndexForSeat,
+  toPhysicalSeatCoord,
   type AceZoneId,
   type PhaseDistanceDetail,
 } from '../data/schedule';
@@ -374,215 +378,80 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
     memberMap,
   ]);
 
-  // Build Audience Left-to-Right Front Horizon Stations (Current Zone 3 or 4 Slots + Contiguous Adjacent Zone Border Slots)
+  // Build Audience Left-to-Right Front Horizon: Top 3 Closest Cheerleaders across Contiguous C | B | A Zones (with 1.2-seat stair gap)
   const frontHorizonStations = useMemo(() => {
     const phaseMap =
       scorePhase === 'initial'
         ? currentSetArrangement.initial
         : currentSetArrangement.after10Points;
 
-    const userGlobal =
-      (selectedZone === 'A' ? 0 : selectedZone === 'B' ? 1 : 2) * 24 +
-      selectedSeat;
-
-    type RawStation = {
-      zone: AceZoneId;
-      slotIndex: number;
-      coreSeat: number;
-      seatsLabel: string;
-      shortLabel: string;
-      fullLabel: string;
-      isAdjacentZone: boolean;
-      adjacentSide?: 'left' | 'right';
-      boundaryTag?: string;
-    };
-
-    const currentZoneLength = phaseMap[selectedZone].length;
-    const currentZoneStations: RawStation[] =
-      currentZoneLength === 4
-        ? [
-            {
-              zone: selectedZone,
-              slotIndex: 3,
-              coreSeat: 21,
-              seatsLabel: `${selectedZone} 區 24–19 號`,
-              shortLabel: `◀ ${selectedZone}區 24–19號`,
-              fullLabel: `◀ 本區左翼：${selectedZone} 區 24–19 號`,
-              isAdjacentZone: false,
-            },
-            {
-              zone: selectedZone,
-              slotIndex: 2,
-              coreSeat: 15,
-              seatsLabel: `${selectedZone} 區 18–13 號`,
-              shortLabel: `${selectedZone}區中左 18–13號`,
-              fullLabel: `本區中左：${selectedZone} 區 18–13 號`,
-              isAdjacentZone: false,
-            },
-            {
-              zone: selectedZone,
-              slotIndex: 1,
-              coreSeat: 9,
-              seatsLabel: `${selectedZone} 區 12–7 號`,
-              shortLabel: `${selectedZone}區中右 12–7號`,
-              fullLabel: `本區中右：${selectedZone} 區 12–7 號`,
-              isAdjacentZone: false,
-            },
-            {
-              zone: selectedZone,
-              slotIndex: 0,
-              coreSeat: 3,
-              seatsLabel: `${selectedZone} 區 6–1 號`,
-              shortLabel: `${selectedZone}區 6–1號 ▶`,
-              fullLabel: `本區右翼：${selectedZone} 區 6–1 號 ▶`,
-              isAdjacentZone: false,
-            },
-          ]
-        : [
-            {
-              zone: selectedZone,
-              slotIndex: 2,
-              coreSeat: 20,
-              seatsLabel: `${selectedZone} 區 24–17 號`,
-              shortLabel: `◀ ${selectedZone}區左側 24–17號`,
-              fullLabel: `◀ 本區左手邊：${selectedZone} 區 24–17 號（官方右位）`,
-              isAdjacentZone: false,
-            },
-            {
-              zone: selectedZone,
-              slotIndex: 1,
-              coreSeat: 12,
-              seatsLabel: `${selectedZone} 區 16–9 號`,
-              shortLabel: `▲ ${selectedZone}區中央 16–9號`,
-              fullLabel: `▲ 本區正中央：${selectedZone} 區 16–9 號（官方中位）`,
-              isAdjacentZone: false,
-            },
-            {
-              zone: selectedZone,
-              slotIndex: 0,
-              coreSeat: 5,
-              seatsLabel: `${selectedZone} 區 8–1 號`,
-              shortLabel: `${selectedZone}區右側 8–1號 ▶`,
-              fullLabel: `本區右手邊：${selectedZone} 區 8–1 號（官方左位） ▶`,
-              isAdjacentZone: false,
-            },
-          ];
-
-    const leftNeighbor: RawStation | null =
-      selectedZone === 'A'
-        ? {
-            zone: 'B',
-            slotIndex: 0,
-            coreSeat: 5,
-            seatsLabel: 'B 區 8–1 號',
-            shortLabel: '◀ 隔壁左區 B8–1號',
-            fullLabel: '◀ 隔壁緊鄰左區：B 區 8–1 號（緊連 A24 左側）',
-            isAdjacentZone: true,
-            adjacentSide: 'left',
-            boundaryTag: '◀ 緊鄰左區 (B1↔A24)',
-          }
-        : selectedZone === 'B'
-          ? {
-              zone: 'C',
-              slotIndex: 0,
-              coreSeat: 5,
-              seatsLabel: 'C 區 8–1 號',
-              shortLabel: '◀ 隔壁左區 C8–1號',
-              fullLabel: '◀ 隔壁緊鄰左區：C 區 8–1 號（緊連 B24 左側）',
-              isAdjacentZone: true,
-              adjacentSide: 'left',
-              boundaryTag: '◀ 緊鄰左區 (C1↔B24)',
-            }
-          : null;
-
-    const rightNeighbor: RawStation | null =
-      selectedZone === 'C'
-        ? {
-            zone: 'B',
-            slotIndex: phaseMap.B.length - 1,
-            coreSeat: 20,
-            seatsLabel: 'B 區 24–17 號',
-            shortLabel: '隔壁右區 B24–17號 ▶',
-            fullLabel: '隔壁緊鄰右區：B 區 24–17 號（緊連 C1 右側） ▶',
-            isAdjacentZone: true,
-            adjacentSide: 'right',
-            boundaryTag: '緊鄰右區 (C1↔B24) ▶',
-          }
-        : selectedZone === 'B'
-          ? {
-              zone: 'A',
-              slotIndex: phaseMap.A.length - 1,
-              coreSeat: 20,
-              seatsLabel: 'A 區 24–17 號',
-              shortLabel: '隔壁右區 A24–17號 ▶',
-              fullLabel: '隔壁緊鄰右區：A 區 24–17 號（緊連 B1 右側） ▶',
-              isAdjacentZone: true,
-              adjacentSide: 'right',
-              boundaryTag: '緊鄰右區 (B1↔A24) ▶',
-            }
-          : null;
-
-    const orderedRaw: RawStation[] = [
-      ...(leftNeighbor ? [leftNeighbor] : []),
-      ...currentZoneStations,
-      ...(rightNeighbor ? [rightNeighbor] : []),
-    ];
-
-    const currentActiveSlot = getZoneSlotIndexForSeat(
-      selectedSeat,
-      currentZoneLength
-    );
+    const userCoord = toPhysicalSeatCoord(selectedZone, selectedSeat);
     const phaseBonds = getPhaseAdjacentBonds(phaseMap, memberMap);
 
-    return orderedRaw
-      .map((item) => {
-        const girlId = phaseMap[item.zone][item.slotIndex];
-        const member = memberMap.get(girlId);
-        if (!member) return null;
+    const allCandidates = (['C', 'B', 'A'] as AceZoneId[]).flatMap((zone) => {
+      const arr = phaseMap[zone];
+      return arr
+        .map((girlId, slotIndex) => {
+          const member = memberMap.get(girlId);
+          if (!member) return null;
 
-        const sharedExperienceBonds =
-          phaseBonds.byPositionKey.get(`${item.zone}-${item.slotIndex}`) ?? [];
+          const dist = computePhaseDistance(
+            selectedZone,
+            selectedSeat,
+            zone,
+            slotIndex,
+            arr.length
+          );
+          const physicalCoord = toPhysicalSeatCoord(zone, dist.girlCoreSeat);
+          const rawDistance = Math.abs(userCoord - physicalCoord);
+          const isAdjacentZone = zone !== selectedZone;
+          const isDirectFront = dist.isDirectFront;
+          const isWithin12Seats = rawDistance <= PROXIMITY_SEAT_THRESHOLD;
+          const seatsDiff = dist.seatsToCoreCenter;
+          const signedOffset = dist.signedSeatOffset;
+          const [rStart, rEnd] = dist.girlSeatRange;
 
-        const stationGlobal =
-          (item.zone === 'A' ? 0 : item.zone === 'B' ? 1 : 2) * 24 +
-          item.coreSeat;
-        const signedOffset = userGlobal - stationGlobal;
-        const seatsDiff = Math.abs(signedOffset);
-        const isWithin12Seats = seatsDiff <= 12;
-        const isDirectFront =
-          !item.isAdjacentZone && currentActiveSlot === item.slotIndex;
-        const isSameZoneAdjacent =
-          !item.isAdjacentZone &&
-          currentZoneLength === 3 &&
-          seatMapping.adjacentSlotIndex === item.slotIndex;
+          const relativeBadge = isDirectFront
+            ? `★ 正對你 (${selectedZone}${selectedSeat})`
+            : signedOffset < 0
+              ? `◀ 左前 ${seatsDiff} 席${isWithin12Seats ? '·好拍' : ''}`
+              : `右前 ${seatsDiff} 席${isWithin12Seats ? '·好拍' : ''} ▶`;
 
-        const relativeBadge = isDirectFront
-          ? `★ 正對你 (${selectedZone}${selectedSeat})`
-          : signedOffset < 0
-            ? `◀ 左前 ${seatsDiff} 席${isWithin12Seats ? '·好拍' : ''}`
-            : `右前 ${seatsDiff} 席${isWithin12Seats ? '·好拍' : ''} ▶`;
+          const sharedExperienceBonds =
+            phaseBonds.byPositionKey.get(`${zone}-${slotIndex}`) ?? [];
 
-        return {
-          ...item,
-          member,
-          signedOffset,
-          seatsDiff,
-          isWithin12Seats,
-          isDirectFront,
-          isSameZoneAdjacent,
-          relativeBadge,
-          sharedExperienceBonds,
-        };
-      })
-      .filter((x): x is NonNullable<typeof x> => Boolean(x));
-  }, [
-    scorePhase,
-    currentSetArrangement,
-    selectedZone,
-    selectedSeat,
-    seatMapping.adjacentSlotIndex,
-    memberMap,
-  ]);
+          return {
+            zone,
+            slotIndex,
+            coreSeat: dist.girlCoreSeat,
+            seatsLabel: `${zone} 區 ${rEnd}–${rStart} 號`,
+            shortLabel: isAdjacentZone
+              ? `↔ 鄰區 ${zone} 區 ${rEnd}–${rStart} 號`
+              : `${zone} 區 ${rEnd}–${rStart} 號`,
+            fullLabel: `${zone} 區 ${rEnd}–${rStart} 號`,
+            isAdjacentZone,
+            boundaryTag: isAdjacentZone ? `↔ 跨區 ${zone} 區` : undefined,
+            member,
+            physicalCoord,
+            rawDistance,
+            signedOffset,
+            seatsDiff,
+            isWithin12Seats,
+            isDirectFront,
+            isSameZoneAdjacent: !isAdjacentZone && !isDirectFront,
+            relativeBadge,
+            sharedExperienceBonds,
+          };
+        })
+        .filter((x): x is NonNullable<typeof x> => Boolean(x));
+    });
+
+    // Pick the 3 physically closest cheerleaders across all 3 zones, then order Left (C24) -> Right (A1)
+    return [...allCandidates]
+      .sort((a, b) => a.rawDistance - b.rawDistance)
+      .slice(0, 3)
+      .sort((a, b) => b.physicalCoord - a.physicalCoord);
+  }, [scorePhase, currentSetArrangement, selectedZone, selectedSeat, memberMap]);
 
   const sliderFillPercent = ((selectedSeat - 1) / 23) * 100;
 
@@ -1114,29 +983,33 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                 const slotShort =
                   activePhaseOshiDistance.girlSlotLabel.slice(0, 2);
 
-                // Global seat coordinate (1..72 across A1..A24, B1..B24, C1..C24)
-                const userGlobal =
-                  (selectedZone === 'A' ? 0 : selectedZone === 'B' ? 1 : 2) *
-                    24 +
-                  selectedSeat;
-                const oshiGlobal =
-                  (activePhaseOshiDistance.girlZone === 'A'
-                    ? 0
-                    : activePhaseOshiDistance.girlZone === 'B'
-                      ? 1
-                      : 2) *
-                    24 +
-                  activePhaseOshiDistance.girlCoreSeat;
+                // Physical seat coordinate (1..74.4 with 1.2-seat stair gap between A/B and B/C)
+                const userGlobal = toPhysicalSeatCoord(selectedZone, selectedSeat);
+                const oshiGlobal = toPhysicalSeatCoord(
+                  activePhaseOshiDistance.girlZone,
+                  activePhaseOshiDistance.girlCoreSeat
+                );
 
                 // Audience first-person X mapping:
-                // Facing the court, Leftmost (7%) is C24 (globalSeat=72), Rightmost (93%) is A1 (globalSeat=1)
+                // Facing the court, Leftmost (7%) is C24 (74.4), Rightmost (93%) is A1 (1.0)
                 const toAudienceX = (gSeat: number) =>
-                  Math.max(10, Math.min(90, 7 + ((72 - gSeat) / 71) * 86));
+                  Math.max(
+                    10,
+                    Math.min(
+                      90,
+                      7 +
+                        ((MAX_PHYSICAL_SEAT_COORD - gSeat) /
+                          (MAX_PHYSICAL_SEAT_COORD - 1)) *
+                          86
+                    )
+                  );
 
                 const userX = toAudienceX(userGlobal);
                 const oshiX = toAudienceX(oshiGlobal);
-                // In Audience view, left of user is larger globalSeat (userGlobal + 8), right of user is smaller globalSeat (userGlobal - 8)
-                const fovLeftX = toAudienceX(Math.min(72, userGlobal + 8));
+                // In Audience view, left of user is larger coord (userGlobal + 8), right of user is smaller coord (userGlobal - 8)
+                const fovLeftX = toAudienceX(
+                  Math.min(MAX_PHYSICAL_SEAT_COORD, userGlobal + 8)
+                );
                 const fovRightX = toAudienceX(Math.max(1, userGlobal - 8));
 
                 // Concise relative seat count badge in Audience First-Person perspective
@@ -1174,14 +1047,10 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                       id
                     );
                     if (!m || !dist) return null;
-                    const gSeat =
-                      (dist.girlZone === 'A'
-                        ? 0
-                        : dist.girlZone === 'B'
-                          ? 1
-                          : 2) *
-                        24 +
-                      dist.girlCoreSeat;
+                    const gSeat = toPhysicalSeatCoord(
+                      dist.girlZone,
+                      dist.girlCoreSeat
+                    );
                     const pinX = toAudienceX(gSeat);
                     return {
                       member: m,
@@ -1589,12 +1458,12 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                 );
               })()}
 
-              {/* 3. Front-View Girl Horizon List: Current-Zone 3 Girls + Contiguous Adjacent-Zone Border Girl(s) */}
+              {/* 3. Front-View Nearest 3 Cheerleaders across Contiguous C | B | A Zones (1.2-seat stair gap) */}
               <div className="mt-4 rounded-2xl bg-[#F4FAF8] p-3 text-[#212047] ring-1 ring-[#5ECBC0]/40 sm:p-4">
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#212047]/10 pb-2.5">
                   <div className="flex flex-wrap items-center gap-1.5">
                     <span className="rounded-full bg-[#212047] px-2.5 py-0.5 font-mono-num text-[10px] font-extrabold text-[#7ADAD0] lg:text-xs">
-                      前方女孩視角（{selectedZone} 區＋↔ 鄰區）
+                      {t('前方最近 3 位女孩視角', '가장 가까운 3명 시야')}
                     </span>
                     <span className="text-xs font-extrabold text-[#3F8E67] lg:text-sm">
                       {currentSetArrangement.setLabel} ·{' '}
@@ -1602,20 +1471,12 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                     </span>
                   </div>
                   <span className="rounded-full bg-[#E6F5F1] px-2.5 py-0.5 font-mono-num text-[10px] font-bold text-[#3F8E67] lg:text-xs">
-                    ◀ C1 ↔ B24 · B1 ↔ A24 ▶
+                    {t('區間間隔 1.2 席樓梯 · ◀ 左 C24 ↔ 右 A1 ▶', '구역 간 1.2석 계단 · ◀ C24 ↔ A1 ▶')}
                   </span>
                 </div>
 
-                {/* Desktop (lg+): Continuous Left-to-Right Horizon Row Including Adjacent Zone Neighbor(s) */}
-                <div
-                  className={`mt-3 hidden gap-3 lg:grid ${
-                    frontHorizonStations.length >= 6
-                      ? 'lg:grid-cols-6'
-                      : frontHorizonStations.length === 5
-                        ? 'lg:grid-cols-5'
-                        : 'lg:grid-cols-4'
-                  }`}
-                >
+                {/* Desktop (lg+): Nearest 3 Cheerleaders Ordered Left-to-Right */}
+                <div className="mt-3 hidden gap-3 lg:grid lg:grid-cols-3">
                   {frontHorizonStations.map((st) => {
                     const m = st.member;
                     const isTargetOshi = m.id === activeOshi.id;
@@ -1765,191 +1626,90 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                   })}
                 </div>
 
-                {/* Mobile & Tablet (< lg): 3 or 4 Current-Zone Station Cards + Compact Same-Size Adjacent-Zone Row */}
+                {/* Mobile & Tablet (< lg): Nearest 3 Cheerleaders Across Contiguous C | B | A Zones */}
                 <div className="mt-3 lg:hidden">
-                  <div
-                    className={`grid gap-2 sm:gap-3 ${
-                      frontHorizonStations.filter((st) => !st.isAdjacentZone)
-                        .length === 4
-                        ? 'grid-cols-2 sm:grid-cols-4'
-                        : 'grid-cols-3'
-                    }`}
-                  >
-                    {frontHorizonStations
-                      .filter((st) => !st.isAdjacentZone)
-                      .map((st) => {
-                        const m = st.member;
-                        const isTargetOshi = m.id === activeOshi.id;
+                  <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                    {frontHorizonStations.map((st) => {
+                      const m = st.member;
+                      const isTargetOshi = m.id === activeOshi.id;
 
-                        return (
-                          <div
-                            key={`mob-cur-${st.zone}-${st.slotIndex}-${m.id}`}
-                            className={`group relative flex min-w-0 flex-col justify-between overflow-hidden rounded-2xl p-2 transition-all duration-300 sm:p-2.5 ${
-                              st.isDirectFront
-                                ? 'bg-[#212047] text-white shadow-[0_14px_28px_-10px_rgba(33,32,71,0.5)] ring-2 ring-[#5BAE84]'
-                                : st.isSameZoneAdjacent
+                      return (
+                        <div
+                          key={`mob-cur-${st.zone}-${st.slotIndex}-${m.id}`}
+                          className={`group relative flex min-w-0 flex-col justify-between overflow-hidden rounded-2xl p-2 transition-all duration-300 sm:p-2.5 ${
+                            st.isDirectFront
+                              ? 'bg-[#212047] text-white shadow-[0_14px_28px_-10px_rgba(33,32,71,0.5)] ring-2 ring-[#5BAE84]'
+                              : st.isAdjacentZone
+                                ? 'bg-[#E6F5F1] text-[#212047] ring-2 ring-[#5BAE84] border border-dashed border-[#212047]/25'
+                                : st.isWithin12Seats
                                   ? 'bg-white text-[#212047] ring-2 ring-[#5ECBC0]'
                                   : 'bg-white/85 text-[#212047] ring-1 ring-[#212047]/10'
-                            }`}
-                          >
-                            <div>
-                              <div className="mb-1 flex items-center justify-center">
-                                <span
-                                  className={`max-w-full truncate rounded-full px-1.5 py-0.5 font-mono-num text-[9px] font-extrabold whitespace-nowrap ${
-                                    st.isDirectFront
-                                      ? 'bg-[#5BAE84] text-white'
-                                      : st.isWithin12Seats
-                                        ? 'bg-[#212047] text-[#5ECBC0]'
-                                        : 'bg-[#E6F5F1] text-[#3F8E67]'
-                                  }`}
-                                >
-                                  {st.isDirectFront
-                                    ? t('★ 正對你', '★ 정면')
-                                    : st.signedOffset < 0
-                                      ? `◀ ${t('左', '좌')}${st.seatsDiff}${t('席', '석')}`
-                                      : `${t('右', '우')}${st.seatsDiff}${t('席', '석')} ▶`}
-                                </span>
-                              </div>
-
-                              <button
-                                type="button"
-                                onClick={() => onOpenMemberDetail(m)}
-                                className="relative block w-full overflow-hidden rounded-xl"
-                              >
-                                <MemberPortrait
-                                  member={m}
-                                  variant="avatar"
-                                  className="aspect-square w-full sm:hidden"
-                                />
-                                <MemberPortrait
-                                  member={m}
-                                  variant="card"
-                                  className="hidden aspect-[3/4] w-full sm:block"
-                                />
-                                {isTargetOshi && (
-                                  <span className="absolute right-1 bottom-1 rounded-full bg-[#212047]/90 px-1.5 py-0.5 font-mono-num text-[8px] font-black text-[#5ECBC0] ring-1 ring-[#5ECBC0]">
-                                    ★ {t('主推', '최애')}
-                                  </span>
-                                )}
-                              </button>
-                            </div>
-
-                            <div className="mt-1.5 text-center">
-                              <div className="truncate text-xs font-black sm:text-sm">
-                                {getMemberName(m)}
-                              </div>
-                              <div
-                                className={`truncate font-mono-num text-[9px] font-bold ${
+                          }`}
+                        >
+                          <div>
+                            <div className="mb-1 flex items-center justify-center">
+                              <span
+                                className={`max-w-full truncate rounded-full px-1.5 py-0.5 font-mono-num text-[9px] font-extrabold whitespace-nowrap ${
                                   st.isDirectFront
-                                    ? 'text-[#7ADAD0]'
-                                    : 'text-[#212047]/65'
+                                    ? 'bg-[#5BAE84] text-white'
+                                    : st.isWithin12Seats
+                                      ? 'bg-[#212047] text-[#5ECBC0]'
+                                      : 'bg-[#E6F5F1] text-[#3F8E67]'
                                 }`}
                               >
-                                {st.seatsLabel.replace(/^[ABC]\s*區\s*/, '')}
-                              </div>
-
-                              <div className="mt-1.5 flex items-center justify-center gap-1">
-                                <a
-                                  href={m.instagramUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="shrink-0 rounded-full bg-[#5BAE84] px-2 py-0.5 font-mono-num text-[9px] font-black whitespace-nowrap text-white transition-colors hover:bg-[#3F8E67]"
-                                >
-                                  IG↗
-                                </a>
-                                {!st.isDirectFront && (
-                                  <button
-                                    type="button"
-                                    onClick={() =>
-                                      setSelectedSeat(st.coreSeat)
-                                    }
-                                    className="shrink-0 rounded-full bg-[#E6F5F1] px-2 py-0.5 font-mono-num text-[9px] font-bold whitespace-nowrap text-[#3F8E67] hover:bg-[#5BAE84] hover:text-white"
-                                  >
-                                    {t(`坐${st.coreSeat}`, `${st.coreSeat}석`)}
-                                  </button>
-                                )}
-                              </div>
+                                {st.isDirectFront
+                                  ? t('★ 正對你', '★ 정면')
+                                  : st.signedOffset < 0
+                                    ? `◀ ${t('左', '좌')}${st.seatsDiff}${t('席', '석')}`
+                                    : `${t('右', '우')}${st.seatsDiff}${t('席', '석')} ▶`}
+                              </span>
                             </div>
+
+                            <button
+                              type="button"
+                              onClick={() => onOpenMemberDetail(m)}
+                              className="relative block w-full overflow-hidden rounded-xl"
+                            >
+                              <MemberPortrait
+                                member={m}
+                                variant="avatar"
+                                className="aspect-square w-full sm:hidden"
+                              />
+                              <MemberPortrait
+                                member={m}
+                                variant="card"
+                                className="hidden aspect-[3/4] w-full sm:block"
+                              />
+                              {isTargetOshi && (
+                                <span className="absolute right-1 bottom-1 rounded-full bg-[#212047]/90 px-1.5 py-0.5 font-mono-num text-[8px] font-black text-[#5ECBC0] ring-1 ring-[#5ECBC0]">
+                                  ★ {t('主推', '최애')}
+                                </span>
+                              )}
+                              {st.isAdjacentZone && (
+                                <span className="absolute top-1 left-1 rounded-full bg-[#212047]/90 px-1.5 py-0.2 font-mono-num text-[8px] font-black text-[#7ADAD0]">
+                                  ↔{st.zone}區
+                                </span>
+                              )}
+                            </button>
                           </div>
-                        );
-                      })}
-                  </div>
 
-                  {/* Compact Adjacent-Zone Neighbor Row (1-col when 1 neighbor, 2-col on sm+ or when 2 neighbors) */}
-                  {(() => {
-                    const adjStations = frontHorizonStations.filter(
-                      (st) => st.isAdjacentZone
-                    );
-                    return (
-                  <div
-                    className={`mt-2 grid gap-2 ${
-                      adjStations.length === 1 ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2'
-                    }`}
-                  >
-                    {adjStations.map((st) => {
-                        const m = st.member;
-                        const isTargetOshi = m.id === activeOshi.id;
-                        const adjDistText =
-                          st.signedOffset < 0
-                            ? `◀ ${t('左前', '좌')}${st.seatsDiff}${t('席', '석')}`
-                            : `${t('右前', '우')}${st.seatsDiff}${t('席', '석')} ▶`;
-
-                        return (
-                          <div
-                            key={`mob-adj-${st.zone}-${st.slotIndex}-${m.id}`}
-                            className={`flex min-w-0 items-center justify-between gap-2 overflow-hidden rounded-2xl p-2 transition-all ${
-                              st.isWithin12Seats
-                                ? 'bg-[#212047] text-white ring-1 ring-[#5BAE84]'
-                                : 'bg-white text-[#212047] ring-1 ring-[#212047]/15'
-                            }`}
-                          >
-                            <div className="flex min-w-0 flex-1 items-center gap-2">
-                              <button
-                                type="button"
-                                onClick={() => onOpenMemberDetail(m)}
-                                className="relative shrink-0"
-                              >
-                                <MemberPortrait
-                                  member={m}
-                                  variant="avatar"
-                                  className="h-9 w-9 rounded-full ring-1 ring-[#5ECBC0] sm:h-10 sm:w-10"
-                                />
-                                {isTargetOshi && (
-                                  <span className="absolute -top-0.5 -right-0.5 rounded-full bg-[#5BAE84] px-1 font-mono-num text-[8px] font-black text-white">
-                                    ★
-                                  </span>
-                                )}
-                              </button>
-
-                              <div className="min-w-0 flex-1">
-                                <div className="flex flex-wrap items-center gap-1">
-                                  <span className="truncate text-xs font-black">
-                                    {getMemberName(m)}
-                                  </span>
-                                  <span
-                                    className={`shrink-0 rounded-full px-1.5 py-0.2 font-mono-num text-[9px] font-extrabold whitespace-nowrap ${
-                                      st.isWithin12Seats
-                                        ? 'bg-[#5BAE84] text-white'
-                                        : 'bg-[#E6F5F1] text-[#3F8E67]'
-                                    }`}
-                                  >
-                                    {adjDistText}
-                                  </span>
-                                </div>
-                                <div
-                                  className={`truncate font-mono-num text-[9px] font-bold ${
-                                    st.isWithin12Seats
-                                      ? 'text-[#7ADAD0]'
-                                      : 'text-[#212047]/65'
-                                  }`}
-                                >
-                                  ↔ {t('鄰區', '인접')} {st.seatsLabel}
-                                </div>
-                              </div>
+                          <div className="mt-1.5 text-center">
+                            <div className="truncate text-xs font-black sm:text-sm">
+                              {getMemberName(m)}
+                            </div>
+                            <div
+                              className={`truncate font-mono-num text-[9px] font-bold ${
+                                st.isDirectFront
+                                  ? 'text-[#7ADAD0]'
+                                  : 'text-[#212047]/65'
+                              }`}
+                            >
+                              {st.isAdjacentZone
+                                ? st.seatsLabel.replace(/\s*區\s*/, '區 ')
+                                : st.seatsLabel.replace(/^[ABC]\s*區\s*/, '')}
                             </div>
 
-                            <div className="flex shrink-0 items-center gap-1">
+                            <div className="mt-1.5 flex items-center justify-center gap-1">
                               <a
                                 href={m.instagramUrl}
                                 target="_blank"
@@ -1959,28 +1719,26 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                               >
                                 IG↗
                               </a>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setSelectedZone(st.zone);
-                                  setSelectedSeat(st.coreSeat);
-                                }}
-                                className={`shrink-0 rounded-full px-2 py-0.5 font-mono-num text-[9px] font-bold whitespace-nowrap transition-colors ${
-                                  st.isWithin12Seats
-                                    ? 'bg-white/15 text-[#7ADAD0] hover:bg-white/25'
-                                    : 'bg-[#212047] text-[#7ADAD0] hover:bg-[#3F8E67] hover:text-white'
-                                }`}
-                              >
-                                {st.zone}
-                                {st.coreSeat}
-                              </button>
+                              {!st.isDirectFront && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedZone(st.zone);
+                                    setSelectedSeat(st.coreSeat);
+                                  }}
+                                  className="shrink-0 rounded-full bg-[#E6F5F1] px-2 py-0.5 font-mono-num text-[9px] font-bold whitespace-nowrap text-[#3F8E67] hover:bg-[#5BAE84] hover:text-white"
+                                >
+                                  {st.isAdjacentZone
+                                    ? `${st.zone}${st.coreSeat}`
+                                    : t(`坐${st.coreSeat}`, `${st.coreSeat}석`)}
+                                </button>
+                              )}
                             </div>
                           </div>
-                        );
-                      })}
+                        </div>
+                      );
+                    })}
                   </div>
-                    );
-                  })()}
                 </div>
               </div>
 
