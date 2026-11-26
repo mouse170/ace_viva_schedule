@@ -183,27 +183,27 @@ function getExplicitCrossZoneGuide(rec: GirlSetZoneRecommendation): {
 
   if (rec.zone === 'A' && touchesLarge) {
     return {
-      shortCrossBadge: '↔ 跨區互看：可坐 B 區 1–7 號 ──▶ 斜看 A 區 16–23 號',
+      shortCrossBadge: '↔ 跨區互看：可坐 B 區 1–5 號 ──▶ 斜看 A 區 17–24 號',
     };
   }
   if (rec.zone === 'B' && touchesSmall && !touchesLarge) {
     return {
-      shortCrossBadge: '↔ 跨區互看：可坐 A 區 17–23 號 ──▶ 斜看 B 區 1–8 號',
+      shortCrossBadge: '↔ 跨區互看：可坐 A 區 20–24 號 ──▶ 斜看 B 區 1–8 號',
     };
   }
   if (rec.zone === 'B' && touchesLarge && !touchesSmall) {
     return {
-      shortCrossBadge: '↔ 跨區互看：可坐 C 區 1–7 號 ──▶ 斜看 B 區 16–23 號',
+      shortCrossBadge: '↔ 跨區互看：可坐 C 區 1–5 號 ──▶ 斜看 B 區 17–24 號',
     };
   }
   if (rec.zone === 'B' && touchesSmall && touchesLarge) {
     return {
-      shortCrossBadge: '↔ 跨區：A 區 17–23 看 B 小號 ｜ C 區 1–7 看 B 大號',
+      shortCrossBadge: '↔ 跨區：A 區 20–24 看 B 小號 ｜ C 區 1–5 看 B 大號',
     };
   }
   if (rec.zone === 'C' && touchesSmall) {
     return {
-      shortCrossBadge: '↔ 跨區互看：可坐 B 區 17–23 號 ──▶ 斜看 C 區 1–8 號',
+      shortCrossBadge: '↔ 跨區互看：可坐 B 區 20–24 號 ──▶ 斜看 C 區 1–8 號',
     };
   }
 
@@ -464,7 +464,7 @@ async function renderSeatRadarCardToDataUrl(
   ctx.fillStyle = '#FFFFFF';
   fillTextFit(
     ctx,
-    '▲ 觀眾面向球場視角：左手邊 C 區 (23→1號) ◀ ↔ 中 B 區 ↔ ▶ 右手邊 A 區 (23→1號)',
+    '▲ 觀眾面向球場視角：左手邊 C 區 (24→1號) ◀ ↔ 中 B 區 ↔ ▶ 右手邊 A 區 (24→1號)',
     infoX + 16,
     pill2Y + 19,
     pillW - 32,
@@ -478,9 +478,9 @@ async function renderSeatRadarCardToDataUrl(
   const cardH = 344;
 
   const userGlobal =
-    (userZone === 'A' ? 0 : userZone === 'B' ? 1 : 2) * 23 + userSeat;
+    (userZone === 'A' ? 0 : userZone === 'B' ? 1 : 2) * 24 + userSeat;
   const toRadarNorm = (gSeat: number) =>
-    Math.max(0.07, Math.min(0.93, 0.05 + ((69 - gSeat) / 68) * 0.9));
+    Math.max(0.07, Math.min(0.93, 0.05 + ((72 - gSeat) / 71) * 0.9));
 
   distanceComparisons.forEach((comp, index) => {
     const setObj = schedule.sets[index];
@@ -626,9 +626,9 @@ async function renderSeatRadarCardToDataUrl(
     const zHeaderY = radarY + 10;
     const zColW = (radarW - 32) / 3;
     const zItems: { id: AceZoneId; text: string }[] = [
-      { id: 'C', text: '◀ 左手邊：2F C 區 (23→1號)' },
-      { id: 'B', text: '正中央：2F B 區 (23→1號)' },
-      { id: 'A', text: '右手邊：2F A 區 (23→1號) ▶' },
+      { id: 'C', text: '◀ 左手邊：2F C 區 (24→1號)' },
+      { id: 'B', text: '正中央：2F B 區 (24→1號)' },
+      { id: 'A', text: '右手邊：2F A 區 (24→1號) ▶' },
     ];
     zItems.forEach((z, zIdx) => {
       const zx = radarX + 12 + zIdx * (zColW + 4);
@@ -690,7 +690,7 @@ async function renderSeatRadarCardToDataUrl(
     // User & Oshi X coordinates
     const uPx = radarX + toRadarNorm(userGlobal) * radarW;
     const fovLeftPx =
-      radarX + toRadarNorm(Math.min(69, userGlobal + 8)) * radarW;
+      radarX + toRadarNorm(Math.min(72, userGlobal + 8)) * radarW;
     const fovRightPx =
       radarX + toRadarNorm(Math.max(1, userGlobal - 8)) * radarW;
 
@@ -712,8 +712,8 @@ async function renderSeatRadarCardToDataUrl(
         : comp.initial.girlZone === 'B'
           ? 1
           : 2;
-    const initGlobal = gZIndex * 23 + comp.initial.girlCoreSeat;
-    const after10Global = gZIndex * 23 + comp.after10.girlCoreSeat;
+    const initGlobal = gZIndex * 24 + comp.initial.girlCoreSeat;
+    const after10Global = gZIndex * 24 + comp.after10.girlCoreSeat;
 
     const initPx = radarX + toRadarNorm(initGlobal) * radarW;
     const after10Px = radarX + toRadarNorm(after10Global) * radarW;
@@ -753,7 +753,7 @@ async function renderSeatRadarCardToDataUrl(
             );
             if (!d) return null;
             const zIdx = d.girlZone === 'A' ? 0 : d.girlZone === 'B' ? 1 : 2;
-            const px = radarX + toRadarNorm(zIdx * 23 + d.girlCoreSeat) * radarW;
+            const px = radarX + toRadarNorm(zIdx * 24 + d.girlCoreSeat) * radarW;
             return { fav, d, px };
           })
           .filter((x): x is NonNullable<typeof x> => Boolean(x)),
@@ -771,7 +771,7 @@ async function renderSeatRadarCardToDataUrl(
             );
             if (!d) return null;
             const zIdx = d.girlZone === 'A' ? 0 : d.girlZone === 'B' ? 1 : 2;
-            const px = radarX + toRadarNorm(zIdx * 23 + d.girlCoreSeat) * radarW;
+            const px = radarX + toRadarNorm(zIdx * 24 + d.girlCoreSeat) * radarW;
             return { fav, d, px };
           })
           .filter((x): x is NonNullable<typeof x> => Boolean(x)),
@@ -1213,12 +1213,12 @@ async function renderZoneHoppingCardToDataUrl(
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    // Calculate X positions on the 23 -> 1 ruler (idx 0 = seat 23 on left, idx 22 = seat 1 on right)
+    // Calculate X positions on the 24 -> 1 ruler (idx 0 = seat 24 on left, idx 23 = seat 1 on right)
     const rulerPadX = 18;
     const totalRulerW = diagW - rulerPadX * 2;
-    const seatBoxW = (totalRulerW - 22 * 4) / 23;
+    const seatBoxW = (totalRulerW - 23 * 4) / 24;
     const seatCenterX = (sNum: number) => {
-      const idx = 23 - sNum;
+      const idx = 24 - sNum;
       return diagX + rulerPadX + idx * (seatBoxW + 4) + seatBoxW / 2;
     };
 
@@ -1321,10 +1321,10 @@ async function renderZoneHoppingCardToDataUrl(
     );
     ctx.textAlign = 'left';
 
-    // Draw 23 -> 1 Seat Ruler (Audience First-Person: Left = 23, Right = 1)
+    // Draw 24 -> 1 Seat Ruler (Audience First-Person: Left = 24, Right = 1)
     const rulerY = diagY + 114;
-    for (let idx = 0; idx < 23; idx++) {
-      const sNum = 23 - idx;
+    for (let idx = 0; idx < 24; idx++) {
+      const sNum = 24 - idx;
       const sx = diagX + rulerPadX + idx * (seatBoxW + 4);
       const inInit =
         sNum >= rec.initialSeatRange[0] && sNum <= rec.initialSeatRange[1];
@@ -1400,7 +1400,7 @@ async function renderZoneHoppingCardToDataUrl(
     ctx.fillStyle = '#3F8E67';
     fillTextFit(
       ctx,
-      `◀ 左手邊 ${rec.zone}23${rec.zone === 'A' ? ' (接 B1)' : rec.zone === 'B' ? ' (接 C1)' : ''}`,
+      `◀ 左手邊 ${rec.zone}24${rec.zone === 'A' ? ' (接 B1)' : rec.zone === 'B' ? ' (接 C1)' : ''}`,
       92,
       footY + 20,
       220,
@@ -1432,7 +1432,7 @@ async function renderZoneHoppingCardToDataUrl(
     ctx.textAlign = 'right';
     fillTextFit(
       ctx,
-      `${rec.zone === 'C' ? '(接 B23) ' : rec.zone === 'B' ? '(接 A23) ' : ''}右手邊 ${rec.zone}1 ▶`,
+      `${rec.zone === 'C' ? '(接 B24) ' : rec.zone === 'B' ? '(接 A24) ' : ''}右手邊 ${rec.zone}1 ▶`,
       W - 92,
       footY + 20,
       220,
@@ -1723,7 +1723,7 @@ export const OshiStrategyCardModal: React.FC<OshiStrategyCardModalProps> = ({
                     : 'text-[#212047]/65'
                 }`}
               >
-                以 23→1 尺規與成員頭像圖解每局最佳區間及跨區互看位置。
+                以 24→1 尺規與成員頭像圖解每局最佳區間及跨區互看位置。
               </p>
             </button>
           </div>
@@ -1764,14 +1764,14 @@ export const OshiStrategyCardModal: React.FC<OshiStrategyCardModalProps> = ({
                 <input
                   type="range"
                   min={1}
-                  max={23}
+                  max={24}
                   value={userSeat}
                   onChange={(e) => setUserSeat(Number(e.target.value))}
                   className="seat-range-slider flex-1"
                 />
                 <button
                   type="button"
-                  onClick={() => setUserSeat((s) => Math.min(23, s + 1))}
+                  onClick={() => setUserSeat((s) => Math.min(24, s + 1))}
                   className="rounded-lg bg-white px-2 py-1 font-mono-num text-xs font-black text-[#212047] ring-1 ring-[#212047]/15"
                 >
                   +1

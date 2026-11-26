@@ -47,21 +47,21 @@ const ZONES: {
     id: 'A',
     shortTitle: 'A 區（右）',
     title: '2F 集氣 A 區',
-    subtitle: '觀眾右手邊看台 · 1–23 號（A23 接 B1）',
+    subtitle: '觀眾右手邊看台 · 1–24 號（A24 接 B1）',
     badge: '集氣 A 區',
   },
   {
     id: 'B',
     shortTitle: 'B 區（中）',
     title: '2F 集氣 B 區',
-    subtitle: '正中央看台 · 1–23 號（B1 接 A23 · B23 接 C1）',
+    subtitle: '正中央看台 · 1–24 號（B1 接 A24 · B24 接 C1）',
     badge: '集氣 B 區',
   },
   {
     id: 'C',
     shortTitle: 'C 區（左）',
     title: '2F 集氣 C 區',
-    subtitle: '觀眾左手邊看台 · 1–23 號（C1 接 B23）',
+    subtitle: '觀眾左手邊看台 · 1–24 號（C1 接 B24）',
     badge: '集氣 C 區',
   },
 ];
@@ -76,19 +76,19 @@ const STATION_SEGMENTS: {
     slotIndex: 0,
     shortTitle: '左位 1–8',
     coreSeat: 5,
-    widthPercent: '34.78%',
+    widthPercent: '33.33%',
   },
   {
     slotIndex: 1,
-    shortTitle: '中位 9–15',
+    shortTitle: '中位 9–16',
     coreSeat: 12,
-    widthPercent: '30.44%',
+    widthPercent: '33.34%',
   },
   {
     slotIndex: 2,
-    shortTitle: '右位 16–23',
-    coreSeat: 19,
-    widthPercent: '34.78%',
+    shortTitle: '右位 17–24',
+    coreSeat: 20,
+    widthPercent: '33.33%',
   },
 ];
 
@@ -101,30 +101,30 @@ const STATION_SEGMENTS_4: {
   {
     slotIndex: 0,
     shortTitle: '1–6 號',
-    coreSeat: 4,
-    widthPercent: '26.09%',
+    coreSeat: 3,
+    widthPercent: '25%',
   },
   {
     slotIndex: 1,
     shortTitle: '7–12 號',
     coreSeat: 9,
-    widthPercent: '26.09%',
+    widthPercent: '25%',
   },
   {
     slotIndex: 2,
-    shortTitle: '13–17 號',
+    shortTitle: '13–18 號',
     coreSeat: 15,
-    widthPercent: '21.74%',
+    widthPercent: '25%',
   },
   {
     slotIndex: 3,
-    shortTitle: '18–23 號',
-    coreSeat: 20,
-    widthPercent: '26.08%',
+    shortTitle: '19–24 號',
+    coreSeat: 21,
+    widthPercent: '25%',
   },
 ];
 
-const ALL_23_SEATS = Array.from({ length: 23 }, (_, i) => i + 1);
+const ALL_24_SEATS = Array.from({ length: 24 }, (_, i) => i + 1);
 
 export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
   favoriteIds,
@@ -313,17 +313,17 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
       label: string;
     }[] =
       selectedZone === 'A'
-        ? [{ zone: 'B', edge: 'small', label: '◀ 左鄰 B 區 8–1 號（緊鄰 A23）' }]
+        ? [{ zone: 'B', edge: 'small', label: '◀ 左鄰 B 區 8–1 號（緊鄰 A24）' }]
         : selectedZone === 'C'
-          ? [{ zone: 'B', edge: 'large', label: '右鄰 B 區 23–16 號（緊鄰 C1） ▶' }]
-          : selectedSeat >= 16
+          ? [{ zone: 'B', edge: 'large', label: '右鄰 B 區 24–17 號（緊鄰 C1） ▶' }]
+          : selectedSeat >= 17
             ? [
-                { zone: 'C', edge: 'small', label: '◀ 左鄰 C 區 8–1 號（緊鄰 B23）' },
-                { zone: 'A', edge: 'large', label: '右鄰 A 區 23–16 號（緊鄰 B1） ▶' },
+                { zone: 'C', edge: 'small', label: '◀ 左鄰 C 區 8–1 號（緊鄰 B24）' },
+                { zone: 'A', edge: 'large', label: '右鄰 A 區 24–17 號（緊鄰 B1） ▶' },
               ]
             : [
-                { zone: 'A', edge: 'large', label: '右鄰 A 區 23–16 號（緊鄰 B1） ▶' },
-                { zone: 'C', edge: 'small', label: '◀ 左鄰 C 區 8–1 號（緊鄰 B23）' },
+                { zone: 'A', edge: 'large', label: '右鄰 A 區 24–17 號（緊鄰 B1） ▶' },
+                { zone: 'C', edge: 'small', label: '◀ 左鄰 C 區 8–1 號（緊鄰 B24）' },
               ];
 
     // Primary closest adjacent border spec based on user's seat
@@ -382,7 +382,7 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
         : currentSetArrangement.after10Points;
 
     const userGlobal =
-      (selectedZone === 'A' ? 0 : selectedZone === 'B' ? 1 : 2) * 23 +
+      (selectedZone === 'A' ? 0 : selectedZone === 'B' ? 1 : 2) * 24 +
       selectedSeat;
 
     type RawStation = {
@@ -404,19 +404,19 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
             {
               zone: selectedZone,
               slotIndex: 3,
-              coreSeat: 20,
-              seatsLabel: `${selectedZone} 區 23–18 號`,
-              shortLabel: `◀ ${selectedZone}區 23–18號`,
-              fullLabel: `◀ 本區左翼：${selectedZone} 區 23–18 號`,
+              coreSeat: 21,
+              seatsLabel: `${selectedZone} 區 24–19 號`,
+              shortLabel: `◀ ${selectedZone}區 24–19號`,
+              fullLabel: `◀ 本區左翼：${selectedZone} 區 24–19 號`,
               isAdjacentZone: false,
             },
             {
               zone: selectedZone,
               slotIndex: 2,
               coreSeat: 15,
-              seatsLabel: `${selectedZone} 區 17–13 號`,
-              shortLabel: `${selectedZone}區中左 17–13號`,
-              fullLabel: `本區中左：${selectedZone} 區 17–13 號`,
+              seatsLabel: `${selectedZone} 區 18–13 號`,
+              shortLabel: `${selectedZone}區中左 18–13號`,
+              fullLabel: `本區中左：${selectedZone} 區 18–13 號`,
               isAdjacentZone: false,
             },
             {
@@ -431,7 +431,7 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
             {
               zone: selectedZone,
               slotIndex: 0,
-              coreSeat: 4,
+              coreSeat: 3,
               seatsLabel: `${selectedZone} 區 6–1 號`,
               shortLabel: `${selectedZone}區 6–1號 ▶`,
               fullLabel: `本區右翼：${selectedZone} 區 6–1 號 ▶`,
@@ -442,19 +442,19 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
             {
               zone: selectedZone,
               slotIndex: 2,
-              coreSeat: 19,
-              seatsLabel: `${selectedZone} 區 23–16 號`,
-              shortLabel: `◀ ${selectedZone}區左側 23–16號`,
-              fullLabel: `◀ 本區左手邊：${selectedZone} 區 23–16 號（官方右位）`,
+              coreSeat: 20,
+              seatsLabel: `${selectedZone} 區 24–17 號`,
+              shortLabel: `◀ ${selectedZone}區左側 24–17號`,
+              fullLabel: `◀ 本區左手邊：${selectedZone} 區 24–17 號（官方右位）`,
               isAdjacentZone: false,
             },
             {
               zone: selectedZone,
               slotIndex: 1,
               coreSeat: 12,
-              seatsLabel: `${selectedZone} 區 15–9 號`,
-              shortLabel: `▲ ${selectedZone}區中央 15–9號`,
-              fullLabel: `▲ 本區正中央：${selectedZone} 區 15–9 號（官方中位）`,
+              seatsLabel: `${selectedZone} 區 16–9 號`,
+              shortLabel: `▲ ${selectedZone}區中央 16–9號`,
+              fullLabel: `▲ 本區正中央：${selectedZone} 區 16–9 號（官方中位）`,
               isAdjacentZone: false,
             },
             {
@@ -476,10 +476,10 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
             coreSeat: 5,
             seatsLabel: 'B 區 8–1 號',
             shortLabel: '◀ 隔壁左區 B8–1號',
-            fullLabel: '◀ 隔壁緊鄰左區：B 區 8–1 號（緊連 A23 左側）',
+            fullLabel: '◀ 隔壁緊鄰左區：B 區 8–1 號（緊連 A24 左側）',
             isAdjacentZone: true,
             adjacentSide: 'left',
-            boundaryTag: '◀ 緊鄰左區 (B1↔A23)',
+            boundaryTag: '◀ 緊鄰左區 (B1↔A24)',
           }
         : selectedZone === 'B'
           ? {
@@ -488,10 +488,10 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
               coreSeat: 5,
               seatsLabel: 'C 區 8–1 號',
               shortLabel: '◀ 隔壁左區 C8–1號',
-              fullLabel: '◀ 隔壁緊鄰左區：C 區 8–1 號（緊連 B23 左側）',
+              fullLabel: '◀ 隔壁緊鄰左區：C 區 8–1 號（緊連 B24 左側）',
               isAdjacentZone: true,
               adjacentSide: 'left',
-              boundaryTag: '◀ 緊鄰左區 (C1↔B23)',
+              boundaryTag: '◀ 緊鄰左區 (C1↔B24)',
             }
           : null;
 
@@ -500,25 +500,25 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
         ? {
             zone: 'B',
             slotIndex: phaseMap.B.length - 1,
-            coreSeat: 19,
-            seatsLabel: 'B 區 23–16 號',
-            shortLabel: '隔壁右區 B23–16號 ▶',
-            fullLabel: '隔壁緊鄰右區：B 區 23–16 號（緊連 C1 右側） ▶',
+            coreSeat: 20,
+            seatsLabel: 'B 區 24–17 號',
+            shortLabel: '隔壁右區 B24–17號 ▶',
+            fullLabel: '隔壁緊鄰右區：B 區 24–17 號（緊連 C1 右側） ▶',
             isAdjacentZone: true,
             adjacentSide: 'right',
-            boundaryTag: '緊鄰右區 (C1↔B23) ▶',
+            boundaryTag: '緊鄰右區 (C1↔B24) ▶',
           }
         : selectedZone === 'B'
           ? {
               zone: 'A',
               slotIndex: phaseMap.A.length - 1,
-              coreSeat: 19,
-              seatsLabel: 'A 區 23–16 號',
-              shortLabel: '隔壁右區 A23–16號 ▶',
-              fullLabel: '隔壁緊鄰右區：A 區 23–16 號（緊連 B1 右側） ▶',
+              coreSeat: 20,
+              seatsLabel: 'A 區 24–17 號',
+              shortLabel: '隔壁右區 A24–17號 ▶',
+              fullLabel: '隔壁緊鄰右區：A 區 24–17 號（緊連 B1 右側） ▶',
               isAdjacentZone: true,
               adjacentSide: 'right',
-              boundaryTag: '緊鄰右區 (B1↔A23) ▶',
+              boundaryTag: '緊鄰右區 (B1↔A24) ▶',
             }
           : null;
 
@@ -544,7 +544,7 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
           phaseBonds.byPositionKey.get(`${item.zone}-${item.slotIndex}`) ?? [];
 
         const stationGlobal =
-          (item.zone === 'A' ? 0 : item.zone === 'B' ? 1 : 2) * 23 +
+          (item.zone === 'A' ? 0 : item.zone === 'B' ? 1 : 2) * 24 +
           item.coreSeat;
         const signedOffset = userGlobal - stationGlobal;
         const seatsDiff = Math.abs(signedOffset);
@@ -584,7 +584,7 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
     memberMap,
   ]);
 
-  const sliderFillPercent = ((selectedSeat - 1) / 22) * 100;
+  const sliderFillPercent = ((selectedSeat - 1) / 23) * 100;
 
   return (
     <section
@@ -597,10 +597,10 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex flex-wrap items-center gap-2 rounded-full bg-[#5BAE84]/15 px-3 py-1 font-mono-num text-[10px] font-bold tracking-[0.14em] text-[#212047] ring-1 ring-[#5BAE84]/35 sm:text-xs lg:text-sm">
               <span className="h-2 w-2 shrink-0 rounded-full bg-[#5BAE84]" />
-              <span>{t('2F 集氣區 · 1–23 號直線選位與相對位置雷達', '2F 응원 구역 · 1–23석 직선 좌석 및 상대 위치 레이더')}</span>
+              <span>{t('2F 集氣區 · 1–24 號直線選位與相對位置雷達', '2F 응원 구역 · 1–24석 직선 좌석 및 상대 위치 레이더')}</span>
             </span>
             <span className="inline-flex items-center gap-1 rounded-full bg-[#E6F5F1] px-2.5 py-1 font-mono-num text-[10px] font-extrabold text-[#3F8E67] ring-1 ring-[#5BAE84]/35 sm:text-xs">
-              <span>{t('◀ 左 C 區 (23→1) · ▲ 中 B 區 (23→1) · 右 A 區 (23→1) ▶', '◀ 좌 C구역 (23→1) · ▲ 중 B구역 (23→1) · 우 A구역 (23→1) ▶')}</span>
+              <span>{t('◀ 左 C 區 (24→1) · ▲ 中 B 區 (24→1) · 右 A 區 (24→1) ▶', '◀ 좌 C구역 (24→1) · ▲ 중 B구역 (24→1) · 우 A구역 (24→1) ▶')}</span>
             </span>
           </div>
           <h2 className="mt-2.5 text-2xl font-black tracking-tight text-[#212047] sm:text-4xl lg:text-5xl">
@@ -736,7 +736,7 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                 步驟一 · 選擇「2F 集氣區」區域（A / B / C 區）
               </span>
               <span className="text-[11px] font-medium text-[#212047]/65 lg:text-sm">
-                看台連續相接：A23 ↔ B1 · B23 ↔ C1
+                看台連續相接：A24 ↔ B1 · B24 ↔ C1
               </span>
             </div>
 
@@ -831,7 +831,7 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-mono-num text-[11px] font-extrabold tracking-[0.1em] text-[#212047] sm:text-xs lg:text-base">
-                  步驟二 · 直線選擇座位（1–23 號）
+                  步驟二 · 直線選擇座位（1–24 號）
                 </span>
                 <div className="inline-flex items-center gap-1.5 rounded-full bg-[#212047] px-3 py-1 text-white shadow-xs">
                   <span className="font-mono-num text-xs font-extrabold text-[#5ECBC0] sm:text-sm lg:text-base">
@@ -857,8 +857,8 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setSelectedSeat((prev) => Math.min(23, prev + 1))}
-                  disabled={selectedSeat >= 23}
+                  onClick={() => setSelectedSeat((prev) => Math.min(24, prev + 1))}
+                  disabled={selectedSeat >= 24}
                   className="rounded-full bg-[#F4FAF8] px-3 py-1 font-mono-num text-xs font-extrabold text-[#212047] ring-1 ring-[#212047]/15 transition-colors hover:bg-[#D5EFE9] active:scale-95 disabled:opacity-35 lg:px-4 lg:py-1.5 lg:text-sm"
                 >
                   +1 號 →
@@ -925,26 +925,26 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                 {currentZoneGirlIds.length === 4 ? (
                   <>
                     <div
-                      style={{ left: '26.09%' }}
+                      style={{ left: '25%' }}
                       className="pointer-events-none absolute top-1/2 h-4 w-0.5 -translate-y-1/2 bg-[#212047]/40"
                     />
                     <div
-                      style={{ left: '52.17%' }}
+                      style={{ left: '50%' }}
                       className="pointer-events-none absolute top-1/2 h-4 w-0.5 -translate-y-1/2 bg-[#212047]/40"
                     />
                     <div
-                      style={{ left: '73.91%' }}
+                      style={{ left: '75%' }}
                       className="pointer-events-none absolute top-1/2 h-4 w-0.5 -translate-y-1/2 bg-[#212047]/40"
                     />
                   </>
                 ) : (
                   <>
                     <div
-                      style={{ left: '34.78%' }}
+                      style={{ left: '33.33%' }}
                       className="pointer-events-none absolute top-1/2 h-4 w-0.5 -translate-y-1/2 bg-[#212047]/40"
                     />
                     <div
-                      style={{ left: '65.22%' }}
+                      style={{ left: '66.67%' }}
                       className="pointer-events-none absolute top-1/2 h-4 w-0.5 -translate-y-1/2 bg-[#212047]/40"
                     />
                   </>
@@ -953,24 +953,24 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                 <input
                   type="range"
                   min={1}
-                  max={23}
+                  max={24}
                   step={1}
                   value={selectedSeat}
                   onChange={(e) => setSelectedSeat(Number(e.target.value))}
-                  aria-label={`拉動選擇 ${selectedZone} 區 1 至 23 號座位`}
+                  aria-label={`拉動選擇 ${selectedZone} 區 1 至 24 號座位`}
                   className="seat-range-slider relative z-10"
                 />
               </div>
 
-              {/* Row C: Strictly Single-Line 1–23 Number Ruler (grid-cols-23, NEVER wraps!) */}
-              <div className="mt-1.5 grid grid-cols-23 gap-px select-none">
-                {ALL_23_SEATS.map((num) => {
+              {/* Row C: Strictly Single-Line 1–24 Number Ruler (grid-cols-24, NEVER wraps!) */}
+              <div className="mt-1.5 grid grid-cols-24 gap-px select-none">
+                {ALL_24_SEATS.map((num) => {
                   const isSelected = selectedSeat === num;
-                  const isCore = num === 5 || num === 12 || num === 19;
+                  const isCore = num === 5 || num === 12 || num === 20;
                   const isInActiveSlot =
                     (seatMapping.slotIndex === 0 && num <= 8) ||
-                    (seatMapping.slotIndex === 1 && num >= 9 && num <= 15) ||
-                    (seatMapping.slotIndex === 2 && num >= 16);
+                    (seatMapping.slotIndex === 1 && num >= 9 && num <= 16) ||
+                    (seatMapping.slotIndex === 2 && num >= 17);
 
                   return (
                     <button
@@ -1011,7 +1011,7 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                     {selectedSeat}
                   </span>
                   <span className="hidden rounded-full bg-white/10 px-2.5 py-0.5 font-mono-num text-[10px] font-bold text-white/75 sm:inline-block">
-                    {t('◀ 左 C23 · ▲ 往前看 · 右 A1 ▶', '◀ 좌 C23 · ▲ 정면 · 우 A1 ▶')}
+                    {t('◀ 左 C24 · ▲ 往前看 · 右 A1 ▶', '◀ 좌 C24 · ▲ 정면 · 우 A1 ▶')}
                   </span>
                   {multiFavTopSeats.length > 0 && (
                     <div className="flex items-center gap-1">
@@ -1114,10 +1114,10 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                 const slotShort =
                   activePhaseOshiDistance.girlSlotLabel.slice(0, 2);
 
-                // Global seat coordinate (1..69 across A1..A23, B1..B23, C1..C23)
+                // Global seat coordinate (1..72 across A1..A24, B1..B24, C1..C24)
                 const userGlobal =
                   (selectedZone === 'A' ? 0 : selectedZone === 'B' ? 1 : 2) *
-                    23 +
+                    24 +
                   selectedSeat;
                 const oshiGlobal =
                   (activePhaseOshiDistance.girlZone === 'A'
@@ -1125,18 +1125,18 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                     : activePhaseOshiDistance.girlZone === 'B'
                       ? 1
                       : 2) *
-                    23 +
+                    24 +
                   activePhaseOshiDistance.girlCoreSeat;
 
                 // Audience first-person X mapping:
-                // Facing the court, Leftmost (7%) is C23 (globalSeat=69), Rightmost (93%) is A1 (globalSeat=1)
+                // Facing the court, Leftmost (7%) is C24 (globalSeat=72), Rightmost (93%) is A1 (globalSeat=1)
                 const toAudienceX = (gSeat: number) =>
-                  Math.max(10, Math.min(90, 7 + ((69 - gSeat) / 68) * 86));
+                  Math.max(10, Math.min(90, 7 + ((72 - gSeat) / 71) * 86));
 
                 const userX = toAudienceX(userGlobal);
                 const oshiX = toAudienceX(oshiGlobal);
                 // In Audience view, left of user is larger globalSeat (userGlobal + 8), right of user is smaller globalSeat (userGlobal - 8)
-                const fovLeftX = toAudienceX(Math.min(69, userGlobal + 8));
+                const fovLeftX = toAudienceX(Math.min(72, userGlobal + 8));
                 const fovRightX = toAudienceX(Math.max(1, userGlobal - 8));
 
                 // Concise relative seat count badge in Audience First-Person perspective
@@ -1180,7 +1180,7 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                         : dist.girlZone === 'B'
                           ? 1
                           : 2) *
-                        23 +
+                        24 +
                       dist.girlCoreSeat;
                     const pinX = toAudienceX(gSeat);
                     return {
@@ -1307,18 +1307,18 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                         [
                           {
                             id: 'C' as AceZoneId,
-                            label: '◀ 左手邊：2F C 區 (23→1號)',
-                            mobileLabel: '◀ C區 23→1',
+                            label: '◀ 左手邊：2F C 區 (24→1號)',
+                            mobileLabel: '◀ C區 24→1',
                           },
                           {
                             id: 'B' as AceZoneId,
-                            label: '正中央：2F B 區 (23→1號)',
-                            mobileLabel: 'B區 23→1',
+                            label: '正中央：2F B 區 (24→1號)',
+                            mobileLabel: 'B區 24→1',
                           },
                           {
                             id: 'A' as AceZoneId,
-                            label: '右手邊：2F A 區 (23→1號) ▶',
-                            mobileLabel: 'A區 23→1 ▶',
+                            label: '右手邊：2F A 區 (24→1號) ▶',
+                            mobileLabel: 'A區 24→1 ▶',
                           },
                         ] as const
                       ).map((zItem) => (
@@ -1456,7 +1456,7 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
 
                       {/* Side Orientation Watermarks */}
                       <div className="pointer-events-none absolute top-1/2 left-2 -translate-y-1/2 font-mono-num text-[9px] font-bold text-white/30 sm:text-[10px]">
-                        ◀ 左手邊 (C23)
+                        ◀ 左手邊 (C24)
                       </div>
                       <div className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 font-mono-num text-[9px] font-bold text-white/30 sm:text-[10px]">
                         右手邊 (A1) ▶
@@ -1602,7 +1602,7 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                     </span>
                   </div>
                   <span className="rounded-full bg-[#E6F5F1] px-2.5 py-0.5 font-mono-num text-[10px] font-bold text-[#3F8E67] lg:text-xs">
-                    ◀ C1 ↔ B23 · B1 ↔ A23 ▶
+                    ◀ C1 ↔ B24 · B1 ↔ A24 ▶
                   </span>
                 </div>
 
@@ -2043,7 +2043,7 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                 2F 集氣 {selectedZone} 區 · 第 {selectedSeat} 號席與鄰區五局班表
               </span>
               <span className="rounded-full bg-[#E6F5F1] px-2.5 py-0.5 font-mono-num text-[10px] font-bold text-[#3F8E67] lg:text-xs">
-                ◀ 左 23–16 號 → ▲ 中 15–9 號 → 右 8–1 號 ▶
+                ◀ 左 24–17 號 → ▲ 中 16–9 號 → 右 8–1 號 ▶
               </span>
             </div>
 
@@ -2107,25 +2107,25 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                       const slotLabel = (slotIdx: number) => {
                         if (isFour) {
                           return slotIdx === 3
-                            ? '23–18號'
+                            ? '24–19號'
                             : slotIdx === 2
-                              ? '17–13號'
+                              ? '18–13號'
                               : slotIdx === 1
                                 ? '12–7號'
                                 : '6–1號';
                         }
                         return slotIdx === 2
-                          ? '◀ 左 23–16號'
+                          ? '◀ 左 24–17號'
                           : slotIdx === 1
-                            ? '▲ 中 15–9號'
+                            ? '▲ 中 16–9號'
                             : '右 8–1號 ▶';
                       };
                       return (
                         <div className="mt-3">
                           <div className="font-mono-num text-[10px] font-bold text-[#212047]/65 lg:text-xs">
                             {isFour
-                              ? '【開局 0–10 分（4 人站位）】◀ 23–18 → 17–13 → 12–7 → 6–1 ▶'
-                              : '【開局 0–10 分】◀ 左側 23–16 號 → 中央 15–9 號 → 右側 8–1 號 ▶'}
+                              ? '【開局 0–10 分（4 人站位）】◀ 24–19 → 18–13 → 12–7 → 6–1 ▶'
+                              : '【開局 0–10 分】◀ 左側 24–17 號 → 中央 16–9 號 → 右側 8–1 號 ▶'}
                           </div>
                           <div className={`mt-1.5 grid gap-1.5 lg:gap-2 ${isFour ? 'grid-cols-4' : 'grid-cols-3'}`}>
                             {initSlots.map((slotIdx) => {
@@ -2215,25 +2215,25 @@ export const SeatFinderSection: React.FC<SeatFinderSectionProps> = ({
                       const slotLabel = (slotIdx: number) => {
                         if (isFour) {
                           return slotIdx === 3
-                            ? '23–18號'
+                            ? '24–19號'
                             : slotIdx === 2
-                              ? '17–13號'
+                              ? '18–13號'
                               : slotIdx === 1
                                 ? '12–7號'
                                 : '6–1號';
                         }
                         return slotIdx === 2
-                          ? '◀ 左 23–16號'
+                          ? '◀ 左 24–17號'
                           : slotIdx === 1
-                            ? '▲ 中 15–9號'
+                            ? '▲ 中 16–9號'
                             : '右 8–1號 ▶';
                       };
                       return (
                         <div className="mt-3">
                           <div className="font-mono-num text-[10px] font-bold text-[#3F8E67] lg:text-xs">
                             {isFour
-                              ? '【連莊破 10 分換位後（4 人站位）】◀ 23–18 → 17–13 → 12–7 → 6–1 ▶'
-                              : '【連莊破 10 分換位後】◀ 左側 23–16 號 → 中央 15–9 號 → 右側 8–1 號 ▶'}
+                              ? '【連莊破 10 分換位後（4 人站位）】◀ 24–19 → 18–13 → 12–7 → 6–1 ▶'
+                              : '【連莊破 10 分換位後】◀ 左側 24–17 號 → 中央 16–9 號 → 右側 8–1 號 ▶'}
                           </div>
                           <div className={`mt-1.5 grid gap-1.5 lg:gap-2 ${isFour ? 'grid-cols-4' : 'grid-cols-3'}`}>
                             {afterSlots.map((slotIdx) => {

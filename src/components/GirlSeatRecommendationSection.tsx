@@ -127,7 +127,7 @@ export const GirlSeatRecommendationSection: React.FC<
               <span>{t('女孩專屬黃金選位推薦', '치어리더별 추천 좌석 가이드')}</span>
             </span>
             <span className="inline-flex items-center gap-1 rounded-full bg-[#E6F5F1] px-2.5 py-1 font-mono-num text-[10px] font-extrabold text-[#3F8E67] ring-1 ring-[#5BAE84]/35 lg:text-xs">
-              <span>{t('◀ 左 C 區 (23–16號) ↔ ▲ 中 B 區 (15–9號) ↔ 右 A 區 (8–1號) ▶', '◀ 좌 C구역 (23–16) ↔ ▲ 중 B구역 (15–9) ↔ 우 A구역 (8–1) ▶')}</span>
+              <span>{t('◀ 左 C 區 (24–17號) ↔ ▲ 中 B 區 (16–9號) ↔ 右 A 區 (8–1號) ▶', '◀ 좌 C구역 (24–17) ↔ ▲ 중 B구역 (16–9) ↔ 우 A구역 (8–1) ▶')}</span>
             </span>
           </div>
           <h2 className="mt-2.5 text-2xl font-black tracking-tight text-[#212047] sm:text-4xl lg:text-5xl">

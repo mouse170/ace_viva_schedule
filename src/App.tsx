@@ -232,8 +232,8 @@ export const App: React.FC = () => {
               {
                 zone: 'B',
                 edge: 'large',
-                label: '右鄰 B 區 23–16 號',
-                shortLabel: 'B23-16',
+                label: '右鄰 B 區 24–17 號',
+                shortLabel: 'B24-17',
               },
             ]
           : currentUserSeat.seat >= 12
@@ -247,16 +247,16 @@ export const App: React.FC = () => {
                 {
                   zone: 'A',
                   edge: 'large',
-                  label: '右鄰 A 區 23–16 號',
-                  shortLabel: 'A23-16',
+                  label: '右鄰 A 區 24–17 號',
+                  shortLabel: 'A24-17',
                 },
               ]
             : [
                 {
                   zone: 'A',
                   edge: 'large',
-                  label: '右鄰 A 區 23–16 號',
-                  shortLabel: 'A23-16',
+                  label: '右鄰 A 區 24–17 號',
+                  shortLabel: 'A24-17',
                 },
                 {
                   zone: 'C',
@@ -426,7 +426,7 @@ export const App: React.FC = () => {
               href="#seat-finder-section"
               className="rounded-full bg-[#5BAE84]/20 px-3.5 py-1.5 text-sm font-extrabold text-[#7ADAD0] whitespace-nowrap ring-1 ring-[#5ECBC0]/35 transition-colors hover:bg-[#5BAE84] hover:text-white xl:text-base"
             >
-              {t('23 席面前女孩查詢', '23석 좌석 조회')}
+              {t('24 席面前女孩查詢', '24석 좌석 조회')}
             </a>
             <a
               href="#theme-event-section"
@@ -759,7 +759,7 @@ export const App: React.FC = () => {
               aria-label="選擇座位號碼"
               className="rounded-lg bg-white/12 px-2 py-1 font-mono-num text-[11px] font-bold text-white ring-1 ring-white/20 focus:outline-none sm:text-xs"
             >
-              {Array.from({ length: 23 }, (_, i) => i + 1).map((n) => (
+              {Array.from({ length: 24 }, (_, i) => i + 1).map((n) => (
                 <option
                   key={n}
                   value={n}
@@ -1282,7 +1282,7 @@ export const App: React.FC = () => {
                   一律以官方最新實際公告為準
                 </div>
                 <p className="mt-1.5 text-white/75">
-                  站內所列之出席名單、2F 集氣區（A / B / C 區）各局站位、破 10 分換位規則、1–23 號座位視角對應與主推距離計算，均為依據官方公開貼文所作之輔助推算；若遇現場座位編號調整、動線變更或成員臨時異動，概以官方與現場實際公告為準。
+                  站內所列之出席名單、2F 集氣區（A / B / C 區）各局站位、破 10 分換位規則、1–24 號座位視角對應與主推距離計算，均為依據官方公開貼文所作之輔助推算；若遇現場座位編號調整、動線變更或成員臨時異動，概以官方與現場實際公告為準。
                 </p>
               </div>
 
